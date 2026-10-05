@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import pytest
+from inline_snapshot import snapshot
 
-from tests.unit.transpiler.passes.utils import outer_projection, plan_sql
+from tests.unit.transpiler.passes.utils import plan_sql
 
 _DIALECTS = pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
 
@@ -14,11 +15,55 @@ def test_root_aggregation_over_page(dialect_name: str) -> None:
     """A root aggregation of paginated rows is a window function of the outer SELECT, computed over the page."""
     lines = plan_sql("{ colorAggregationsPaginated(limit: 2) { aggregations { count } nodes { name } } }", dialect_name)
 
-    limit = next(index for index, line in enumerate(lines) if "LIMIT" in line)
-    page_end = next(index for index, line in enumerate(lines) if line.startswith("       ) AS color"))
-    assert limit < page_end
-    assert [column for column in outer_projection(lines) if "OVER" in column] == ["count(*) OVER () AS anon_1"]
-    assert sum("OVER ()" in line for line in lines) == 1
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id,",
+                    "       count(*) OVER () AS anon_1",
+                    "  FROM (",
+                    "        SELECT color.name AS name,",
+                    "               color.id AS id",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT %(param_1)s",
+                    "        OFFSET %(param_2)s",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.name,",
+                    "       color.id,",
+                    "       count(*) OVER () AS anon_1",
+                    "  FROM (",
+                    "        SELECT color.name AS name,",
+                    "               color.id AS id",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT ?",
+                    "        OFFSET ?",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.name,",
+                    "       color.id,",
+                    "       count(*) OVER () AS anon_1",
+                    "  FROM (",
+                    "        SELECT color.name AS name,",
+                    "               color.id AS id",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT %s,",
+                    "               %s",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -28,7 +73,52 @@ def test_root_aggregation_reads_root_alias(dialect_name: str) -> None:
         "{ colorAggregationsPaginated { aggregations { count max { name } } nodes { id } } }", dialect_name
     )
 
-    assert [column for column in outer_projection(lines) if "OVER" in column] == [
-        "count(*) OVER () AS anon_1",
-        "max(color.name) OVER () AS anon_2",
-    ]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.id,",
+                    "       count(*) OVER () AS anon_1,",
+                    "       max(color.name) OVER () AS anon_2",
+                    "  FROM (",
+                    "        SELECT color.id AS id,",
+                    "               color.name AS name",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT %(param_1)s",
+                    "        OFFSET %(param_2)s",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.id,",
+                    "       count(*) OVER () AS anon_1,",
+                    "       max(color.name) OVER () AS anon_2",
+                    "  FROM (",
+                    "        SELECT color.id AS id,",
+                    "               color.name AS name",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT ?",
+                    "        OFFSET ?",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.id,",
+                    "       count(*) OVER () AS anon_1,",
+                    "       max(color.name) OVER () AS anon_2",
+                    "  FROM (",
+                    "        SELECT color.id AS id,",
+                    "               color.name AS name",
+                    "          FROM color AS color",
+                    "         ORDER BY color.id ASC",
+                    "         LIMIT %s,",
+                    "               %s",
+                    "       ) AS color",
+                    " ORDER BY color.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )

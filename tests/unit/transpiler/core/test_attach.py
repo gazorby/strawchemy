@@ -8,6 +8,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import func, inspect, select
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.exc import SAWarning
@@ -57,14 +58,14 @@ def _node() -> QueryNodeType:
     return cast("QueryNodeType", _Node())
 
 
-def _sql(statement: Select[Any], features: DatabaseFeatures) -> str:
+def _sql(statement: Select[Any], features: DatabaseFeatures) -> list[str]:
     """Compiles with the FROM linter on, so a cartesian product raises."""
     with warnings.catch_warnings():
         warnings.simplefilter("error", category=SAWarning)
         compiled = statement.compile(
             dialect=_DIALECTS[features.dialect], compile_kwargs={"literal_binds": True}, linting=FROM_LINTING
         )
-    return " ".join(format_sql(str(compiled)).split())
+    return format_sql(str(compiled)).splitlines()
 
 
 def _outer(
@@ -99,10 +100,24 @@ def test_attach_rows_lateral_correlates_on_the_foreign_key() -> None:
     assert join.is_outer is True
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name), POSTGRES)
-    assert "LEFT OUTER JOIN LATERAL (" in sql
-    assert "WHERE color.id = fruit_1.color_id" in sql
-    assert "ORDER BY fruit_1.sweetness ASC LIMIT 2 OFFSET 1" in sql
-    assert sql.endswith(") AS anon_1 ON TRUE")
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.id AS id,",
+            "               fruit_1.sweetness AS sweetness",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "         ORDER BY fruit_1.sweetness ASC",
+            "         LIMIT 2",
+            "        OFFSET 1",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_rows_lateral_returns_the_order_by_adapted_onto_the_lateral() -> None:
@@ -113,8 +128,22 @@ def test_attach_rows_lateral_returns_the_order_by_adapted_onto_the_lateral() -> 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name, order_by=order_by), POSTGRES)
 
-    assert "fruit_1.sweetness AS sweetness" in sql
-    assert sql.endswith("ORDER BY anon_1.sweetness ASC")
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.sweetness AS sweetness",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "         ORDER BY fruit_1.sweetness ASC",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY anon_1.sweetness ASC",
+        ]
+    )
 
 
 def test_attach_rows_cte_ranks_per_parent_and_limits_in_on() -> None:
@@ -125,11 +154,31 @@ def test_attach_rows_cte_ranks_per_parent_and_limits_in_on() -> None:
 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name, order_by=order_by), SQLITE)
-    assert "dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id)" in sql
-    assert "WHERE fruit_1.color_id IS NOT NULL" in sql
-    assert "LIMIT" not in sql
-    assert "ON color.id = anon_1.color_id AND anon_1.rank > 1 AND anon_1.rank <= 3" in sql
-    assert sql.endswith("ORDER BY anon_1.sweetness ASC")
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.name,",
+            "                  fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "         ORDER BY fruit_1.sweetness ASC",
+            "       ) SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            "   AND anon_1.rank > 1",
+            "   AND anon_1.rank <= 3",
+            " ORDER BY anon_1.sweetness ASC",
+        ]
+    )
 
 
 def test_attach_rows_cte_without_pagination_has_no_rank() -> None:
@@ -143,9 +192,25 @@ def test_attach_rows_cte_without_pagination_has_no_rank() -> None:
 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name), SQLITE)
-    assert "rank" not in sql
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.id AS id",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.name,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.id",
+            "       ) SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+        ]
+    )
     assert order_by == ()
-    assert "ON color.id = anon_1.color_id" in sql
 
 
 def test_attach_rows_secondary_relation_joins_the_secondary_table() -> None:
@@ -158,11 +223,23 @@ def test_attach_rows_secondary_relation_joins_the_secondary_table() -> None:
 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name), POSTGRES)
-    assert (
-        "FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 "
-        "ON department_1.id = user_department_join_table_1.department_id"
-    ) in sql
-    assert 'WHERE "user".id = user_department_join_table_1.user_id' in sql
+    assert sql == snapshot(
+        [
+            'SELECT "user".id,',
+            "       anon_1.name",
+            '  FROM "user" AS "user"',
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT department_1.id AS id,",
+            "               department_1.name AS name",
+            "          FROM department AS department_1",
+            "          JOIN user_department_join_table AS user_department_join_table_1",
+            "            ON department_1.id = user_department_join_table_1.department_id",
+            '         WHERE "user".id = user_department_join_table_1.user_id',
+            "         ORDER BY department_1.id ASC",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_rows_emulated_distinct_on_is_ranked_per_database() -> None:
@@ -175,9 +252,54 @@ def test_attach_rows_emulated_distinct_on_is_ranked_per_database() -> None:
     cte_sql = _sql(_outer(parent, sqlite_join), SQLITE)
     lateral_sql = _sql(_outer(parent, lateral_join), POSTGRES)
 
-    assert "row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.name" in cte_sql
-    assert "row_number() OVER (PARTITION BY fruit_1.name" in lateral_sql
-    assert "WHERE color.id = fruit_1.color_id" in lateral_sql
+    assert cte_sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT anon_2.id AS id,",
+            "               anon_2.color_id AS color_id,",
+            "               anon_2.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.sweetness ASC, anon_2.id) AS rank",
+            "          FROM (",
+            "                SELECT fruit_1.id AS id,",
+            "                       fruit_1.color_id AS color_id,",
+            "                       fruit_1.sweetness AS sweetness,",
+            "                       row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.name ORDER BY fruit_1.sweetness ASC) AS anon_3",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE fruit_1.color_id IS NOT NULL",
+            "               ) AS anon_2",
+            "         WHERE anon_2.anon_3 = 1",
+            "         GROUP BY anon_2.id,",
+            "                  anon_2.color_id,",
+            "                  anon_2.sweetness",
+            "         ORDER BY anon_2.sweetness ASC",
+            "       ) SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            "   AND anon_1.rank <= 1",
+        ]
+    )
+    assert lateral_sql == snapshot(
+        [
+            "SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT anon_2.id AS id,",
+            "               anon_2.sweetness AS sweetness",
+            "          FROM (",
+            "                SELECT fruit_1.id AS id,",
+            "                       fruit_1.sweetness AS sweetness,",
+            "                       row_number() OVER (PARTITION BY fruit_1.name ORDER BY fruit_1.sweetness ASC) AS anon_3",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_2",
+            "         WHERE anon_2.anon_3 = 1",
+            "         ORDER BY anon_2.sweetness ASC",
+            "         LIMIT 1",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_rows_cte_nested_sort_keys_are_exposed() -> None:
@@ -195,8 +317,35 @@ def test_attach_rows_cte_nested_sort_keys_are_exposed() -> None:
 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name, order_by=order_by), MYSQL)
-    assert "color_1.name AS name_1" in sql
-    assert sql.endswith("ORDER BY anon_1.name_1 ASC, anon_1.sweetness ASC")
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.id AS id,",
+            "               color_1.name AS name_1,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name ASC, fruit_1.sweetness ASC, fruit_1.id) AS `rank`",
+            "          FROM fruit AS fruit_1",
+            "          LEFT OUTER JOIN color AS color_1",
+            "            ON color_1.id = fruit_1.color_id",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.name,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.id,",
+            "                  color_1.name,",
+            "                  fruit_1.sweetness",
+            "         ORDER BY color_1.name ASC,",
+            "                  fruit_1.sweetness ASC",
+            "       ) SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            " ORDER BY anon_1.name_1 ASC,",
+            "          anon_1.sweetness ASC",
+        ]
+    )
 
 
 def test_attach_grouped_lateral_count() -> None:
@@ -211,11 +360,19 @@ def test_attach_grouped_lateral_count() -> None:
     assert isinstance(join, AggregateJoin)
     assert join.key == ("aggregate", node)
     sql = _sql(_outer(parent, join, join.columns[function_node]), POSTGRES)
-    assert (
-        "JOIN LATERAL ( SELECT count(*) AS count_1 FROM fruit AS fruit_2 WHERE color.id = fruit_2.color_id ) AS anon_1 ON TRUE"
-        in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       anon_1.count_1",
+            "  FROM color AS color",
+            "  JOIN LATERAL (",
+            "        SELECT count(*) AS count_1",
+            "          FROM fruit AS fruit_2",
+            "         WHERE color.id = fruit_2.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
     )
-    assert "coalesce" not in sql
 
 
 def test_attach_grouped_cte_count_is_coalesced_in_an_outer_join() -> None:
@@ -229,10 +386,21 @@ def test_attach_grouped_cte_count_is_coalesced_in_an_outer_join() -> None:
 
     assert join.is_outer is True
     sql = _sql(_outer(parent, join, join.columns[function_node]), SQLITE)
-    assert "GROUP BY fruit_2.color_id" in sql
-    assert "WHERE fruit_2.color_id IS NOT NULL" in sql
-    assert "LEFT OUTER JOIN anon_1 ON color.id = anon_1.color_id" in sql
-    assert "coalesce(anon_1.count_1, 0)" in sql
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               fruit_2.color_id AS color_id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE fruit_2.color_id IS NOT NULL",
+            "         GROUP BY fruit_2.color_id",
+            "       ) SELECT color.id,",
+            "       coalesce(anon_1.count_1, 0) AS coalesce_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+        ]
+    )
 
 
 def test_attach_grouped_cte_keeps_other_functions_uncoalesced() -> None:
@@ -245,8 +413,23 @@ def test_attach_grouped_cte_keeps_other_functions_uncoalesced() -> None:
     join = attach_grouped(labels, _node(), Color.fruits, parent, function_alias, SQLITE)
 
     sql = _sql(_outer(parent, join, join.columns[count_node], join.columns[max_node]), SQLITE)
-    assert "coalesce(anon_1.count_1, 0)" in sql
-    assert "coalesce(anon_1.max_1" not in sql
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               max(fruit_2.sweetness) AS max_1,",
+            "               fruit_2.color_id AS color_id",
+            "          FROM fruit AS fruit_2",
+            "         WHERE fruit_2.color_id IS NOT NULL",
+            "         GROUP BY fruit_2.color_id",
+            "       ) SELECT color.id,",
+            "       coalesce(anon_1.count_1, 0) AS coalesce_1,",
+            "       anon_1.max_1",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+        ]
+    )
 
 
 def test_attach_grouped_secondary_uses_parent_copy_keys() -> None:
@@ -260,10 +443,24 @@ def test_attach_grouped_secondary_uses_parent_copy_keys() -> None:
 
     sql = _sql(_outer(parent, join, join.columns[function_node]), SQLITE)
     assert join.is_outer is True
-    assert "FROM USER AS user_1 JOIN user_department_join_table AS user_department_join_table_1" in sql
-    assert "GROUP BY user_1.id" in sql
-    assert "LEFT OUTER JOIN anon_1 ON user.id = anon_1.id" in sql
-    assert "coalesce(anon_1.count_1, 0)" in sql
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT count(*) AS count_1,",
+            "               user_1.id AS id",
+            "          FROM USER AS user_1",
+            "          JOIN user_department_join_table AS user_department_join_table_1",
+            "            ON user_1.id = user_department_join_table_1.user_id",
+            "          JOIN department AS department_1",
+            "            ON department_1.id = user_department_join_table_1.department_id",
+            "         GROUP BY user_1.id",
+            "       ) SELECT user.id,",
+            "       coalesce(anon_1.count_1, 0) AS coalesce_1",
+            "  FROM USER AS USER",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON user.id = anon_1.id",
+        ]
+    )
 
 
 def test_attach_grouped_secondary_lateral_joins_the_secondary_table() -> None:
@@ -277,12 +474,21 @@ def test_attach_grouped_secondary_lateral_joins_the_secondary_table() -> None:
     )
 
     sql = _sql(_outer(parent, join, join.columns[function_node]), POSTGRES)
-    assert (
-        "JOIN LATERAL ( SELECT count(*) AS count_1 FROM department AS department_1 "
-        "JOIN user_department_join_table AS user_department_join_table_1 "
-        "ON department_1.id = user_department_join_table_1.department_id"
-    ) in sql
-    assert 'WHERE "user".id = user_department_join_table_1.user_id' in sql
+    assert sql == snapshot(
+        [
+            'SELECT "user".id,',
+            "       anon_1.count_1",
+            '  FROM "user" AS "user"',
+            "  JOIN LATERAL (",
+            "        SELECT count(*) AS count_1",
+            "          FROM department AS department_1",
+            "          JOIN user_department_join_table AS user_department_join_table_1",
+            "            ON department_1.id = user_department_join_table_1.department_id",
+            '         WHERE "user".id = user_department_join_table_1.user_id',
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_grouped_lateral_correlates_from_a_nested_select() -> None:
@@ -298,7 +504,23 @@ def test_attach_grouped_lateral_correlates_from_a_nested_select() -> None:
 
     sql = _sql(select(parent.id).where(body.exists().correlate(parent)), POSTGRES)
 
-    assert "SELECT count(*) AS count_1 FROM fruit AS fruit_2 WHERE color.id = fruit_2.color_id" in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id",
+            "  FROM color AS color",
+            " WHERE EXISTS (",
+            "        SELECT fruit_1.id",
+            "          FROM fruit AS fruit_1",
+            "          JOIN LATERAL (",
+            "                SELECT count(*) AS count_1",
+            "                  FROM fruit AS fruit_2",
+            "                 WHERE color.id = fruit_2.color_id",
+            "               ) AS anon_1",
+            "            ON TRUE",
+            "         WHERE color.id = fruit_1.color_id",
+            "       )",
+        ]
+    )
 
 
 def test_correlate_relation_secondary_keeps_target_left_of_later_joins() -> None:
@@ -313,8 +535,23 @@ def test_correlate_relation_secondary_keeps_target_left_of_later_joins() -> None
     )
 
     sql = _sql(select(parent.id).where(statement.exists().correlate(parent)), POSTGRES)
-    assert sql.count("FROM department AS department_1 JOIN user_department_join_table") == 1
-    assert 'WHERE "user".id = user_department_join_table_1.user_id' in sql
+    assert sql == snapshot(
+        [
+            'SELECT "user".id',
+            '  FROM "user" AS "user"',
+            " WHERE EXISTS (",
+            "        SELECT department_1.id",
+            "          FROM department AS department_1",
+            "          JOIN user_department_join_table AS user_department_join_table_1",
+            "            ON department_1.id = user_department_join_table_1.department_id",
+            "          JOIN user_department_join_table AS user_department_join_table_2",
+            "            ON department_1.id = user_department_join_table_2.department_id",
+            '          JOIN "user" AS user_1',
+            "            ON user_1.id = user_department_join_table_2.user_id",
+            '         WHERE "user".id = user_department_join_table_1.user_id',
+            "       )",
+        ]
+    )
 
 
 def test_attach_rows_lateral_nested_sort_keys_are_exposed() -> None:
@@ -340,9 +577,36 @@ def test_attach_rows_lateral_nested_sort_keys_are_exposed() -> None:
 
     assert join.alias is not None
     sql = _sql(_outer(parent, join, join.alias.name, order_by=order_by), POSTGRES)
-    assert "LEFT OUTER JOIN LATERAL (" in sql
-    assert "color_1.name AS name_1" in sql
-    assert sql.endswith("ORDER BY anon_1.name_1 ASC, anon_1.count_1 DESC, anon_1.sweetness ASC")
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       anon_1.name",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT fruit_1.name AS name,",
+            "               color_1.name AS name_1,",
+            "               anon_2.count_1 AS count_1,",
+            "               fruit_1.sweetness AS sweetness",
+            "          FROM fruit AS fruit_1",
+            "          LEFT OUTER JOIN color AS color_1",
+            "            ON color_1.id = fruit_1.color_id",
+            "          JOIN LATERAL (",
+            "                SELECT count(*) AS count_1",
+            "                  FROM fruit AS fruit_2",
+            "                 WHERE color_1.id = fruit_2.color_id",
+            "               ) AS anon_2",
+            "            ON TRUE",
+            "         WHERE color.id = fruit_1.color_id",
+            "         ORDER BY color_1.name ASC,",
+            "                  anon_2.count_1 DESC,",
+            "                  fruit_1.sweetness ASC",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY anon_1.name_1 ASC,",
+            "          anon_1.count_1 DESC,",
+            "          anon_1.sweetness ASC",
+        ]
+    )
 
 
 def test_attach_rows_secondary_relation_without_lateral_is_unsupported() -> None:
@@ -376,11 +640,33 @@ def test_attach_shared_rows_lateral_pages() -> None:
     assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (5, 5)]
     assert all(any(page.rank is column for column in join.target.c) for page in pages.values())
     sql = _sql(_outer(parent, join, join.alias.name, *(page.rank for page in pages.values())), POSTGRES)
-    assert "WHERE color.id = fruit_1.color_id" in sql
-    assert "row_number() OVER (ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1" in sql
-    assert "row_number() OVER (ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2" in sql
-    assert "WHERE anon_2.rank_1 <= 2 OR anon_2.rank_2 > 5 AND anon_2.rank_2 <= 10" in sql
-    assert sql.endswith(") AS anon_1 ON TRUE")
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       anon_1.name,",
+            "       anon_1.rank_1,",
+            "       anon_1.rank_2",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT anon_2.name AS name,",
+            "               anon_2.id AS id,",
+            "               anon_2.rank_1 AS rank_1,",
+            "               anon_2.rank_2 AS rank_2",
+            "          FROM (",
+            "                SELECT fruit_1.name AS name,",
+            "                       fruit_1.id AS id,",
+            "                       row_number() OVER (ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1,",
+            "                       row_number() OVER (ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_2",
+            "         WHERE anon_2.rank_1 <= 2",
+            "            OR anon_2.rank_2 > 5",
+            "           AND anon_2.rank_2 <= 10",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_shared_rows_unbounded_window_keeps_every_row() -> None:
@@ -397,8 +683,20 @@ def test_attach_shared_rows_unbounded_window_keeps_every_row() -> None:
     )
 
     sql = _sql(_outer(parent, join), POSTGRES)
-    assert sql.count("SELECT") == 2
-    assert "rank_1 <=" not in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT fruit_1.id AS id,",
+            "               row_number() OVER (ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1,",
+            "               row_number() OVER (ORDER BY fruit_1.id ASC) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )
 
 
 def test_attach_shared_rows_cte_pages() -> None:
@@ -422,17 +720,30 @@ def test_attach_shared_rows_cte_pages() -> None:
     assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (5, 5)]
     assert all(any(page.rank is column for column in cte.c) for page in pages.values())
     sql = _sql(_outer(parent, join, join.alias.name, *(page.rank for page in pages.values())), SQLITE)
-    assert sql.count("dense_rank()") == 2
-    assert (
-        "dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1"
-        in sql
-    )
-    assert (
-        "dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2"
-        in sql
-    )
-    assert sql.endswith(
-        "ON color.id = anon_1.color_id AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 5 AND anon_1.rank_2 <= 10)"
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id ASC) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.name,",
+            "                  fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "       ) SELECT color.id,",
+            "       anon_1.name,",
+            "       anon_1.rank_1,",
+            "       anon_1.rank_2",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            "   AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 5 AND anon_1.rank_2 <= 10)",
+        ]
     )
 
 
@@ -450,8 +761,25 @@ def test_attach_shared_rows_cte_unbounded_window_keeps_every_row() -> None:
     )
 
     sql = _sql(_outer(parent, join), SQLITE)
-    assert sql.count("dense_rank()") == 2
-    assert sql.endswith("ON color.id = anon_1.color_id")
+    assert sql == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "       ) SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+        ]
+    )
     assert [(page.offset, page.limit) for page in pages.values()] == [(None, 2), (None, None)]
 
 
@@ -466,8 +794,25 @@ def test_attach_shared_rows_cte_offset_without_limit() -> None:
 
     join, _ = attach_shared_rows(RowSet.over(target), windows, [target.id], Color.fruits, parent, SQLITE, is_outer=True)
 
-    assert _sql(_outer(parent, join), SQLITE).endswith(
-        "ON color.id = anon_1.color_id AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 3)"
+    assert _sql(_outer(parent, join), SQLITE) == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id ASC) AS rank_1,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "       ) SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            "   AND (anon_1.rank_1 <= 2 OR anon_1.rank_2 > 3)",
+        ]
     )
 
 
@@ -484,5 +829,16 @@ def test_attach_shared_rows_ranks_equal_nodes_once() -> None:
 
     assert list(pages) == [node]
     sql = _sql(_outer(parent, join), POSTGRES)
-    assert sql.count("row_number()") == 1
-    assert "row_number() OVER (ORDER BY fruit_1.id ASC) AS rank_1" in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT fruit_1.id AS id,",
+            "               row_number() OVER (ORDER BY fruit_1.id ASC) AS rank_1",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+        ]
+    )

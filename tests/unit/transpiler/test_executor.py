@@ -9,6 +9,7 @@ from unittest.mock import MagicMock
 from uuid import uuid4
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import Result, Select, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import MultipleResultsFound
@@ -23,6 +24,7 @@ from strawchemy.transpiler._core.rowset import AliasPage, Projection, RowSet
 from strawchemy.transpiler._executor import NodeResult, SyncQueryExecutor
 from strawchemy.transpiler._passes import DEFAULT_PIPELINES
 from tests.unit.models import Color, Fruit
+from tests.utils import format_sql
 
 if TYPE_CHECKING:
     from sqlalchemy.sql import ColumnElement
@@ -158,13 +160,29 @@ def test_executor_emits_plan_in_statement() -> None:
 
 
 @pytest.mark.parametrize("limit", [None, 2], ids=["plain", "paginated"])
-def test_executor_add_where_reads_the_root_alias(limit: int | None) -> None:
+def test_executor_add_where_reads_the_root_alias(limit: int | None, request: pytest.FixtureRequest) -> None:
     """add_where predicates on the unaliased model are moved onto the plan's root alias, adding no FROM."""
     executor = SyncQueryExecutor(plan=_plan(limit), id_field_definitions=[])
     planned_froms = len(executor.statement().get_final_froms())
     executor.add_where(Fruit.id == uuid4())
     statement = executor.statement()
-    assert "WHERE" in str(statement)
+    assert (
+        format_sql(str(statement)).splitlines()
+        == snapshot(
+            {
+                "plain": ["SELECT fruit.id", "  FROM fruit AS fruit", " WHERE fruit.id = :id_1"],
+                "paginated": [
+                    "SELECT fruit.id",
+                    "  FROM (",
+                    "        SELECT fruit.id AS id",
+                    "          FROM fruit AS fruit",
+                    "         LIMIT :param_1",
+                    "       ) AS fruit",
+                    " WHERE fruit.id = :id_1",
+                ],
+            }
+        )[request.node.callspec.id]
+    )
     assert len(statement.get_final_froms()) == planned_froms
 
 

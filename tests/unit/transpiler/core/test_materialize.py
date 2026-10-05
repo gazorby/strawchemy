@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-import re
 import typing
 from dataclasses import dataclass, replace
 from typing import Any, cast
 
+from inline_snapshot import snapshot
 from sqlalchemy import Lateral, Subquery, and_, inspect, or_, select
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
@@ -25,7 +25,7 @@ from strawchemy.transpiler._core.rowset import OrderPriority, Projection, RowSet
 from strawchemy.transpiler._executor import SyncQueryExecutor
 from strawchemy.transpiler.hook import QueryHook
 from tests.unit.models import Color, Group, SponsoredUser, Tag, User
-from tests.utils import as_dto
+from tests.utils import as_dto, format_sql
 
 if typing.TYPE_CHECKING:
     from sqlalchemy import ClauseElement, Select
@@ -205,19 +205,13 @@ def _root(model: type[DeclarativeBase], type_: type[Any], *fields: str) -> tuple
     return root, *(root.insert_child(type_.__dto_field_definitions__[name]) for name in fields)
 
 
-def _sql(statement: ClauseElement, dialect: Dialect | None = None) -> str:
-    return str(statement.compile(dialect=dialect or postgresql.dialect()))
+def _sql(statement: ClauseElement, dialect: Dialect | None = None) -> list[str]:
+    return format_sql(str(statement.compile(dialect=dialect or postgresql.dialect()))).splitlines()
 
 
-def _exists_sql(level: Level, dto_filter: BooleanFilterDTO, dialect: Dialect | None = None) -> str:
-    """Compiles the EXISTS of ``dto_filter`` in a SELECT of the level's alias, and returns the EXISTS alone."""
-    sql = _sql(select(level.alias).where(level.plan_exists(dto_filter)), dialect)
-    return sql[sql.index("EXISTS") :]
-
-
-def _table_reads(sql: str, table: str) -> int:
-    """Counts the FROM or JOIN entries reading ``table``."""
-    return len(re.findall(rf"(?<![\w.\"]){re.escape(table)} AS ", sql))
+def _exists_sql(level: Level, dto_filter: BooleanFilterDTO, dialect: Dialect | None = None) -> list[str]:
+    """Compiles the EXISTS of ``dto_filter`` in a SELECT of the level's alias."""
+    return _sql(select(level.alias).where(level.plan_exists(dto_filter)), dialect)
 
 
 def _page(plan: QueryPlan) -> Subquery:
@@ -238,10 +232,10 @@ def test_inline_keeps_single_from() -> None:
 
     plan = level.materialize(rows, Projection.over(root, level.alias).with_loaded(root, "name"))
 
-    sql = _sql(plan.emit())
     assert plan.rows is rows
-    assert _table_reads(sql, "color") == 1
-    assert "(SELECT" not in sql
+    assert _sql(plan.emit()) == snapshot(
+        ["SELECT color.name,", "       color.id", "  FROM color AS color", " WHERE color.name = %(name_1)s"]
+    )
 
 
 def test_wrap_exports_only_read_columns() -> None:
@@ -252,12 +246,21 @@ def test_wrap_exports_only_read_columns() -> None:
 
     plan = level.materialize(rows, Projection.over(root, level.alias).with_loaded(root, "name"))
 
-    page = _page(plan)
-    sql = _sql(plan.emit())
-    assert sorted(page.c.keys()) == ["id", "name"]
-    assert sql.startswith("SELECT color.name, color.id \nFROM (SELECT")
-    assert sql.endswith(") AS color ORDER BY color.name ASC")
-    assert _table_reads(sql, "color") == 1
+    assert sorted(_page(plan).c.keys()) == ["id", "name"]
+    assert _sql(plan.emit()) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id",
+            "  FROM (",
+            "        SELECT color.name AS name,",
+            "               color.id AS id",
+            "          FROM color AS color",
+            "         ORDER BY color.name ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS color",
+            " ORDER BY color.name ASC",
+        ]
+    )
 
 
 def test_wrap_reuses_row_stage_to_one_join() -> None:
@@ -271,10 +274,29 @@ def test_wrap_reuses_row_stage_to_one_join() -> None:
 
     plan = level.materialize(rows, projection)
 
-    sql = _sql(plan.emit())
     assert not plan.projection.joins
-    assert _table_reads(sql, "color") == 1
-    assert sql.index("JOIN color AS") < sql.index(') AS "group"')
+    assert _sql(plan.emit()) == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".id,',
+            '       "group".name_1,',
+            '       "group".id_1,',
+            '       "group".private',
+            "  FROM (",
+            '        SELECT "group".name AS name,',
+            '               "group".id AS id,',
+            "               color_1.name AS name_1,",
+            "               color_1.id AS id_1,",
+            "               color_1.private AS PRIVATE",
+            '          FROM "group" AS "group"',
+            "          LEFT OUTER JOIN color AS color_1",
+            '            ON color_1.id = "group".color_id',
+            "         ORDER BY color_1.name ASC",
+            "         LIMIT %(param_1)s",
+            '       ) AS "group"',
+            ' ORDER BY "group".name_1 ASC',
+        ]
+    )
     assert inspect(plan.relation_entities[color]).selectable is _page(plan)
 
 
@@ -292,11 +314,33 @@ def test_wrap_exports_row_stage_aggregate() -> None:
 
     plan = level.materialize(rows, projection.with_computed(count.node, count_column))
 
-    page = _page(plan)
-    sql = _sql(plan.emit())
-    assert sql.count("LATERAL") == 1
-    assert sql.index("LATERAL") < sql.index(") AS color")
-    assert plan.column_map[count.node].table is page
+    assert _sql(plan.emit()) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       color.count_1",
+            "  FROM (",
+            "        SELECT color.name AS name,",
+            "               color.id AS id,",
+            "               color.private AS PRIVATE,",
+            "               anon_1.count_1 AS count_1,",
+            "               anon_1.sum_1 AS sum_1",
+            "          FROM color AS color",
+            "          JOIN LATERAL (",
+            "                SELECT count(*) AS count_1,",
+            "                       sum(fruit_1.sweetness) AS sum_1",
+            "                  FROM fruit AS fruit_1",
+            "                 WHERE color.id = fruit_1.color_id",
+            "               ) AS anon_1",
+            "            ON TRUE",
+            "         ORDER BY anon_1.sum_1 ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS color",
+            " ORDER BY color.sum_1 ASC",
+        ]
+    )
+    assert plan.column_map[count.node].table is _page(plan)
     assert plan.column_map[count.node] in plan.projection.columns
 
 
@@ -317,7 +361,29 @@ def test_wrap_recorrelates_projection_lateral() -> None:
     tables = {element.table for element in visitors.iterate(lateral) if isinstance(element, ColumnClause)}
     assert _page(plan) in tables
     assert plan.column_map[count.node].table is lateral
-    assert _table_reads(_sql(plan.emit()), "color") == 1
+    assert _sql(plan.emit()) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       anon_1.count_1",
+            "  FROM (",
+            "        SELECT color.name AS name,",
+            "               color.id AS id,",
+            "               color.private AS PRIVATE",
+            "          FROM color AS color",
+            "         ORDER BY color.name ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS color",
+            "  JOIN LATERAL (",
+            "        SELECT count(*) AS count_1",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY color.name ASC",
+        ]
+    )
 
 
 def test_wrap_composite_primary_key() -> None:
@@ -346,9 +412,30 @@ def test_wrap_self_referential_to_one() -> None:
     for alias, entity in ((level.alias, plan.rows.source), (sponsor_alias, plan.relation_entities[sponsor])):
         expected = adapter.traverse(clause_element(alias.name))  # ty: ignore[unresolved-attribute]
         assert expected in clause_element(entity.name).proxy_set
-    sql = _sql(plan.emit())
-    assert _table_reads(sql, "sponsored_user") == 2
-    assert sql.count("(SELECT") == 1
+    assert _sql(plan.emit()) == snapshot(
+        [
+            "SELECT sponsored_user.name,",
+            "       sponsored_user.id,",
+            "       sponsored_user.name_1,",
+            "       sponsored_user.sponsor_id,",
+            "       sponsored_user.id_1,",
+            "       sponsored_user.private",
+            "  FROM (",
+            "        SELECT sponsored_user.name AS name,",
+            "               sponsored_user.id AS id,",
+            "               sponsored_user_1.name AS name_1,",
+            "               sponsored_user_1.sponsor_id AS sponsor_id,",
+            "               sponsored_user_1.id AS id_1,",
+            "               sponsored_user_1.private AS PRIVATE",
+            "          FROM sponsored_user AS sponsored_user",
+            "          LEFT OUTER JOIN sponsored_user AS sponsored_user_1",
+            "            ON sponsored_user.id = sponsored_user_1.sponsor_id",
+            "         ORDER BY sponsored_user_1.name ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS sponsored_user",
+            " ORDER BY sponsored_user.name_1 ASC",
+        ]
+    )
 
 
 def test_wrap_self_referential_add_where_reads_the_root_columns() -> None:
@@ -387,9 +474,25 @@ def test_plan_child_hooked_relation_gets_own_join() -> None:
     join = projection.joins["relation", color]
     assert join.alias is not None
     assert join.alias is not rows.joins["relation", color].alias
-    sql = _sql(level.materialize(rows, projection).emit())
-    assert _table_reads(sql, "color") == 2
-    assert re.search(r"LEFT OUTER JOIN color AS (color_\d) ON \1\.id = \"group\"\.color_id AND \1\.name != ", sql)
+    assert _sql(level.materialize(rows, projection).emit()) == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".tag_id,',
+            '       "group".color_id,',
+            '       "group".id,',
+            '       "group".private,',
+            "       color_1.name AS name_1,",
+            "       color_1.id AS id_1,",
+            "       color_1.private AS private_1",
+            '  FROM "group" AS "group"',
+            "  LEFT OUTER JOIN color AS color_2",
+            '    ON color_2.id = "group".color_id',
+            "  LEFT OUTER JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            "   AND color_1.name != %(name_2)s",
+            " WHERE color_2.name = %(name_3)s",
+        ]
+    )
 
 
 def test_plan_child_attaches_paginated_relation_with_its_order_by() -> None:
@@ -413,11 +516,20 @@ def test_plan_exists_has_no_root_copy() -> None:
     dto_filter = _ColorFilter(fruits=_FRUIT_FILTER(sweetness=_SWEETNESS_COMPARISON(gt=5)))  # ty: ignore[unknown-argument]  # input fields are generated at runtime
     level = Level.root(_request(Color, None, dto_filter), _context(Color))
 
-    sql = _exists_sql(level, dto_filter)
-
-    assert sql.startswith("EXISTS (SELECT 1 \nFROM fruit AS fruit_1 \nWHERE color.id = fruit_1.color_id AND ")
-    assert "fruit_1.sweetness > " in sql
-    assert _table_reads(sql, "color") == 0
+    assert _exists_sql(level, dto_filter) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private",
+            "  FROM color AS color",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM fruit AS fruit_1",
+            "         WHERE color.id = fruit_1.color_id",
+            "           AND fruit_1.sweetness > %(sweetness_1)s",
+            "       )",
+        ]
+    )
 
 
 def test_plan_exists_under_or_splits_at_the_relation() -> None:
@@ -430,12 +542,16 @@ def test_plan_exists_under_or_splits_at_the_relation() -> None:
     )
     level = Level.root(_request(Color, None, dto_filter), _context(Color))
 
-    sql = _exists_sql(level, dto_filter)
-
-    assert sql.startswith("EXISTS (SELECT 1 \nFROM fruit AS fruit_1 \nWHERE color.id = fruit_1.color_id AND ")
-    assert sql.endswith(") OR color.name = %(name_1)s")
-    assert _table_reads(sql, "color") == 0
-    assert "OUTER JOIN" not in sql
+    assert _exists_sql(level, dto_filter) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private",
+            "  FROM color AS color",
+            " WHERE (EXISTS (SELECT 1 FROM fruit AS fruit_1 WHERE color.id = fruit_1.color_id AND fruit_1.sweetness > %(sweetness_1)s))",
+            "    OR color.name = %(name_1)s",
+        ]
+    )
 
 
 def test_plan_exists_dml_derived_table_matches_every_primary_key() -> None:
@@ -443,10 +559,25 @@ def test_plan_exists_dml_derived_table_matches_every_primary_key() -> None:
     dto_filter = _PairFilter(name=TextComparison(eq="x"))  # ty: ignore[unknown-argument]  # input fields are generated at runtime
     level = Level.dml(_request(_Pair, None, dto_filter), _context(_Pair, mysql.dialect()))
 
-    sql = _exists_sql(level, dto_filter, mysql.dialect())
-
-    assert "FROM (SELECT pair_1.left_id AS left_id, pair_1.right_id AS right_id \nFROM pair AS pair_1" in sql
-    assert sql.endswith("dml_matched.left_id = pair.left_id AND dml_matched.right_id = pair.right_id)")
+    assert _exists_sql(level, dto_filter, mysql.dialect()) == snapshot(
+        [
+            "SELECT pair.left_id,",
+            "       pair.right_id,",
+            "       pair.name",
+            "  FROM pair",
+            " WHERE EXISTS (",
+            "        SELECT 1",
+            "          FROM (",
+            "                SELECT pair_1.left_id AS left_id,",
+            "                       pair_1.right_id AS right_id",
+            "                  FROM pair AS pair_1",
+            "                 WHERE pair_1.name = %s",
+            "               ) AS dml_matched",
+            "         WHERE dml_matched.left_id = pair.left_id",
+            "           AND dml_matched.right_id = pair.right_id",
+            "       )",
+        ]
+    )
 
 
 class _Relations(PassBase):
@@ -471,9 +602,32 @@ def test_wrap_rebuilds_relation_join_on_the_page() -> None:
 
     onclause = plan.projection.joins["relation", color].onclause
     assert inspect(onclause.parent.entity).selectable is _page(plan)  # ty: ignore[unresolved-attribute]
-    sql = _sql(plan.emit())
-    assert _table_reads(sql, '"group"') == 1
-    assert re.search(r"LEFT OUTER JOIN color AS (color_\d) ON \1\.id = \"group\"\.color_id AND \1\.name != ", sql)
+    assert _sql(plan.emit()) == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".tag_id,',
+            '       "group".color_id,',
+            '       "group".id,',
+            '       "group".private,',
+            "       color_1.name AS name_1,",
+            "       color_1.id AS id_1,",
+            "       color_1.private AS private_1",
+            "  FROM (",
+            '        SELECT "group".name AS name,',
+            '               "group".tag_id AS tag_id,',
+            '               "group".color_id AS color_id,',
+            '               "group".id AS id,',
+            '               "group".private AS PRIVATE',
+            '          FROM "group" AS "group"',
+            '         ORDER BY "group".name ASC',
+            "         LIMIT %(param_1)s",
+            '       ) AS "group"',
+            "  LEFT OUTER JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            "   AND color_1.name != %(name_2)s",
+            ' ORDER BY "group".name ASC',
+        ]
+    )
 
 
 def test_plan_child_reuses_nested_row_stage_join() -> None:
@@ -504,9 +658,47 @@ def test_wrap_joins_cte_relation_on_the_page() -> None:
     assert onclause is not None
     tables = {element.table for element in visitors.iterate(onclause) if isinstance(element, ColumnClause)}
     assert _page(plan) in tables
-    sql = _sql(plan.emit(), sqlite.dialect())
-    assert sql.startswith("WITH ")
-    assert _table_reads(sql, "color") == 1
+    assert _sql(plan.emit(), sqlite.dialect()) == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.name AS name,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               fruit_1.id AS id,",
+            "               fruit_1.private AS PRIVATE,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.name ASC, fruit_1.id) AS rank",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.name,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness,",
+            "                  fruit_1.id,",
+            "                  fruit_1.private",
+            "         ORDER BY fruit_1.name ASC",
+            "       ) SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       anon_1.name AS name_1,",
+            "       anon_1.color_id,",
+            "       anon_1.sweetness,",
+            "       anon_1.id AS id_1,",
+            "       anon_1.private AS private_1",
+            "  FROM (",
+            "        SELECT color.name AS name,",
+            "               color.id AS id,",
+            "               color.private AS PRIVATE",
+            "          FROM color AS color",
+            "         ORDER BY color.name ASC",
+            "         LIMIT ?",
+            "        OFFSET ?",
+            "       ) AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON color.id = anon_1.color_id",
+            "   AND anon_1.rank <= ?",
+            " ORDER BY color.name ASC,",
+            "          anon_1.name ASC",
+        ]
+    )
 
 
 def test_relation_wrap_self_referential_exports_both_aliases() -> None:
@@ -525,8 +717,41 @@ def test_relation_wrap_self_referential_exports_both_aliases() -> None:
     assert isinstance(lateral, Lateral)
     assert len([column for column in lateral.c if column.key.startswith("name")]) == 2
     assert inspect(projection.entities[sponsor]).selectable is lateral
-    sql = _sql(level.materialize(RowSet.over(level.alias), projection).emit())
-    assert _table_reads(sql, "sponsored_user") == 3
+    assert _sql(level.materialize(RowSet.over(level.alias), projection).emit()) == snapshot(
+        [
+            "SELECT sponsored_user.name,",
+            "       sponsored_user.sponsor_id,",
+            "       sponsored_user.id,",
+            "       sponsored_user.private,",
+            "       anon_1.name AS name_1,",
+            "       anon_1.sponsor_id AS sponsor_id_1,",
+            "       anon_1.id AS id_1,",
+            "       anon_1.private AS private_1,",
+            "       anon_1.name_2,",
+            "       anon_1.sponsor_id_2,",
+            "       anon_1.id_2,",
+            "       anon_1.private_2",
+            "  FROM sponsored_user AS sponsored_user",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT sponsored_user_1.name AS name,",
+            "               sponsored_user_1.sponsor_id AS sponsor_id,",
+            "               sponsored_user_1.id AS id,",
+            "               sponsored_user_1.private AS PRIVATE,",
+            "               sponsored_user_2.name AS name_2,",
+            "               sponsored_user_2.sponsor_id AS sponsor_id_2,",
+            "               sponsored_user_2.id AS id_2,",
+            "               sponsored_user_2.private AS private_2",
+            "          FROM sponsored_user AS sponsored_user_1",
+            "          LEFT OUTER JOIN sponsored_user AS sponsored_user_2",
+            "            ON sponsored_user_1.id = sponsored_user_2.sponsor_id",
+            "         WHERE sponsored_user_1.id = sponsored_user.sponsor_id",
+            "         ORDER BY sponsored_user_2.name ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            " ORDER BY anon_1.name_2 ASC",
+        ]
+    )
 
 
 def test_wrap_self_referential_two_levels_deep() -> None:
@@ -551,9 +776,42 @@ def test_wrap_self_referential_two_levels_deep() -> None:
     for alias, entity in pairs:
         expected = adapter.traverse(clause_element(alias.name))  # ty: ignore[unresolved-attribute]
         assert expected in clause_element(entity.name).proxy_set
-    sql = _sql(plan.emit())
-    assert _table_reads(sql, "sponsored_user") == 3
-    assert sql.count("(SELECT") == 1
+    assert _sql(plan.emit()) == snapshot(
+        [
+            "SELECT sponsored_user.name,",
+            "       sponsored_user.id,",
+            "       sponsored_user.name_1,",
+            "       sponsored_user.sponsor_id,",
+            "       sponsored_user.id_1,",
+            "       sponsored_user.private,",
+            "       sponsored_user.name_2,",
+            "       sponsored_user.sponsor_id_1,",
+            "       sponsored_user.id_2,",
+            "       sponsored_user.private_1",
+            "  FROM (",
+            "        SELECT sponsored_user.name AS name,",
+            "               sponsored_user.id AS id,",
+            "               sponsored_user_1.name AS name_1,",
+            "               sponsored_user_1.sponsor_id AS sponsor_id,",
+            "               sponsored_user_1.id AS id_1,",
+            "               sponsored_user_1.private AS PRIVATE,",
+            "               sponsored_user_2.name AS name_2,",
+            "               sponsored_user_2.sponsor_id AS sponsor_id_1,",
+            "               sponsored_user_2.id AS id_2,",
+            "               sponsored_user_2.private AS private_1",
+            "          FROM sponsored_user AS sponsored_user",
+            "          LEFT OUTER JOIN sponsored_user AS sponsored_user_1",
+            "            ON sponsored_user.id = sponsored_user_1.sponsor_id",
+            "          LEFT OUTER JOIN sponsored_user AS sponsored_user_2",
+            "            ON sponsored_user_1.id = sponsored_user_2.sponsor_id",
+            "         ORDER BY sponsored_user_1.name ASC,",
+            "                  sponsored_user_2.name ASC",
+            "         LIMIT %(param_1)s",
+            "       ) AS sponsored_user",
+            " ORDER BY sponsored_user.name_1 ASC,",
+            "          sponsored_user.name_2 ASC",
+        ]
+    )
 
 
 def test_wrap_rebuilds_entities_over_recorrelated_lateral() -> None:
@@ -572,7 +830,52 @@ def test_wrap_rebuilds_entities_over_recorrelated_lateral() -> None:
     assert lateral is not projection.joins["relation", users].target
     assert inspect(plan.relation_entities[users]).selectable is lateral
     assert inspect(plan.relation_entities[tag]).selectable is lateral
-    assert _table_reads(_sql(plan.emit()), '"group"') == 1
+    assert _sql(plan.emit()) == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".tag_id,',
+            '       "group".color_id,',
+            '       "group".id,',
+            '       "group".private,',
+            "       anon_1.name AS name_1,",
+            "       anon_1.group_id,",
+            "       anon_1.tag_id AS tag_id_1,",
+            "       anon_1.id AS id_1,",
+            "       anon_1.private AS private_1,",
+            "       anon_1.name_2,",
+            "       anon_1.id_2,",
+            "       anon_1.private_2",
+            "  FROM (",
+            '        SELECT "group".name AS name,',
+            '               "group".tag_id AS tag_id,',
+            '               "group".color_id AS color_id,',
+            '               "group".id AS id,',
+            '               "group".private AS PRIVATE',
+            '          FROM "group" AS "group"',
+            '         ORDER BY "group".name ASC',
+            "         LIMIT %(param_1)s",
+            '       ) AS "group"',
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT user_1.name AS name,",
+            "               user_1.group_id AS group_id,",
+            "               user_1.tag_id AS tag_id,",
+            "               user_1.id AS id,",
+            "               user_1.private AS PRIVATE,",
+            "               tag_1.name AS name_2,",
+            "               tag_1.id AS id_2,",
+            "               tag_1.private AS private_2",
+            '          FROM "user" AS user_1',
+            "          LEFT OUTER JOIN tag AS tag_1",
+            "            ON tag_1.id = user_1.tag_id",
+            '         WHERE "group".id = user_1.group_id',
+            "         ORDER BY tag_1.name ASC",
+            "         LIMIT %(param_2)s",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            ' ORDER BY "group".name ASC,',
+            "          anon_1.name_2 ASC",
+        ]
+    )
 
 
 def test_wrap_hooked_to_one_filtered_and_selected() -> None:
@@ -585,14 +888,35 @@ def test_wrap_hooked_to_one_filtered_and_selected() -> None:
     rows = _paginated(rows.with_where(color_name_column == "red"), clause_element(level.alias.name).asc())
     projection = level.plan_child(color, rows, Projection.over(root, level.alias))
 
-    sql = _sql(level.materialize(rows, projection).emit())
-
-    page_end = sql.index(') AS "group"')
-    assert _table_reads(sql, "color") == 2
-    assert sql.index("JOIN color AS") < page_end
-    hooked = re.search(r"LEFT OUTER JOIN color AS (color_\d) ON \1\.id = \"group\"\.color_id AND \1\.name != ", sql)
-    assert hooked is not None
-    assert hooked.start() > page_end
+    assert _sql(level.materialize(rows, projection).emit()) == snapshot(
+        [
+            'SELECT "group".name,',
+            '       "group".tag_id,',
+            '       "group".color_id,',
+            '       "group".id,',
+            '       "group".private,',
+            "       color_1.name AS name_1,",
+            "       color_1.id AS id_1,",
+            "       color_1.private AS private_1",
+            "  FROM (",
+            '        SELECT "group".name AS name,',
+            '               "group".tag_id AS tag_id,',
+            '               "group".color_id AS color_id,',
+            '               "group".id AS id,',
+            '               "group".private AS PRIVATE',
+            '          FROM "group" AS "group"',
+            "          LEFT OUTER JOIN color AS color_2",
+            '            ON color_2.id = "group".color_id',
+            "         WHERE color_2.name = %(name_2)s",
+            '         ORDER BY "group".name ASC',
+            "         LIMIT %(param_1)s",
+            '       ) AS "group"',
+            "  LEFT OUTER JOIN color AS color_1",
+            '    ON color_1.id = "group".color_id',
+            "   AND color_1.name != %(name_3)s",
+            ' ORDER BY "group".name ASC',
+        ]
+    )
 
 
 def test_plan_exists_or_across_relations_is_one_exists_per_relation() -> None:
@@ -605,12 +929,18 @@ def test_plan_exists_or_across_relations_is_one_exists_per_relation() -> None:
     )
     level = Level.root(_request(User, None, dto_filter), _context(User))
 
-    sql = _exists_sql(level, dto_filter)
-
-    assert sql.count("EXISTS (SELECT 1") == 2
-    assert ') OR (EXISTS (SELECT 1 \nFROM "group" AS group_1' in sql
-    assert _table_reads(sql, '"user"') == 0
-    assert "OUTER JOIN" not in sql
+    assert _exists_sql(level, dto_filter) == snapshot(
+        [
+            'SELECT "user".name,',
+            '       "user".group_id,',
+            '       "user".tag_id,',
+            '       "user".id,',
+            '       "user".private',
+            '  FROM "user" AS "user"',
+            ' WHERE (EXISTS (SELECT 1 FROM department AS department_1 JOIN user_department_join_table AS user_department_join_table_1 ON department_1.id = user_department_join_table_1.department_id WHERE "user".id = user_department_join_table_1.user_id AND department_1.name = %(name_1)s))',
+            '    OR (EXISTS (SELECT 1 FROM "group" AS group_1 WHERE group_1.id = "user".group_id AND group_1.name = %(name_2)s))',
+        ]
+    )
 
 
 def test_plan_exists_without_relation_is_the_predicate() -> None:
@@ -618,4 +948,4 @@ def test_plan_exists_without_relation_is_the_predicate() -> None:
     dto_filter = _ColorFilter(name=TextComparison(eq="red"))  # ty: ignore[unknown-argument]  # input fields are generated at runtime
     level = Level.root(_request(Color, None, dto_filter), _context(Color))
 
-    assert _sql(level.plan_exists(dto_filter)) == "color.name = %(name_1)s"
+    assert _sql(level.plan_exists(dto_filter)) == snapshot(["color.name = %(name_1)s"])

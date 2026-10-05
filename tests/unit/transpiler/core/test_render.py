@@ -7,6 +7,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import func, select, true
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import Load, aliased, load_only
@@ -36,9 +37,9 @@ _DIALECTS: dict[str, Dialect] = {
 }
 
 
-def _sql(statement: Select[Any], features: DatabaseFeatures) -> str:
+def _sql(statement: Select[Any], features: DatabaseFeatures) -> list[str]:
     compiled = statement.compile(dialect=_DIALECTS[features.dialect], compile_kwargs={"literal_binds": True})
-    return " ".join(format_sql(str(compiled)).split())
+    return format_sql(str(compiled)).splitlines()
 
 
 class _Node:
@@ -63,8 +64,24 @@ def test_order_terms_nulls_native_and_emulated() -> None:
     native_sql = _sql(select(Color).order_by(*native), POSTGRES)
     emulated_sql = _sql(select(Color).order_by(*emulated), SQLITE)
 
-    assert "color.name ASC NULLS FIRST" in native_sql
-    assert "color.name IS NULL DESC, color.name ASC" in emulated_sql
+    assert native_sql == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private",
+            "  FROM color",
+            " ORDER BY color.name ASC NULLS FIRST",
+        ]
+    )
+    assert emulated_sql == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private",
+            "  FROM color",
+            " ORDER BY color.name IS NULL DESC, color.name ASC",
+        ]
+    )
 
 
 def test_render_rows_orders_by_priority() -> None:
@@ -78,7 +95,15 @@ def test_render_rows_orders_by_priority() -> None:
 
     sql = _sql(render_rows(rows, [alias.id, alias.name], POSTGRES).statement, POSTGRES)
 
-    assert "ORDER BY color.id ASC, color.name ASC" in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       color.name",
+            "  FROM color AS color",
+            " ORDER BY color.id ASC,",
+            "          color.name ASC",
+        ]
+    )
 
 
 def test_render_rows_distinct_native_when_order_prefix() -> None:
@@ -88,8 +113,15 @@ def test_render_rows_distinct_native_when_order_prefix() -> None:
 
     sql = _sql(render_rows(rows, [alias.id, alias.name], POSTGRES).statement, POSTGRES)
 
-    assert "DISTINCT ON (color.name)" in sql
-    assert "row_number" not in sql
+    assert sql == snapshot(
+        [
+            "SELECT DISTINCT",
+            "    ON (color.name) color.id,",
+            "       color.name",
+            "  FROM color AS color",
+            " ORDER BY color.name ASC",
+        ]
+    )
 
 
 def test_render_rows_distinct_emulated_otherwise() -> None:
@@ -102,10 +134,34 @@ def test_render_rows_distinct_emulated_otherwise() -> None:
     sqlite_sql = _sql(render_rows(by_name, [alias.id, alias.name], SQLITE).statement, SQLITE)
     postgres_sql = _sql(render_rows(by_id, [alias.id, alias.name], POSTGRES).statement, POSTGRES)
 
-    for sql in (sqlite_sql, postgres_sql):
-        assert "row_number() OVER (PARTITION BY" in sql
-        assert "= 1" in sql
-        assert "DISTINCT ON" not in sql
+    assert sqlite_sql == snapshot(
+        [
+            "SELECT anon_1.id,",
+            "       anon_1.name",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               color.name AS name,",
+            "               row_number() OVER (PARTITION BY color.name ORDER BY color.name ASC) AS anon_2",
+            "          FROM color AS color",
+            "       ) AS anon_1",
+            " WHERE anon_1.anon_2 = 1",
+            " ORDER BY anon_1.name ASC",
+        ]
+    )
+    assert postgres_sql == snapshot(
+        [
+            "SELECT anon_1.id,",
+            "       anon_1.name",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               color.name AS name,",
+            "               row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC) AS anon_2",
+            "          FROM color AS color",
+            "       ) AS anon_1",
+            " WHERE anon_1.anon_2 = 1",
+            " ORDER BY anon_1.id ASC",
+        ]
+    )
 
 
 def test_render_rows_hook_order_before_client_breaks_native_distinct() -> None:
@@ -120,7 +176,21 @@ def test_render_rows_hook_order_before_client_breaks_native_distinct() -> None:
 
     sql = _sql(render_rows(rows, [alias.id, alias.name], POSTGRES).statement, POSTGRES)
 
-    assert "row_number()" in sql
+    assert sql == snapshot(
+        [
+            "SELECT anon_1.id,",
+            "       anon_1.name",
+            "  FROM (",
+            "        SELECT color.id AS id,",
+            "               color.name AS name,",
+            "               row_number() OVER (PARTITION BY color.name ORDER BY color.id ASC, color.name ASC) AS anon_2",
+            "          FROM color AS color",
+            "       ) AS anon_1",
+            " WHERE anon_1.anon_2 = 1",
+            " ORDER BY anon_1.id ASC,",
+            "          anon_1.name ASC",
+        ]
+    )
 
 
 def test_render_rows_edit_order_by_first() -> None:
@@ -134,7 +204,15 @@ def test_render_rows_edit_order_by_first() -> None:
 
     sql = _sql(render_rows(rows, [alias.id, alias.name], POSTGRES).statement, POSTGRES)
 
-    assert "ORDER BY color.id ASC, color.name ASC" in sql
+    assert sql == snapshot(
+        [
+            "SELECT color.id,",
+            "       color.name",
+            "  FROM color AS color",
+            " ORDER BY color.id ASC,",
+            "          color.name ASC",
+        ]
+    )
 
 
 def test_render_rows_edit_order_by_selected_for_distinct() -> None:
@@ -144,8 +222,15 @@ def test_render_rows_edit_order_by_selected_for_distinct() -> None:
 
     sql = _sql(render_rows(rows, [alias.name], POSTGRES).statement, POSTGRES)
 
-    assert "DISTINCT ON (color.id)" in sql
-    assert sql.index("color.id") < sql.index("FROM")
+    assert sql == snapshot(
+        [
+            "SELECT DISTINCT",
+            "    ON (color.id) color.name,",
+            "       color.id",
+            "  FROM color AS color",
+            " ORDER BY color.id ASC",
+        ]
+    )
 
 
 def test_render_rows_order_of_clauses() -> None:
@@ -169,9 +254,20 @@ def test_render_rows_order_of_clauses() -> None:
 
     sql = _sql(render_rows(rows, [fruit.id], POSTGRES).statement, POSTGRES)
 
-    assert sql.index("color AS shallow") < sql.index("color AS deep")
-    assert sql.index("fruit.name != 'x'") < sql.index("fruit.name = 'apple'")
-    assert "LIMIT 3 OFFSET 1" in sql
+    assert sql == snapshot(
+        [
+            "SELECT fruit.id",
+            "  FROM fruit AS fruit",
+            "  LEFT OUTER JOIN color AS shallow",
+            "    ON fruit.color_id = shallow.id",
+            "  LEFT OUTER JOIN color AS deep",
+            "    ON fruit.color_id = deep.id",
+            " WHERE fruit.name != 'x'",
+            "   AND fruit.name = 'apple'",
+            " LIMIT 3",
+            "OFFSET 1",
+        ]
+    )
 
 
 def test_render_plan_selects_entities_columns_and_options() -> None:
@@ -190,9 +286,16 @@ def test_render_plan_selects_entities_columns_and_options() -> None:
 
     statement = render_plan(plan)
 
-    sql = _sql(statement, POSTGRES)
-    assert sql.index("color.name") < sql.index("total")
-    assert "WHERE color.name = 'red'" in sql
+    assert _sql(statement, POSTGRES) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.name AS name__1,",
+            "       count(color.id) OVER () AS total",
+            "  FROM color AS color",
+            " WHERE color.name = 'red'",
+        ]
+    )
     assert len(statement._with_options) == 2  # noqa: SLF001
 
 
@@ -210,9 +313,21 @@ def test_render_plan_selects_a_shared_entity_once() -> None:
 
     statement = render_plan(plan)
 
-    selected = _sql(statement, POSTGRES).split(" FROM ")[0]
-    assert selected.count("fruit.id") == 1
-    assert "fruit_rank" in selected
+    assert _sql(statement, POSTGRES) == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       fruit.name AS name_1,",
+            "       fruit.color_id,",
+            "       fruit.sweetness,",
+            "       fruit.id AS id_1,",
+            "       fruit.private AS private_1,",
+            "       row_number() OVER (ORDER BY fruit.name) AS fruit_rank",
+            "  FROM color AS color,",
+            "       fruit AS fruit",
+        ]
+    )
 
 
 def test_render_plan_selects_each_rank_object() -> None:
@@ -285,7 +400,18 @@ def test_render_plan_keeps_projection_order_by_in_insertion_order() -> None:
 
     sql = _sql(render_plan(plan), POSTGRES)
 
-    assert sql.endswith("ORDER BY color.name DESC, color.id ASC, color.id DESC, color.name ASC")
+    assert sql == snapshot(
+        [
+            "SELECT color.name,",
+            "       color.id,",
+            "       color.private",
+            "  FROM color AS color",
+            " ORDER BY color.name DESC,",
+            "          color.id ASC,",
+            "          color.id DESC,",
+            "          color.name ASC",
+        ]
+    )
 
 
 def test_render_plan_renders_aggregate_join_as_plain_join() -> None:
@@ -302,9 +428,22 @@ def test_render_plan_renders_aggregate_join_as_plain_join() -> None:
 
     statement = render_plan(plan)
 
-    sql = _sql(statement, POSTGRES)
-    assert "LEFT OUTER JOIN LATERAL" in sql
-    assert "agg.n" in sql.split("FROM")[0]
+    assert _sql(statement, POSTGRES) == snapshot(
+        [
+            "SELECT fruit.name,",
+            "       fruit.color_id,",
+            "       fruit.sweetness,",
+            "       fruit.id,",
+            "       fruit.private,",
+            "       agg.n",
+            "  FROM fruit AS fruit",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT count(color.id) AS n",
+            "          FROM color",
+            "       ) AS agg",
+            "    ON TRUE",
+        ]
+    )
     assert any(column is lateral.c.n for column in statement.selected_columns)
 
 
@@ -319,8 +458,9 @@ def test_render_rows_returns_final_order_by() -> None:
 
     result = render_rows(rows, [alias.id], POSTGRES)
 
-    compiled = [_sql(select(alias).order_by(term), POSTGRES).split("ORDER BY ")[1] for term in result.order_by]
-    assert compiled == ["color.id ASC", "color.name ASC"]
+    assert [str(term.compile(dialect=_DIALECTS["postgresql"])) for term in result.order_by] == snapshot(
+        ["color.id ASC", "color.name ASC"]
+    )
     assert len(result.statement.selected_columns) == 2
 
 
@@ -331,7 +471,20 @@ def test_render_rows_partition_by() -> None:
 
     sql = _sql(render_rows(rows, [fruit.id], SQLITE, partition_by=[fruit.color_id]).statement, SQLITE)
 
-    assert "row_number() OVER (PARTITION BY fruit.color_id, fruit.name" in sql
+    assert sql == snapshot(
+        [
+            "SELECT anon_1.id,",
+            "       anon_1.name",
+            "  FROM (",
+            "        SELECT fruit.id AS id,",
+            "               fruit.name AS name,",
+            "               row_number() OVER (PARTITION BY fruit.color_id, fruit.name ORDER BY fruit.name ASC) AS anon_2",
+            "          FROM fruit AS fruit",
+            "       ) AS anon_1",
+            " WHERE anon_1.anon_2 = 1",
+            " ORDER BY anon_1.name ASC",
+        ]
+    )
 
 
 def test_render_plan_rejects_unwrapped_distinct_on() -> None:

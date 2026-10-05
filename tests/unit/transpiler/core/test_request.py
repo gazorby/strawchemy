@@ -6,6 +6,7 @@ import typing
 from typing import Any, cast
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import aliased
 
@@ -187,7 +188,7 @@ def test_build_count_without_arguments() -> None:
     windowed = build(function, alias, "postgresql", over=True)
 
     assert str(plain.element.compile(dialect=postgresql.dialect())) == "count(*)"
-    assert "OVER ()" in str(windowed.element.compile(dialect=postgresql.dialect()))
+    assert str(windowed.element.compile(dialect=postgresql.dialect())) == snapshot("count(*) OVER ()")
 
 
 def test_build_distinct_argument_function() -> None:
@@ -198,7 +199,7 @@ def test_build_distinct_argument_function() -> None:
 
     label = build(function, aliased(Fruit.__mapper__), "postgresql")
 
-    assert "count(DISTINCT" in str(label.element.compile(dialect=postgresql.dialect()))
+    assert str(label.element.compile(dialect=postgresql.dialect())) == snapshot("count(DISTINCT fruit_1.sweetness)")
 
 
 def _count_filter() -> object:

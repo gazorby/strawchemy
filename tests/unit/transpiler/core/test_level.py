@@ -7,6 +7,7 @@ from dataclasses import replace
 from functools import partial
 from typing import Any, cast
 
+from inline_snapshot import snapshot
 from sqlalchemy import inspect
 from sqlalchemy.dialects import postgresql, sqlite
 from sqlalchemy.orm import aliased
@@ -147,9 +148,9 @@ def test_column_extracts_the_json_path() -> None:
     dict_col.metadata.data.json_path = "$.key"
     level = _level(SQLDataTypes, root)
 
-    sql = str(level.column(dict_col).compile(dialect=postgresql.dialect()))
-
-    assert "coalesce(jsonb_path_query_first(" in sql
+    assert str(level.column(dict_col).compile(dialect=postgresql.dialect())) == snapshot(
+        "coalesce(jsonb_path_query_first(sql_data_types.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB))"
+    )
 
 
 def test_path_column_joins_each_hop_once() -> None:

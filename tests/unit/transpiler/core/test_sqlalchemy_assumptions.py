@@ -18,12 +18,14 @@ from __future__ import annotations
 
 from typing import Any
 
+from inline_snapshot import snapshot
 from sqlalchemy import Subquery, delete, select, update
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import aliased
 from sqlalchemy.sql.util import ClauseAdapter
 
 from tests.unit.models import Color, SponsoredUser
+from tests.utils import format_sql
 
 
 def _two_alias_page() -> tuple[Any, Any, Subquery]:
@@ -53,8 +55,22 @@ def test_aliased_on_subquery_with_two_aliases_of_one_table() -> None:
     # Plain entities over the subquery both resolve to the root's exported columns.
     root_entity = aliased(SponsoredUser, page)
     sponsor_entity = aliased(SponsoredUser, page)
-    sql = str(select(root_entity.name, sponsor_entity.name))
-    assert sql.startswith("SELECT anon_1.name, anon_1.name AS name__1")
+    sql = format_sql(str(select(root_entity.name, sponsor_entity.name)))
+    assert sql.splitlines() == snapshot(
+        [
+            "SELECT anon_1.name,",
+            "       anon_1.name AS name__1",
+            "  FROM (",
+            "        SELECT sponsored_user_1.id AS id,",
+            "               sponsored_user_1.name AS name,",
+            "               sponsored_user_2.id AS id_1,",
+            "               sponsored_user_2.name AS name_1",
+            "          FROM sponsored_user AS sponsored_user_1",
+            "          JOIN sponsored_user AS sponsored_user_2",
+            "            ON sponsored_user_1.sponsor_id = sponsored_user_2.id",
+            "       ) AS anon_1",
+        ]
+    )
 
 
 def test_entity_over_relabelled_nested_subquery_finds_its_own_columns() -> None:
@@ -65,9 +81,25 @@ def test_entity_over_relabelled_nested_subquery_finds_its_own_columns() -> None:
 
     sponsor_entity = aliased(SponsoredUser, sponsor_view, adapt_on_names=True)
 
-    sql = str(select(sponsor_entity.name))
-    assert sql.startswith("SELECT anon_1.name")
-    assert "anon_2.name_1 AS name" in sql
+    sql = format_sql(str(select(sponsor_entity.name)))
+    assert sql.splitlines() == snapshot(
+        [
+            "SELECT anon_1.name",
+            "  FROM (",
+            "        SELECT anon_2.id_1 AS id,",
+            "               anon_2.name_1 AS name",
+            "          FROM (",
+            "                SELECT sponsored_user_1.id AS id,",
+            "                       sponsored_user_1.name AS name,",
+            "                       sponsored_user_2.id AS id_1,",
+            "                       sponsored_user_2.name AS name_1",
+            "                  FROM sponsored_user AS sponsored_user_1",
+            "                  JOIN sponsored_user AS sponsored_user_2",
+            "                    ON sponsored_user_1.sponsor_id = sponsored_user_2.id",
+            "               ) AS anon_2",
+            "       ) AS anon_1",
+        ]
+    )
 
 
 def test_table_alias_targets_table_columns() -> None:

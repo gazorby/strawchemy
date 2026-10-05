@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 import operator
-import re
 from dataclasses import dataclass, replace
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import and_, exists, func, inspect, literal, or_, select
 from sqlalchemy.dialects import sqlite
 from sqlalchemy.orm import aliased
@@ -22,6 +22,7 @@ from strawchemy.transpiler._core.render import render_plan
 from strawchemy.transpiler._core.rowset import AliasPage, Join, Projection, RowSet
 from strawchemy.transpiler._core.share import share_ctes
 from tests.unit.models import Color, Fruit
+from tests.utils import format_sql
 
 if TYPE_CHECKING:
     from collections.abc import Callable
@@ -142,9 +143,9 @@ def _rank_plan(*ctes: _Ranked) -> QueryPlan:
     )
 
 
-def _sql(plan: QueryPlan) -> str:
+def _sql(plan: QueryPlan) -> list[str]:
     compiled = render_plan(plan).compile(dialect=sqlite.dialect(), compile_kwargs={"literal_binds": True})
-    return " ".join(str(compiled).split())
+    return format_sql(str(compiled)).splitlines()
 
 
 def test_identical_bodies_are_shared() -> None:
@@ -181,13 +182,40 @@ def test_rank_ctes_differing_only_in_windows_merge() -> None:
     """Two rank CTEs differing only in their windows are one CTE ranked twice, each join keeping its own bounds."""
     plan = share_ctes(_rank_plan())
 
-    sql = _sql(plan)
-    assert sql.count("WITH") == 1
-    assert sql.count(" AS (") == 1
-    assert "ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1" in sql
-    assert "ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2" in sql
-    assert "ON anon_1.color_id = color.id AND anon_1.rank_1 <= 2" in sql
-    assert "ON anon_2.color_id = color.id AND anon_2.rank_2 <= 3" in sql
+    assert _sql(plan) == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "         GROUP BY fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "         ORDER BY fruit_1.sweetness DESC",
+            "       ) SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       anon_1.color_id,",
+            "       anon_1.sweetness,",
+            "       anon_1.id AS id_1,",
+            "       anon_2.color_id AS color_id_1,",
+            "       anon_2.sweetness AS sweetness_1,",
+            "       anon_2.id AS id_2,",
+            "       anon_1.rank_1,",
+            "       anon_2.rank_2",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON anon_1.color_id = color.id",
+            "   AND anon_1.rank_1 <= 2",
+            "  LEFT OUTER JOIN anon_1 AS anon_2",
+            "    ON anon_2.color_id = color.id",
+            "   AND anon_2.rank_2 <= 3",
+        ]
+    )
     second_node, second = list(plan.projection.joins.items())[1]
     shared_alias = inspect(second.target).selectable  # ty: ignore[unresolved-attribute]
     assert plan.projection.pages[second_node[1]].rank is shared_alias.c.rank_2
@@ -201,12 +229,126 @@ def test_rank_ctes_differing_only_in_windows_merge() -> None:
         pytest.param((_Ranked(((True, 2),)), _Ranked(((False, 3),)), _Ranked(((False, 5),))), id="second-repeated"),
     ],
 )
-def test_merged_rank_ctes_keep_each_page_on_its_own_rank(ctes: tuple[_Ranked, ...]) -> None:
+def test_merged_rank_ctes_keep_each_page_on_its_own_rank(
+    ctes: tuple[_Ranked, ...], request: pytest.FixtureRequest
+) -> None:
     """Merged rank CTEs, sibling ranks or a repeated body among them, give each page its own rank and bounds."""
     plan = share_ctes(_rank_plan(*ctes))
 
-    sql = _sql(plan)
-    assert sql.count(" AS (") == 1
+    assert (
+        _sql(plan)
+        == snapshot(
+            {
+                "single-then-shared": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               fruit_1.sweetness AS sweetness,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_3",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.id,",
+                    "                  fruit_1.color_id,",
+                    "                  fruit_1.sweetness",
+                    "         ORDER BY fruit_1.sweetness DESC",
+                    "       ) SELECT color.name,",
+                    "       color.id,",
+                    "       color.private,",
+                    "       anon_1.color_id,",
+                    "       anon_1.sweetness,",
+                    "       anon_1.id AS id_1,",
+                    "       anon_2.color_id AS color_id_1,",
+                    "       anon_2.sweetness AS sweetness_1,",
+                    "       anon_2.id AS id_2,",
+                    "       anon_1.rank_1,",
+                    "       anon_2.rank_2,",
+                    "       anon_2.rank_3",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON anon_1.color_id = color.id",
+                    "   AND anon_1.rank_1 <= 2",
+                    "  LEFT OUTER JOIN anon_1 AS anon_2",
+                    "    ON anon_2.color_id = color.id",
+                    "   AND (anon_2.rank_2 <= 3 OR anon_2.rank_3 <= 4)",
+                ],
+                "shared-then-single": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               fruit_1.sweetness AS sweetness,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_1,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_2,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_3",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.id,",
+                    "                  fruit_1.color_id,",
+                    "                  fruit_1.sweetness",
+                    "         ORDER BY fruit_1.sweetness ASC",
+                    "       ) SELECT color.name,",
+                    "       color.id,",
+                    "       color.private,",
+                    "       anon_1.color_id,",
+                    "       anon_1.sweetness,",
+                    "       anon_1.id AS id_1,",
+                    "       anon_2.color_id AS color_id_1,",
+                    "       anon_2.sweetness AS sweetness_1,",
+                    "       anon_2.id AS id_2,",
+                    "       anon_1.rank_1,",
+                    "       anon_1.rank_2,",
+                    "       anon_2.rank_3",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON anon_1.color_id = color.id",
+                    "   AND (anon_1.rank_1 <= 3 OR anon_1.rank_2 <= 4)",
+                    "  LEFT OUTER JOIN anon_1 AS anon_2",
+                    "    ON anon_2.color_id = color.id",
+                    "   AND anon_2.rank_3 <= 2",
+                ],
+                "second-repeated": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               fruit_1.sweetness AS sweetness,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.id,",
+                    "                  fruit_1.color_id,",
+                    "                  fruit_1.sweetness",
+                    "         ORDER BY fruit_1.sweetness DESC",
+                    "       ) SELECT color.name,",
+                    "       color.id,",
+                    "       color.private,",
+                    "       anon_1.color_id,",
+                    "       anon_1.sweetness,",
+                    "       anon_1.id AS id_1,",
+                    "       anon_2.color_id AS color_id_1,",
+                    "       anon_2.sweetness AS sweetness_1,",
+                    "       anon_2.id AS id_2,",
+                    "       anon_3.color_id AS color_id_2,",
+                    "       anon_3.sweetness AS sweetness_2,",
+                    "       anon_3.id AS id_3,",
+                    "       anon_1.rank_1,",
+                    "       anon_2.rank_2,",
+                    "       anon_3.rank_2 AS rank_2_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON anon_1.color_id = color.id",
+                    "   AND anon_1.rank_1 <= 2",
+                    "  LEFT OUTER JOIN anon_1 AS anon_2",
+                    "    ON anon_2.color_id = color.id",
+                    "   AND anon_2.rank_2 <= 3",
+                    "  LEFT OUTER JOIN anon_1 AS anon_3",
+                    "    ON anon_3.color_id = color.id",
+                    "   AND anon_3.rank_2 <= 5",
+                ],
+            }
+        )[request.node.callspec.id]
+    )
     pages = iter(plan.projection.pages.values())
     for ranked, join in zip(ctes, plan.projection.joins.values(), strict=True):
         target = inspect(join.target).selectable  # ty: ignore[unresolved-attribute]
@@ -215,12 +357,10 @@ def test_merged_rank_ctes_keep_each_page_on_its_own_rank(ctes: tuple[_Ranked, ..
             for bound in visitors.iterate(join.onclause)
             if isinstance(bound, BinaryExpression) and bound.operator is operator.le
         ]
-        for descending, limit in ranked.windows:
+        for _, limit in ranked.windows:
             rank = next(pages).rank
             assert rank.table is target
             assert any(left is rank and value == limit for left, value in bounds)
-            direction = "DESC" if descending else "ASC"
-            assert re.search(rf"ORDER BY fruit_1\.sweetness {direction}, fruit_1\.id\) AS {rank.name}\b", sql)
 
 
 def test_rank_ctes_whose_ranks_read_another_from_clause_stay_separate() -> None:
@@ -237,10 +377,45 @@ def test_rank_ctes_over_a_join_merge() -> None:
         color = aliased(Color, flat=True)
         return statement.join(color, color.id == fruit.color_id).where(color.name != "red")
 
-    sql = _sql(share_ctes(_rank_plan(_Ranked(((True, 2),), edit=joined), _Ranked(((False, 3),), edit=joined))))
+    plan = share_ctes(_rank_plan(_Ranked(((True, 2),), edit=joined), _Ranked(((False, 3),), edit=joined)))
 
-    assert sql.count(" AS (") == 1
-    assert "ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2" in sql
+    assert _sql(plan) == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT fruit_1.id AS id,",
+            "               fruit_1.color_id AS color_id,",
+            "               fruit_1.sweetness AS sweetness,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness DESC, fruit_1.id) AS rank_1,",
+            "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.sweetness ASC, fruit_1.id) AS rank_2",
+            "          FROM fruit AS fruit_1",
+            "          JOIN color AS color_1",
+            "            ON color_1.id = fruit_1.color_id",
+            "         WHERE fruit_1.color_id IS NOT NULL",
+            "           AND color_1.name != 'red'",
+            "         GROUP BY fruit_1.id,",
+            "                  fruit_1.color_id,",
+            "                  fruit_1.sweetness",
+            "         ORDER BY fruit_1.sweetness DESC",
+            "       ) SELECT color.name,",
+            "       color.id,",
+            "       color.private,",
+            "       anon_1.color_id,",
+            "       anon_1.sweetness,",
+            "       anon_1.id AS id_1,",
+            "       anon_2.color_id AS color_id_1,",
+            "       anon_2.sweetness AS sweetness_1,",
+            "       anon_2.id AS id_2,",
+            "       anon_1.rank_1,",
+            "       anon_2.rank_2",
+            "  FROM color AS color",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON anon_1.color_id = color.id",
+            "   AND anon_1.rank_1 <= 2",
+            "  LEFT OUTER JOIN anon_1 AS anon_2",
+            "    ON anon_2.color_id = color.id",
+            "   AND anon_2.rank_2 <= 3",
+        ]
+    )
 
 
 def test_rank_ctes_with_different_bodies_stay_separate() -> None:

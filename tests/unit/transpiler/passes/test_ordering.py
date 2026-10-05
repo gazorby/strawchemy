@@ -6,6 +6,7 @@ from importlib import import_module
 from typing import TYPE_CHECKING
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy.dialects import postgresql
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
@@ -18,7 +19,7 @@ from strawchemy.transpiler._core.request import QueryRequest
 from strawchemy.transpiler._passes import DEFAULT_PIPELINES
 from strawchemy.transpiler._passes.ordering import Ordering
 from tests.unit.models import Color, Fruit, Group
-from tests.unit.transpiler.passes.utils import outer_order_by, plan_sql
+from tests.unit.transpiler.passes.utils import plan_sql
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -50,7 +51,21 @@ def test_no_client_order_orders_by_keys(dialect_name: str) -> None:
     """Without client ordering, deterministic ordering orders the root rows by their primary key."""
     lines = plan_sql("{ colors { name } }", dialect_name)
 
-    assert outer_order_by(lines) == ["color.id ASC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.id ASC",
+                ],
+                "sqlite": ["SELECT color.name,", "       color.id", "  FROM color AS color", " ORDER BY color.id ASC"],
+                "mysql": ["SELECT color.name,", "       color.id", "  FROM color AS color", " ORDER BY color.id ASC"],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -58,7 +73,31 @@ def test_client_order_replaces_keys(dialect_name: str) -> None:
     """A client ordering is used alone: the primary keys are not appended to it."""
     lines = plan_sql("{ colors(orderBy: { name: DESC }) { name } }", dialect_name)
 
-    assert outer_order_by(lines) == ["color.name DESC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC",
+                ],
+                "sqlite": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC",
+                ],
+                "mysql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -66,7 +105,34 @@ def test_default_order_by_then_keys(dialect_name: str) -> None:
     """Without client ordering, ``default_order_by`` orders the rows, then the primary keys break ties."""
     lines = plan_sql("{ colorsByNameDesc { name } }", dialect_name)
 
-    assert outer_order_by(lines) == ["color.name DESC", "color.id ASC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC,",
+                    "          color.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC,",
+                    "          color.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.name DESC,",
+                    "          color.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -74,7 +140,21 @@ def test_client_order_overrides_default_order_by(dialect_name: str) -> None:
     """A client ordering replaces ``default_order_by``."""
     lines = plan_sql("{ colorsByNameDesc(orderBy: { id: DESC }) { name } }", dialect_name)
 
-    assert outer_order_by(lines) == ["color.id DESC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " ORDER BY color.id DESC",
+                ],
+                "sqlite": ["SELECT color.name,", "       color.id", "  FROM color AS color", " ORDER BY color.id DESC"],
+                "mysql": ["SELECT color.name,", "       color.id", "  FROM color AS color", " ORDER BY color.id DESC"],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -84,12 +164,73 @@ def test_order_by_to_one_reused_in_wrap(dialect_name: str) -> None:
         "{ groupsPaginated(limit: 2, orderBy: { color: { name: ASC } }) { name color { name } } }", dialect_name
     )
 
-    unquoted = [line.replace('"', "").replace("`", "") for line in lines]
-    page_end = next(index for index, line in enumerate(unquoted) if line.startswith("       ) AS group"))
-    assert [line.strip() for line in unquoted if "JOIN" in line] == ["LEFT OUTER JOIN color AS color_1"]
-    assert next(index for index, line in enumerate(unquoted) if "JOIN color" in line) < page_end
-    assert sum("FROM group AS group" in line for line in unquoted) == 1
-    assert outer_order_by(unquoted) == ["group.name_1 ASC", "group.id_1 ASC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    'SELECT "group".name,',
+                    '       "group".id,',
+                    '       "group".name_1,',
+                    '       "group".id_1',
+                    "  FROM (",
+                    '        SELECT "group".name AS name,',
+                    '               "group".id AS id,',
+                    "               color_1.name AS name_1,",
+                    "               color_1.id AS id_1",
+                    '          FROM "group" AS "group"',
+                    "          LEFT OUTER JOIN color AS color_1",
+                    '            ON color_1.id = "group".color_id',
+                    "         ORDER BY color_1.name ASC",
+                    "         LIMIT %(param_1)s",
+                    "        OFFSET %(param_2)s",
+                    '       ) AS "group"',
+                    ' ORDER BY "group".name_1 ASC,',
+                    '          "group".id_1 ASC',
+                ],
+                "sqlite": [
+                    'SELECT "group".name,',
+                    '       "group".id,',
+                    '       "group".name_1,',
+                    '       "group".id_1',
+                    "  FROM (",
+                    '        SELECT "group".name AS name,',
+                    '               "group".id AS id,',
+                    "               color_1.name AS name_1,",
+                    "               color_1.id AS id_1",
+                    '          FROM "group" AS "group"',
+                    "          LEFT OUTER JOIN color AS color_1",
+                    '            ON color_1.id = "group".color_id',
+                    "         ORDER BY color_1.name ASC",
+                    "         LIMIT ?",
+                    "        OFFSET ?",
+                    '       ) AS "group"',
+                    ' ORDER BY "group".name_1 ASC,',
+                    '          "group".id_1 ASC',
+                ],
+                "mysql": [
+                    "SELECT `group`.name,",
+                    "       `group`.id,",
+                    "       `group`.name_1,",
+                    "       `group`.id_1",
+                    "  FROM (",
+                    "        SELECT `group`.name AS name,",
+                    "               `group`.id AS id,",
+                    "               color_1.name AS name_1,",
+                    "               color_1.id AS id_1",
+                    "          FROM `group` AS `group`",
+                    "          LEFT OUTER JOIN color AS color_1",
+                    "            ON color_1.id = `group`.color_id",
+                    "         ORDER BY color_1.name ASC",
+                    "         LIMIT %s,",
+                    "               %s",
+                    "       ) AS `group`",
+                    " ORDER BY `group`.name_1 ASC,",
+                    "          `group`.id_1 ASC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -97,7 +238,71 @@ def test_relation_own_order_without_keys(dialect_name: str) -> None:
     """A relation ordered by the client orders its own rows by that ordering only, after the root's keys."""
     lines = plan_sql("{ colors { fruits(orderBy: { name: DESC }) { name } } }", dialect_name)
 
-    assert outer_order_by(lines) == ["color.id ASC", "anon_1.name DESC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN LATERAL (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE color.id = fruit_1.color_id",
+                    "         ORDER BY fruit_1.name DESC",
+                    "       ) AS anon_1",
+                    "    ON TRUE",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.name DESC",
+                ],
+                "sqlite": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.name DESC, fruit_1.id) AS rank",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.name,",
+                    "                  fruit_1.id,",
+                    "                  fruit_1.color_id",
+                    "         ORDER BY fruit_1.name DESC",
+                    "       ) SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON color.id = anon_1.color_id",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.name DESC",
+                ],
+                "mysql": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.name DESC, fruit_1.id) AS `rank`",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.name,",
+                    "                  fruit_1.id,",
+                    "                  fruit_1.color_id",
+                    "         ORDER BY fruit_1.name DESC",
+                    "       ) SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON color.id = anon_1.color_id",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.name DESC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -105,8 +310,77 @@ def test_paginated_relation_orders_page_by_keys(dialect_name: str) -> None:
     """A paginated relation without client ordering orders its page by its primary key, inside its LATERAL or CTE."""
     lines = plan_sql("{ colorsPaginatedFruits { fruits(limit: 2) { name } } }", dialect_name)
 
-    assert "         ORDER BY fruit_1.id ASC" in lines
-    assert outer_order_by(lines) == ["color.id ASC", "anon_1.id ASC"]
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN LATERAL (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE color.id = fruit_1.color_id",
+                    "         ORDER BY fruit_1.id ASC",
+                    "         LIMIT %(param_1)s",
+                    "        OFFSET %(param_2)s",
+                    "       ) AS anon_1",
+                    "    ON TRUE",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.id ASC",
+                ],
+                "sqlite": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.name,",
+                    "                  fruit_1.id,",
+                    "                  fruit_1.color_id",
+                    "         ORDER BY fruit_1.id ASC",
+                    "       ) SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON color.id = anon_1.color_id",
+                    "   AND anon_1.rank > ?",
+                    "   AND anon_1.rank <= ?",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.id ASC",
+                ],
+                "mysql": [
+                    "WITH anon_1 AS (",
+                    "        SELECT fruit_1.name AS name,",
+                    "               fruit_1.id AS id,",
+                    "               fruit_1.color_id AS color_id,",
+                    "               dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS `rank`",
+                    "          FROM fruit AS fruit_1",
+                    "         WHERE fruit_1.color_id IS NOT NULL",
+                    "         GROUP BY fruit_1.name,",
+                    "                  fruit_1.id,",
+                    "                  fruit_1.color_id",
+                    "         ORDER BY fruit_1.id ASC",
+                    "       ) SELECT color.id,",
+                    "       anon_1.name,",
+                    "       anon_1.id AS id_1",
+                    "  FROM color AS color",
+                    "  LEFT OUTER JOIN anon_1",
+                    "    ON color.id = anon_1.color_id",
+                    "   AND anon_1.`rank` > %s",
+                    "   AND anon_1.`rank` <= %s",
+                    " ORDER BY color.id ASC,",
+                    "          anon_1.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 def test_default_order_by_invalid_column_raises() -> None:

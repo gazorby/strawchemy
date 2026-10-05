@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+from inline_snapshot import snapshot
 from sqlalchemy import delete, select
 from strawberry.types import get_object_definition
 
@@ -13,6 +14,7 @@ from tests.unit.models import Color
 from tests.unit.schemas.optimizations import ColorFilter
 from tests.unit.transpiler.passes.utils import plan_sql
 from tests.unit.utils import SQLA_DIALECTS
+from tests.utils import format_sql
 
 if TYPE_CHECKING:
     from strawchemy.dto.strawberry import BooleanFilterDTO
@@ -20,31 +22,95 @@ if TYPE_CHECKING:
 _DIALECTS = pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
 
 
-def _one_line(lines: list[str]) -> str:
-    """Returns ``lines`` as one line, a MySQL ``INNER JOIN`` written ``JOIN``."""
-    return " ".join(" ".join(lines).split()).replace("INNER JOIN", "JOIN")
-
-
 @_DIALECTS
 def test_user_statement_where_only_inlined(dialect_name: str) -> None:
     """A user statement adding only a WHERE has it copied onto the root alias, with no join or subquery."""
     lines = plan_sql("{ colorsNamedRed { name } }", dialect_name)
-    sql = _one_line(lines)
 
-    assert "WHERE color.name = " in sql
-    assert "JOIN" not in sql
-    assert sum("SELECT" in line for line in lines) == 1
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " WHERE color.name = %(name_1)s",
+                    " ORDER BY color.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " WHERE color.name = ?",
+                    " ORDER BY color.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " WHERE color.name = %s",
+                    " ORDER BY color.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
 def test_user_statement_with_join_uses_pk_join(dialect_name: str) -> None:
     """A user statement with a join is joined to the root on its primary key, as a subquery named ``user_statement``."""
-    sql = _one_line(plan_sql("{ colorsWithSweetFruits { name } }", dialect_name))
+    lines = plan_sql("{ colorsWithSweetFruits { name } }", dialect_name)
 
     assert (
-        "JOIN ( SELECT color.id AS id FROM color JOIN fruit ON color.id = fruit.color_id WHERE fruit.sweetness >" in sql
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    "  JOIN (",
+                    "        SELECT color.id AS id",
+                    "          FROM color",
+                    "          JOIN fruit",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE fruit.sweetness > %(sweetness_1)s",
+                    "       ) AS user_statement",
+                    "    ON color.id = user_statement.id",
+                    " ORDER BY color.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    "  JOIN (",
+                    "        SELECT color.id AS id",
+                    "          FROM color",
+                    "          JOIN fruit",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE fruit.sweetness > ?",
+                    "       ) AS user_statement",
+                    "    ON color.id = user_statement.id",
+                    " ORDER BY color.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.name,",
+                    "       color.id",
+                    "  FROM color AS color",
+                    " INNER JOIN (",
+                    "        SELECT color.id AS id",
+                    "          FROM color",
+                    "         INNER JOIN fruit",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE fruit.sweetness > %s",
+                    "       ) AS user_statement",
+                    "    ON color.id = user_statement.id",
+                    " ORDER BY color.id ASC",
+                ],
+            }
+        )[dialect_name]
     )
-    assert ") AS user_statement ON color.id = user_statement.id" in sql
 
 
 def _name_filter() -> BooleanFilterDTO:
@@ -63,8 +129,17 @@ def test_filter_expressions_add_where_only_statement(dialect_name: str) -> None:
 
     statement = delete(Color).where(*transpiler.filter_expressions(_name_filter()))
 
-    sql = " ".join(str(statement.compile(dialect=dialect, compile_kwargs={"literal_binds": True})).split())
-    assert sql.endswith("WHERE color.id = 2 AND color.name != 'zzz'")
+    sql = format_sql(str(statement.compile(dialect=dialect, compile_kwargs={"literal_binds": True})))
+    assert (
+        sql.splitlines()
+        == snapshot(
+            {
+                "postgresql": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
+                "sqlite": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
+                "mysql": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS
@@ -87,5 +162,14 @@ def test_filter_expressions_ignore_statement_without_where(dialect_name: str) ->
 
     statement = delete(Color).where(*transpiler.filter_expressions(_name_filter()))
 
-    sql = " ".join(str(statement.compile(dialect=dialect, compile_kwargs={"literal_binds": True})).split())
-    assert sql.endswith("WHERE color.name != 'zzz'")
+    sql = format_sql(str(statement.compile(dialect=dialect, compile_kwargs={"literal_binds": True})))
+    assert (
+        sql.splitlines()
+        == snapshot(
+            {
+                "postgresql": ["DELETE", "  FROM color", " WHERE color.name != 'zzz'"],
+                "sqlite": ["DELETE", "  FROM color", " WHERE color.name != 'zzz'"],
+                "mysql": ["DELETE", "  FROM color", " WHERE color.name != 'zzz'"],
+            }
+        )[dialect_name]
+    )

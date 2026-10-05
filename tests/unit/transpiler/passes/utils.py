@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import re
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
@@ -22,38 +21,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler._core.pipeline import Pipelines
     from strawchemy.typing import SupportedDialect
 
-__all__ = ("coalesced", "outer_order_by", "outer_projection", "plan_sql")
-
-
-def coalesced(column: str, dialect_name: str) -> str:
-    """Returns how ``column``, a count read through an outer CTE join, is selected on ``dialect_name``."""
-    if dialect_name == "postgresql":
-        return column
-    placeholder = "?" if dialect_name == "sqlite" else "%s"
-    return f"coalesce({column}, {placeholder}) AS coalesce_1"
-
-
-def outer_order_by(lines: list[str]) -> list[str]:
-    """Returns the terms of the outermost ORDER BY of ``lines``, as ``plan_sql`` formats them."""
-    start = next(index for index, line in enumerate(lines) if line.startswith(" ORDER BY"))
-    return [line.strip(" ,").removeprefix("ORDER BY ") for line in lines[start:]]
-
-
-def outer_projection(lines: list[str]) -> list[str]:
-    """Returns the columns of the outermost SELECT list of ``lines``, as ``plan_sql`` formats them.
-
-    The outer SELECT is the only one at the statement's own indentation; a CTE's ends the line closing its body.
-    """
-    columns: list[str] = []
-    for line in lines:
-        if not columns:
-            if (match := re.match(r"(?:\s*\) )?SELECT (.*)", line)) is not None:
-                columns.append(match.group(1).strip().rstrip(","))
-        elif line.startswith("  FROM"):
-            break
-        else:
-            columns.append(line.strip().rstrip(","))
-    return columns
+__all__ = ("plan_sql",)
 
 
 def plan_sql(
