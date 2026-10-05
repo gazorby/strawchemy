@@ -171,6 +171,64 @@ GEO_DATA = [
 ]
 
 
+ASYNC_ENGINE_PARAMS = (
+    pytest.param(
+        "aiosqlite_engine",
+        marks=[
+            pytest.mark.aiosqlite,
+            pytest.mark.integration,
+            pytest.mark.xdist_group("sqlite"),
+        ],
+    ),
+    pytest.param(
+        "psycopg_async_engine",
+        marks=[
+            pytest.mark.psycopg_async,
+            pytest.mark.integration,
+            pytest.mark.xdist_group("postgres"),
+        ],
+    ),
+    pytest.param(
+        "asyncmy_engine",
+        marks=[
+            pytest.mark.asyncmy,
+            pytest.mark.integration,
+            pytest.mark.xdist_group("mysql"),
+        ],
+    ),
+)
+ASYNCPG_ENGINE_PARAM = pytest.param(
+    "asyncpg_engine",
+    marks=[
+        pytest.mark.asyncpg,
+        pytest.mark.integration,
+        pytest.mark.xdist_group("postgres"),
+    ],
+)
+
+
+def _requested_session(request: FixtureRequest) -> AnySession:
+    return request.getfixturevalue("any_session" if "any_session" in request.fixturenames else "any_async_session")
+
+
+def _query_executor(
+    session: Session | AsyncSession,
+    request: FixtureRequest,
+    sync_query: type[Any],
+    async_query: type[Any],
+    sync_mutation: type[Any] | None,
+    async_mutation: type[Any] | None,
+) -> AnyQueryExecutor:
+    if isinstance(session, AsyncSession):
+        request.getfixturevalue("seed_db_async")
+        return generate_query(
+            session=session, query=async_query, mutation=async_mutation, scalar_overrides=scalar_overrides
+        )
+    request.getfixturevalue("seed_db_sync")
+
+    return generate_query(session=session, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides)
+
+
 @pytest.fixture
 def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
     return [
@@ -691,42 +749,6 @@ async def psycopg_async_engine(postgres_database_service: PostgresService) -> As
         await engine.dispose()
 
 
-ASYNC_ENGINE_PARAMS = (
-    pytest.param(
-        "aiosqlite_engine",
-        marks=[
-            pytest.mark.aiosqlite,
-            pytest.mark.integration,
-            pytest.mark.xdist_group("sqlite"),
-        ],
-    ),
-    pytest.param(
-        "psycopg_async_engine",
-        marks=[
-            pytest.mark.psycopg_async,
-            pytest.mark.integration,
-            pytest.mark.xdist_group("postgres"),
-        ],
-    ),
-    pytest.param(
-        "asyncmy_engine",
-        marks=[
-            pytest.mark.asyncmy,
-            pytest.mark.integration,
-            pytest.mark.xdist_group("mysql"),
-        ],
-    ),
-)
-ASYNCPG_ENGINE_PARAM = pytest.param(
-    "asyncpg_engine",
-    marks=[
-        pytest.mark.asyncpg,
-        pytest.mark.integration,
-        pytest.mark.xdist_group("postgres"),
-    ],
-)
-
-
 @pytest.fixture(name="async_engine", params=ASYNC_ENGINE_PARAMS)
 def async_engine(request: FixtureRequest) -> AsyncEngine:
     return cast("AsyncEngine", request.getfixturevalue(request.param))
@@ -811,10 +833,6 @@ async def seed_db_async(
 
 
 # Utilities
-
-
-def _requested_session(request: FixtureRequest) -> AnySession:
-    return request.getfixturevalue("any_session" if "any_session" in request.fixturenames else "any_async_session")
 
 
 @pytest.fixture
@@ -904,24 +922,6 @@ def any_async_session(request: FixtureRequest) -> AsyncSession:
 @pytest.fixture(params=[None], ids=["tracked"])
 def query_tracker(request: FixtureRequest) -> QueryTracker:
     return QueryTracker(_requested_session(request))
-
-
-def _query_executor(
-    session: Session | AsyncSession,
-    request: FixtureRequest,
-    sync_query: type[Any],
-    async_query: type[Any],
-    sync_mutation: type[Any] | None,
-    async_mutation: type[Any] | None,
-) -> AnyQueryExecutor:
-    if isinstance(session, AsyncSession):
-        request.getfixturevalue("seed_db_async")
-        return generate_query(
-            session=session, query=async_query, mutation=async_mutation, scalar_overrides=scalar_overrides
-        )
-    request.getfixturevalue("seed_db_sync")
-
-    return generate_query(session=session, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides)
 
 
 @pytest.fixture(params=[None], ids=["session"])
