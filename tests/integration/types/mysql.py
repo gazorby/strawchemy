@@ -930,6 +930,17 @@ class AsyncMutation:
     update_users_filter: list[UserType] = strawchemy.update(
         UserPartial, UserFilter, repository_type=StrawchemyAsyncRepository
     )
+    delete_users_restricted: list[UserType] = strawchemy.delete(
+        UserFilter,
+        repository_type=StrawchemyAsyncRepository,
+        filter_statement=lambda _: select(User).where(User.id == 2),
+    )
+    update_users_restricted: list[UserType] = strawchemy.update(
+        UserPartial,
+        UserFilter,
+        repository_type=StrawchemyAsyncRepository,
+        filter_statement=lambda _: select(User).where(User.id == 2),
+    )
 
     @strawberry.field
     async def create_blue_color(self, info: strawberry.Info, data: ColorCreateInput) -> ColorType:
@@ -1060,6 +1071,17 @@ class SyncMutation:
     delete_users_filter: list[UserType] = strawchemy.delete(UserFilter, repository_type=StrawchemySyncRepository)
     update_users_filter: list[UserType] = strawchemy.update(
         UserPartial, UserFilter, repository_type=StrawchemySyncRepository
+    )
+    delete_users_restricted: list[UserType] = strawchemy.delete(
+        UserFilter,
+        repository_type=StrawchemySyncRepository,
+        filter_statement=lambda _: select(User).where(User.id == 2),
+    )
+    update_users_restricted: list[UserType] = strawchemy.update(
+        UserPartial,
+        UserFilter,
+        repository_type=StrawchemySyncRepository,
+        filter_statement=lambda _: select(User).where(User.id == 2),
     )
 
     @strawberry.field

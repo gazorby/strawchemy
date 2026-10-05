@@ -40,6 +40,11 @@ def default_session_getter(info: Info[Any, Any]) -> Any:
         return _get_or_subscribe(_get_or_subscribe(info.context, "request"), "session")
 
 
+def response_path(info: Info[Any, Any]) -> tuple[str, ...]:
+    """Returns the response keys leading to the field resolved with ``info``, list indices left out."""
+    return tuple(key for key in info.path.as_list() if isinstance(key, str))
+
+
 def dto_model_from_type(type_: Any) -> Any:
     return type_.__dto_model__
 

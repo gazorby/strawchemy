@@ -74,9 +74,9 @@
                  dense_rank() OVER (PARTITION BY fruit_farm_1.fruit_id ORDER BY fruit_farm_1.id ASC, fruit_farm_1.id) AS rank
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
-           GROUP BY fruit_farm_1.fruit_id,
-                    fruit_farm_1.name,
-                    fruit_farm_1.id
+           GROUP BY fruit_farm_1.name,
+                    fruit_farm_1.id,
+                    fruit_farm_1.fruit_id
            ORDER BY fruit_farm_1.id ASC
          ) SELECT fruit.name,
          fruit.id,
@@ -101,9 +101,9 @@
                  dense_rank() OVER (PARTITION BY fruit_farm_1.fruit_id ORDER BY fruit_farm_1.id ASC, fruit_farm_1.id) AS `rank`
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
-           GROUP BY fruit_farm_1.fruit_id,
-                    fruit_farm_1.name,
-                    fruit_farm_1.id
+           GROUP BY fruit_farm_1.name,
+                    fruit_farm_1.id,
+                    fruit_farm_1.fruit_id
            ORDER BY fruit_farm_1.id ASC
          ) SELECT fruit.name,
          fruit.id,
@@ -194,9 +194,9 @@
                  dense_rank() OVER (PARTITION BY fruit_farm_1.fruit_id ORDER BY fruit_farm_1.id ASC, fruit_farm_1.id) AS rank
             FROM fruit_farm AS fruit_farm_1
            WHERE fruit_farm_1.fruit_id IS NOT NULL
-           GROUP BY fruit_farm_1.fruit_id,
-                    fruit_farm_1.name,
-                    fruit_farm_1.id
+           GROUP BY fruit_farm_1.name,
+                    fruit_farm_1.id,
+                    fruit_farm_1.fruit_id
            ORDER BY fruit_farm_1.id ASC
          ) SELECT fruit.name,
          fruit.id,
@@ -221,9 +221,9 @@
                  dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id,
-                    fruit_1.id,
-                    fruit_1.name
+           GROUP BY fruit_1.id,
+                    fruit_1.name,
+                    fruit_1.color_id
            ORDER BY fruit_1.id ASC
          ) SELECT color.name,
          color.id,
@@ -248,9 +248,9 @@
                  dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS `rank`
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id,
-                    fruit_1.id,
-                    fruit_1.name
+           GROUP BY fruit_1.id,
+                    fruit_1.name,
+                    fruit_1.color_id
            ORDER BY fruit_1.id ASC
          ) SELECT color.name,
          color.id,
@@ -341,9 +341,9 @@
                  dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
             FROM fruit AS fruit_1
            WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.color_id,
-                    fruit_1.id,
-                    fruit_1.name
+           GROUP BY fruit_1.id,
+                    fruit_1.name,
+                    fruit_1.color_id
            ORDER BY fruit_1.id ASC
          ) SELECT color.name,
          color.id,
@@ -473,8 +473,6 @@
                          fruit.name AS name,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,
@@ -496,8 +494,6 @@
                          fruit.name AS name,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
            ORDER BY anon_1.name ASC,
@@ -512,19 +508,12 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT anon_1.id AS id,
-                 anon_1.name AS name
-            FROM (
-                  SELECT fruit.id AS id,
-                         fruit.name AS name,
-                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
-                    FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = $1::INTEGER
-           ORDER BY anon_1.name ASC,
-                    anon_1.id ASC
+          SELECT DISTINCT
+              ON (fruit.name) fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
@@ -535,19 +524,12 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT anon_1.id AS id,
-                 anon_1.name AS name
-            FROM (
-                  SELECT fruit.id AS id,
-                         fruit.name AS name,
-                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
-                    FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
-           ORDER BY anon_1.name ASC,
-                    anon_1.id ASC
+          SELECT DISTINCT
+              ON (fruit.name) fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
@@ -558,19 +540,12 @@
   SELECT fruit.name,
          fruit.id
     FROM (
-          SELECT anon_1.id AS id,
-                 anon_1.name AS name
-            FROM (
-                  SELECT fruit.id AS id,
-                         fruit.name AS name,
-                         row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
-                    FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
-           ORDER BY anon_1.name ASC,
-                    anon_1.id ASC
+          SELECT DISTINCT
+              ON (fruit.name) fruit.id AS id,
+                 fruit.name AS name
+            FROM fruit AS fruit
+           ORDER BY fruit.name ASC,
+                    fruit.id ASC
          ) AS fruit
    ORDER BY fruit.name ASC,
             fruit.id ASC
@@ -588,8 +563,6 @@
                          fruit.name AS name,
                          row_number() OVER (PARTITION BY fruit.name ORDER BY fruit.name ASC, fruit.id ASC) AS anon_2
                     FROM fruit AS fruit
-                   ORDER BY fruit.name ASC,
-                            fruit.id ASC
                  ) AS anon_1
            WHERE anon_1.anon_2 = ?
            ORDER BY anon_1.name ASC,

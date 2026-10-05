@@ -42,12 +42,34 @@ _CONTAINER_LOCK_DIR = Path(tempfile.gettempdir()) / "strawchemy-pytest-databases
 _CONTAINER_READY_TIMEOUT = 60
 
 
-def pytest_configure() -> None:
-    """Abort when the runner promised extras that aren't installed.
+@pytest.fixture(autouse=True)
+def _allow_duplicate_reads(request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Turns the duplicate read check off for a test marked ``allow_duplicate_reads``, on the dialects it names.
+
+    Raises:
+        pytest.UsageError: If the marker gives no reason.
+    """
+    if (marker := request.node.get_closest_marker("allow_duplicate_reads")) is None:
+        return
+    reason = marker.kwargs.get("reason") or next(iter(marker.args), None)
+    if not reason:
+        msg = f"{request.node.nodeid}: allow_duplicate_reads needs a reason"
+        raise pytest.UsageError(msg)
+    monkeypatch.setattr("tests.duplicate_reads._allowed_reason", reason)
+    monkeypatch.setattr("tests.duplicate_reads._allowed_dialects", marker.kwargs.get("dialects"))
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the ``allow_duplicate_reads`` marker, and abort when the runner promised extras that aren't installed.
 
     Suites needing an extra skip themselves when it's missing, which would otherwise report
     green in a run meant to exercise them.
     """
+    config.addinivalue_line(
+        "markers",
+        "allow_duplicate_reads(reason, dialects=None): the test's queries may read the same rows twice, for the "
+        "stated reason, on ``dialects`` or on every dialect",
+    )
     required = [extra for extra in os.environ.get(EXTRAS_ENV_VAR, "").split(",") if extra]
     if unknown := set(required) - _EXTRA_MODULES.keys():
         msg = f"{EXTRAS_ENV_VAR} names unknown extras: {', '.join(sorted(unknown))}"

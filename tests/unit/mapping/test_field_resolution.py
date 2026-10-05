@@ -27,8 +27,8 @@ def _nested_field(strawchemy: Strawchemy, *, with_argument: bool) -> StrawchemyF
     return field
 
 
-def _info(response_key: str) -> Info[Any, Any]:
-    return cast("Info[Any, Any]", SimpleNamespace(path=SimpleNamespace(key=response_key)))
+def _info(*path: str | int) -> Info[Any, Any]:
+    return cast("Info[Any, Any]", SimpleNamespace(path=SimpleNamespace(as_list=lambda: list(path))))
 
 
 def test_nested_field_with_arguments_is_not_basic(strawchemy: Strawchemy) -> None:
@@ -43,9 +43,10 @@ def test_nested_field_is_sync_with_async_repository(strawchemy: Strawchemy) -> N
 
 
 def test_nested_field_resolves_value_of_its_response_key(strawchemy: Strawchemy) -> None:
-    """Test that a nested field given its arguments returns the value stored for its alias, else its attribute."""
+    """Test that a nested field given its arguments returns the value stored for its response path, else its attribute."""
     field = _nested_field(strawchemy, with_argument=True)
-    source = SimpleNamespace(fruits="first", **{RESPONSE_VALUES_ATTRIBUTE: {"a": "first", "b": "second"}})
-    assert field.get_result(source, _info("b"), [], {"limit": 2}) == "second"
-    assert field.get_result(source, _info("fruits"), [], {"limit": 2}) == "first"
-    assert field.get_result(SimpleNamespace(fruits="plain"), _info("b"), [], {"limit": 2}) == "plain"
+    response_values = {("colors", "a"): "first", ("colors", "b"): "second"}
+    source = SimpleNamespace(fruits="first", **{RESPONSE_VALUES_ATTRIBUTE: response_values})
+    assert field.get_result(source, _info("colors", 0, "b"), [], {"limit": 2}) == "second"
+    assert field.get_result(source, _info("colors", 0, "fruits"), [], {"limit": 2}) == "first"
+    assert field.get_result(SimpleNamespace(fruits="plain"), _info("colors", 0, "b"), [], {"limit": 2}) == "plain"

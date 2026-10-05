@@ -4,9 +4,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= ?
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= ?
          )
    ORDER BY fruit.id ASC
   '''
@@ -16,9 +16,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= %s
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %s
          )
    ORDER BY fruit.id ASC
   '''
@@ -28,9 +28,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= $1::INTEGER
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= $1::INTEGER
          )
    ORDER BY fruit.id ASC
   '''
@@ -40,9 +40,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %(sweetness_1)s::INTEGER
          )
    ORDER BY fruit.id ASC
   '''
@@ -52,9 +52,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= %(sweetness_1)s::INTEGER
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %(sweetness_1)s::INTEGER
          )
    ORDER BY fruit.id ASC
   '''
@@ -64,9 +64,9 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.id IN (
-          SELECT fruit.id
-            FROM fruit
-           WHERE fruit.sweetness >= ?
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= ?
          )
    ORDER BY fruit.id ASC
   '''
@@ -76,10 +76,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= ?
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= ?
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''
@@ -89,10 +89,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= %s
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %s
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''
@@ -102,10 +102,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= $1::INTEGER
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= $1::INTEGER
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''
@@ -115,10 +115,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= %(sweetness_1)s::INTEGER
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %(sweetness_1)s::INTEGER
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''
@@ -128,10 +128,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= %(sweetness_1)s::INTEGER
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= %(sweetness_1)s::INTEGER
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''
@@ -141,10 +141,10 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE EXISTS (
-          SELECT fruit_1.id
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness >= ?
-             AND fruit_1.id = fruit.id
+          SELECT custom_filter.id
+            FROM fruit AS custom_filter
+           WHERE custom_filter.sweetness >= ?
+             AND custom_filter.id = fruit.id
          )
    ORDER BY fruit.id ASC
   '''

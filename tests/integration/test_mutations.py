@@ -13,6 +13,7 @@ from tests.utils import maybe_async
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy.repository.typing import AnySession
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
@@ -2063,6 +2064,171 @@ async def test_delete_filter(
         query_tracker.assert_statements(1, "select", sql_snapshot)
     else:
         query_tracker.assert_statements(2, "select", sql_snapshot)
+
+
+async def test_update_and_delete_filter_without_returning(
+    raw_colors: RawRecordData,
+    raw_users: RawRecordData,
+    any_query: AnyQueryExecutor,
+    any_session: AnySession,
+    query_tracker: QueryTracker,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """On a dialect without UPDATE/DELETE RETURNING, filtered mutations select the affected rows before running."""
+    dialect = any_session.get_bind().dialect
+    monkeypatch.setattr(dialect, "update_returning", False)
+    monkeypatch.setattr(dialect, "delete_returning", False)
+
+    result = await maybe_async(
+        any_query('mutation { updateColorsFilter(data: { name: "updated" }, filter: { name: { eq: "Red" } }) { id } }')
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColorsFilter"] == [{"id": to_graphql_representation(raw_colors[0]["id"], "output")}]
+
+    result = await maybe_async(any_query('mutation { deleteUsersFilter(filter: { name: { eq: "Alice" } }) { id } }'))
+    assert not result.errors
+    assert result.data
+    alice = next(user for user in raw_users if user["name"] == "Alice")
+    assert result.data["deleteUsersFilter"] == [{"id": to_graphql_representation(alice["id"], "output")}]
+
+    assert query_tracker.filter("update").query_count == 1
+    assert query_tracker.filter("delete").query_count == 1
+    assert all("RETURNING" not in query.statement_str for query in query_tracker)
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "above", "updated_names"),
+    [
+        pytest.param("Banana", "Lemon", 2, ["Yellow"], id="count-passes"),
+        pytest.param("Banana", "Lemon", 3, [], id="count-fails"),
+        pytest.param("Apple", "Lemon", 1, [], id="fruits-of-two-colors"),
+    ],
+)
+async def test_update_filter_and_branch_counting_a_shared_to_many(
+    first: str,
+    second: str,
+    above: int,
+    updated_names: list[str],
+    raw_colors: RawRecordData,
+    any_query: AnyQueryExecutor,
+) -> None:
+    """An update filtered on a fruit and an ``_and`` branch counting fruits and testing another updates the matches."""
+    count = f"fruitsAggregate: {{ count: {{ predicate: {{ gt: {above} }} }} }}"
+    dto_filter = f'{{ fruits: {{ name: {{ eq: "{first}" }} }}, _and: [{{ {count}, fruits: {{ name: {{ eq: "{second}" }} }} }}] }}'
+
+    result = await maybe_async(
+        any_query(f'mutation {{ updateColorsFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}')
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["updateColorsFilter"] == [
+        {"id": to_graphql_representation(color["id"], "output")}
+        for color in raw_colors
+        if color["name"] in updated_names
+    ]
+
+
+@pytest.mark.parametrize(
+    ("raw_users", "raw_user_departments"),
+    [
+        pytest.param(
+            [
+                {"id": 1, "name": "Alice", "group_id": 1, "bio": None},
+                {"id": 2, "name": "Bob", "group_id": 1, "bio": None},
+                {"id": 3, "name": "Charlie", "group_id": 2, "bio": None},
+                {"id": 4, "name": "Dave", "group_id": 1, "bio": None},
+                {"id": 5, "name": "Eve", "group_id": None, "bio": None},
+            ],
+            [
+                {"user_id": 1, "department_id": 1},
+                {"user_id": 2, "department_id": 2},
+                {"user_id": 3, "department_id": 1},
+                {"user_id": 4, "department_id": 1},
+                {"user_id": 4, "department_id": 3},
+                {"user_id": 5, "department_id": 3},
+            ],
+            id="dave-in-two-departments",
+        )
+    ],
+)
+async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
+    any_query: AnyQueryExecutor,
+    raw_users: RawRecordData,  # noqa: ARG001
+    raw_user_departments: RawRecordData,  # noqa: ARG001
+) -> None:
+    """An update filtered on a department, a topic of the group and a department count updates the users passing all."""
+    dto_filter = (
+        '{ departments: { name: { eq: "IT" } }, group: { topics: { name: { eq: "Hello!" } } }, '
+        "departmentsAggregate: { count: { predicate: { gt: 1 } } } }"
+    )
+
+    result = await maybe_async(
+        any_query(f'mutation {{ updateUsersFilter(data: {{ name: "updated" }}, filter: {dto_filter}) {{ id }} }}')
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["updateUsersFilter"] == [{"id": to_graphql_representation(4, "output")}]
+
+
+@pytest.mark.parametrize(
+    ("dto_filter", "deleted_names"),
+    [
+        pytest.param('{ name: { eq: "Alice" } }', ["Alice"], id="name"),
+        pytest.param("{ bio: { isNull: false } }", ["Tango"], id="bio"),
+    ],
+)
+async def test_delete_filter_on_unselected_column(
+    dto_filter: str, deleted_names: list[str], raw_users: RawRecordData, any_query: AnyQueryExecutor
+) -> None:
+    """Deleting by a filter on a column the selection does not read returns the ids of the deleted rows."""
+    result = await maybe_async(any_query(f"mutation {{ deleteUsersFilter(filter: {dto_filter}) {{ id }} }}"))
+    assert not result.errors
+    assert result.data
+    assert result.data["deleteUsersFilter"] == [
+        {"id": to_graphql_representation(user["id"], "output")} for user in raw_users if user["name"] in deleted_names
+    ]
+
+    result = await maybe_async(any_query("{ users { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["users"]) == sorted(
+        user["name"] for user in raw_users if user["name"] not in deleted_names
+    )
+
+
+async def test_delete_restricted_by_repository_statement(any_query: AnyQueryExecutor) -> None:
+    """A delete whose repository statement keeps only Bob deletes Bob alone, whatever rows the filter matches."""
+    result = await maybe_async(
+        any_query('mutation { deleteUsersRestricted(filter: { name: { neq: "zzz" } }) { name } }')
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["deleteUsersRestricted"] == [{"name": "Bob"}]
+
+    result = await maybe_async(any_query("{ users { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango"]
+
+
+async def test_update_restricted_by_repository_statement(any_query: AnyQueryExecutor) -> None:
+    """An update whose repository statement keeps only Bob updates Bob alone, whatever rows the filter matches."""
+    result = await maybe_async(
+        any_query(
+            'mutation { updateUsersRestricted(data: { name: "Updated" }, filter: { name: { neq: "zzz" } }) { name } }'
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert result.data["updateUsersRestricted"] == [{"name": "Updated"}]
+
+    result = await maybe_async(any_query("{ users { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango", "Updated"]
 
 
 @pytest.mark.snapshot

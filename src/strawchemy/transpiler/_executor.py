@@ -5,10 +5,12 @@ from __future__ import annotations
 import dataclasses
 from collections import defaultdict
 from dataclasses import dataclass
+from operator import itemgetter
 from typing import TYPE_CHECKING, Any, Generic, Literal, TypeAlias
 
-from sqlalchemy import inspect
+from sqlalchemy import Column, inspect
 from sqlalchemy.exc import MultipleResultsFound
+from sqlalchemy.sql import visitors
 from typing_extensions import Self
 
 from strawchemy.dto import ModelT
@@ -16,12 +18,12 @@ from strawchemy.exceptions import QueryResultError
 from strawchemy.repository.typing import AnyAsyncSession, AnySyncSession, DeclarativeT
 
 if TYPE_CHECKING:
-    from collections.abc import Generator, Mapping, Sequence
+    from collections.abc import Generator, Iterable, Mapping, Sequence
 
     from sqlalchemy import ColumnElement, Label, Result, Select, StatementLambdaElement
 
     from strawchemy.dto.strawberry import GraphQLFieldDefinition
-    from strawchemy.transpiler._plan import QueryPlan
+    from strawchemy.transpiler._core.plan import QueryPlan
     from strawchemy.typing import QueryNodeType
 
 
@@ -134,7 +136,7 @@ class QueryExecutor(Generic[DeclarativeT]):
     """Primary-key fields of the queried model, used by the repository to fetch by id."""
     execution_options: dict[str, Any] | None = None
     extra_where: list[ColumnElement[bool]] = dataclasses.field(default_factory=list)
-    """WHERE predicates added to the planned statement."""
+    """WHERE predicates added to the planned statement, on the unaliased model."""
 
     @property
     def column_map(self) -> Mapping[QueryNodeType, ColumnElement[Any]]:
@@ -155,6 +157,21 @@ class QueryExecutor(Generic[DeclarativeT]):
         """Adds WHERE predicates to the planned statement, such as a primary-key lookup."""
         self.extra_where.extend(predicates)
 
+    def _on_root(self, predicate: ColumnElement[bool]) -> ColumnElement[bool]:
+        """Reads the model columns of ``predicate`` through the root entity's attributes.
+
+        A page exporting two aliases of the root's table would make a match by base column ambiguous.
+        """
+        entity = self.plan.root_entity
+        mapper = inspect(entity).mapper
+
+        def replace(element: visitors.ExternallyTraversible, **_: object) -> ColumnElement[Any] | None:
+            if isinstance(element, Column) and element.table in mapper.tables:
+                return getattr(entity, mapper.get_property_by_column(element).key).__clause_element__()
+            return None
+
+        return visitors.replacement_traverse(predicate, {}, replace)
+
     def _to_query_result(
         self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
     ) -> QueryResult[DeclarativeT]:
@@ -169,12 +186,18 @@ class QueryExecutor(Generic[DeclarativeT]):
         nodes: list[DeclarativeT] = []
         computed: list[dict[QueryNodeType, Any]] = []
         related: dict[RelatedKey, dict[QueryNodeType, Any]] = {}
-        related_objects: dict[QueryNodeType, dict[int, dict[int, Any]]] = {
-            node: {} for node in self.plan.relation_entities
+        relation_entities, pages = self.plan.relation_entities, self.plan.relation_pages
+        ranked_nodes = {id(node) for node in pages}
+        related_objects: dict[QueryNodeType, dict[int, dict[int, tuple[int, Any]]]] = {
+            node: {} for node in relation_entities
         }
-        positions = {node: position for position, node in enumerate(self.plan.relation_entities, start=1)}
+        entity_positions: dict[int, int] = {}
+        for alias in self.plan.projection.entities.values():
+            entity_positions.setdefault(id(alias), len(entity_positions))
+        positions = {node: entity_positions[id(alias)] for node, alias in relation_entities.items()}
         entities = [
-            (position, related_objects[node], positions.get(node.parent, 0)) for node, position in positions.items()
+            (position, related_objects[node], positions.get(node.parent, 0), pages.get(node))
+            for node, position in positions.items()
         ]
         seen: set[int] = set()
         for row in result.all():
@@ -183,9 +206,14 @@ class QueryExecutor(Generic[DeclarativeT]):
             row_computed = {node: mapping[label] for node, label in self.column_map.items() if label in mapping}
             for node, columns in self.identity_columns.items():
                 related[node, tuple(mapping[column] for column in columns)] = row_computed
-            for position, by_parent, parent_position in entities:
-                if (related_object := row[position]) is not None:
-                    by_parent.setdefault(id(row[parent_position]), {})[id(related_object)] = related_object
+            for position, by_parent, parent_position, page in entities:
+                if (related_object := row[position]) is None:
+                    continue
+                rank = 0 if page is None else mapping[page.rank]
+                if page is None or page.contains(rank):
+                    objects = by_parent.setdefault(id(row[parent_position]), {})
+                    if (kept := objects.get(id(related_object))) is None or rank < kept[0]:
+                        objects[id(related_object)] = (rank, related_object)
             if id(obj) in seen:
                 continue
             seen.add(id(obj))
@@ -207,7 +235,10 @@ class QueryExecutor(Generic[DeclarativeT]):
             query_computed_values=defaultdict(lambda: None) | query_computed_values,
             related_computed_values=related,
             related_objects={
-                id(node): {identity: list(objects.values()) for identity, objects in by_parent.items()}
+                id(node): {
+                    identity: _collection(objects.values(), by_rank=id(node) in ranked_nodes)
+                    for identity, objects in by_parent.items()
+                }
                 for node, by_parent in related_objects.items()
             },
         )
@@ -216,7 +247,7 @@ class QueryExecutor(Generic[DeclarativeT]):
         """Returns the planned statement with the extra WHERE predicates and execution options."""
         statement = self.plan.emit()
         if self.extra_where:
-            statement = statement.where(*self.extra_where)
+            statement = statement.where(*(self._on_root(predicate) for predicate in self.extra_where))
         if self.execution_options:
             statement = statement.execution_options(**self.execution_options)
         return statement
@@ -254,3 +285,7 @@ class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
     def get_one_or_none(self, session: AnySyncSession) -> QueryResult[DeclarativeT]:
         """Runs the statement and returns at most one result."""
         return self._to_query_result(self.execute(session), "one_or_none")
+
+
+def _collection(ranked: Iterable[tuple[int, Any]], *, by_rank: bool) -> list[Any]:
+    return [obj for _, obj in (sorted(ranked, key=itemgetter(0)) if by_rank else ranked)]

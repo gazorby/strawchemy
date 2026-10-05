@@ -22,7 +22,6 @@ if TYPE_CHECKING:
 
     from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
-    from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
 
@@ -32,7 +31,7 @@ if TYPE_CHECKING:
     from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
 
 
-__all__ = ("InsertData", "InsertOrUpdate", "MutationData", "RowLike", "SQLAlchemyGraphQLRepository", "dml_target")
+__all__ = ("InsertData", "InsertOrUpdate", "MutationData", "RowLike", "SQLAlchemyGraphQLRepository")
 
 
 T = TypeVar("T", bound=Any)
@@ -374,11 +373,3 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 )
 
         return params
-
-
-def dml_target(alias: AliasedClass[Any]) -> Any:
-    """Make an aliased entity usable as a ``delete()``/``update()`` target.
-
-    DML against an alias is supported at runtime but missing from SQLAlchemy's ``_DMLTableArgument``.
-    """
-    return alias

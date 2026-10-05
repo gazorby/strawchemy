@@ -47,6 +47,7 @@ from typing_extensions import Self
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.schema.scalars import Date, DateTime, Interval, Time
+from tests.duplicate_reads import assert_no_duplicate_reads
 from tests.fixtures import DefaultQuery
 from tests.integration.models import (
     Color,
@@ -959,6 +960,8 @@ class QueryTracker:
         execution_options: dict[str, Any],
         result: CursorResult[Any],
     ) -> None:
+        if isinstance(clauseelement, Select):
+            assert_no_duplicate_reads(clauseelement, conn.dialect)
         self.executions.append(QueryInspector(clauseelement, conn.dialect, multiparams, params))
 
     def filter(self, statement: FilterableStatement) -> Self:

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import re
 from collections import Counter
 from typing import TYPE_CHECKING, Any, Literal
 
@@ -665,6 +666,68 @@ async def test_aggregation_two_levels_under_relation_with_arguments(
             {"id": color["id"], "fruitsAggregate": expected} for _ in sweetness
         ]
     assert query_tracker.query_count == 1
+
+
+@pytest.mark.allow_duplicate_reads(
+    reason=(
+        "on postgresql, colors and colors.fruits.color each compute fruitsAggregate in a LATERAL correlated to "
+        "their own alias; the CTE databases share one grouped CTE"
+    ),
+    dialects=("postgresql",),
+)
+async def test_same_aggregate_on_root_and_under_relation(
+    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+) -> None:
+    """Test that one aggregate selected on the root and under a relation reports each parent's value."""
+    result = await maybe_async(
+        any_query("{ colors { id fruitsAggregate { count } fruits { id color { id fruitsAggregate { count } } } } }")
+    )
+    assert not result.errors
+    assert result.data
+    for color in result.data["colors"]:
+        count = sum(1 for fruit in raw_fruits if fruit["color_id"] == color["id"])
+        assert color["fruitsAggregate"] == {"count": count}
+        assert [fruit["color"] for fruit in color["fruits"]] == [
+            {"id": color["id"], "fruitsAggregate": {"count": count}} for _ in range(count)
+        ]
+    assert query_tracker.query_count == 1
+
+
+async def test_aggregate_under_aliases_differing_in_limit(
+    any_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    raw_farms: RawRecordData,
+    query_tracker: QueryTracker,
+    db_features: DatabaseFeatures,
+) -> None:
+    """Test that aliases of a relation differing in limit each count their farms, sharing one grouped CTE without LATERAL."""
+    result = await maybe_async(
+        any_query(
+            """
+            {
+                colorsPaginated {
+                    id
+                    a: fruits(limit: 1) { id farmsAggregate { count } }
+                    b: fruits(limit: 2) { id farmsAggregate { count } }
+                }
+            }
+            """
+        )
+    )
+    assert not result.errors
+    assert result.data
+    farm_counts = Counter(farm["fruit_id"] for farm in raw_farms)
+    for color in result.data["colorsPaginated"]:
+        fruits = [
+            {"id": fruit["id"], "farmsAggregate": {"count": farm_counts[fruit["id"]]}}
+            for fruit in sorted(raw_fruits, key=lambda fruit: fruit["id"])
+            if fruit["color_id"] == color["id"]
+        ]
+        assert color["a"] == fruits[:1]
+        assert color["b"] == fruits[:2]
+    assert query_tracker.query_count == 1
+    if not db_features.supports_lateral:
+        assert len(re.findall(r"\banon_\d+ AS\s*\(", query_tracker[0].statement_str)) == 2
 
 
 async def test_nested_aggregation_under_aliased_relations_with_arguments(

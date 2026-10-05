@@ -73,6 +73,7 @@ class QueryHook(Generic[DeclarativeT]):
     _checked_mappers: set[Mapper[Any]] = field(init=False, default_factory=set, compare=False, repr=False)
 
     def __post_init__(self) -> None:
+        """Splits ``load`` into the columns and the relationships the hook loads."""
         if isinstance(self.load, _UnsetLoad):
             # The inherited ``__init__`` shadows a ``load`` set as a plain class attribute on a subclass.
             self.load = list(getattr(type(self), "load", ()))

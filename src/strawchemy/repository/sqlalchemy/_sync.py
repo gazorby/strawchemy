@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
 
-from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository, dml_target
+from strawchemy.repository.sqlalchemy._base import InsertData, MutationData, SQLAlchemyGraphQLRepository
 from strawchemy.repository.typing import AnySyncSession, DeclarativeT
 from strawchemy.schema.mutation import RelationType, UpsertData
 from strawchemy.transpiler import QueryResult, SyncQueryExecutor, Transpiler
@@ -18,7 +18,6 @@ if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
 
     from sqlalchemy.orm import DeclarativeBase
-    from sqlalchemy.orm.util import AliasedClass
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.sqlalchemy._base import InsertOrUpdate, RowLike
@@ -71,19 +70,18 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
     def _delete_where(
         self,
-        alias: AliasedClass[Any],
         where: builtins.list[ColumnElement[bool]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> Sequence[Row[Any]]:
-        alias_insp = inspect(alias)
-        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
+        model_pks = [getattr(self.model, pk.key) for pk in self.model.__mapper__.primary_key if pk.key]
         if self._dialect.delete_returning:
-            statement = delete(dml_target(alias)).returning(*model_pks)
+            statement = delete(self.model).returning(*model_pks).execution_options(synchronize_session=False)
             if where:
                 statement = statement.where(*where)
             result = self.session.execute(statement, execution_options=execution_options or {})
             return result.all()
-        affected_statement, delete_statement = select(*model_pks), delete(dml_target(alias))
+        affected_statement = select(*model_pks)
+        delete_statement = delete(self.model).execution_options(synchronize_session=False)
         if where:
             affected_statement, delete_statement = affected_statement.where(*where), delete_statement.where(*where)
         affected_rows = (self.session.execute(affected_statement)).all()
@@ -93,21 +91,19 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
     def _update_where(
         self,
-        alias: AliasedClass[Any],
         values: dict[str, Any],
         where: builtins.list[ColumnElement[bool]] | None = None,
         execution_options: dict[str, Any] | None = None,
     ) -> Sequence[Row[Any]]:
-        alias_insp = inspect(alias)
-        model_pks = [getattr(alias, pk.key) for pk in alias_insp.mapper.primary_key if pk.key]
+        model_pks = [getattr(self.model, pk.key) for pk in self.model.__mapper__.primary_key if pk.key]
         if self._dialect.update_returning:
-            statement = update(dml_target(alias)).values(**values).returning(*model_pks)
+            statement = update(self.model).values(**values).returning(*model_pks)
             if where:
                 statement = statement.where(*where)
             result = self.session.execute(statement, execution_options=execution_options or {})
             return result.all()
 
-        affected_statement, update_statement = select(*model_pks), update(dml_target(alias)).values(**values)
+        affected_statement, update_statement = select(*model_pks), update(self.model).values(**values)
         if where:
             affected_statement, update_statement = affected_statement.where(*where), update_statement.where(*where)
         affected_rows = (self.session.execute(affected_statement)).all()
@@ -255,7 +251,7 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
 
         transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
-        return self._update_where(transpiler.context.aliases.root_alias, values[0], where_expressions)
+        return self._update_where(values[0], where_expressions)
 
     def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
         data.input.add_non_input_relations()
@@ -514,8 +510,6 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
             transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
             where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
             to_be_deleted = self.list(selection, dto_filter=dto_filter)
-            affected_rows = self._delete_where(
-                transpiler.context.aliases.root_alias, where_expressions, execution_options
-            )
+            affected_rows = self._delete_where(where_expressions, execution_options)
             transaction.commit()
         return to_be_deleted.filter_in(**self._rows_to_filter_dict(affected_rows))
