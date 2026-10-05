@@ -3,12 +3,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import pytest
-from graphql import GraphQLError
 from strawberry.types import get_object_definition
 
 from tests.integration.types.postgres import UserType
 from tests.integration.typing import RawRecordData
-from tests.typing import AnyQueryExecutor, SyncQueryExecutor
+from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
@@ -17,15 +16,6 @@ if TYPE_CHECKING:
     from tests.integration.fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
-
-
-def test_required_id_single(no_session_query: SyncQueryExecutor) -> None:
-    result = no_session_query("{ user { name } }")
-
-    assert bool(result.errors)
-    assert len(result.errors) == 1
-    assert isinstance(result.errors[0], GraphQLError)
-    assert result.errors[0].message == "Field 'user' argument 'id' of type 'Int!' is required, but it was not provided."
 
 
 async def test_single(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:

@@ -64,7 +64,7 @@ from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, Any
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.types import sqlite as sqlite_types
-from tests.typing import AnyQueryExecutor, SyncQueryExecutor
+from tests.typing import AnyQueryExecutor
 from tests.utils import generate_query
 
 if TYPE_CHECKING:
@@ -91,7 +91,6 @@ __all__ = (
     "asyncpg_engine",
     "engine",
     "expire_on_commit",
-    "no_session_query",
     "psycopg_async_engine",
     "psycopg_engine",
     "raw_colors",
@@ -912,11 +911,6 @@ def any_query(
     return generate_query(
         session=request.param, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides
     )
-
-
-@pytest.fixture
-def no_session_query(sync_query: type[Any]) -> SyncQueryExecutor:
-    return generate_query(query=sync_query, scalar_overrides=scalar_overrides)
 
 
 @dataclass

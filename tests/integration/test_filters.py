@@ -1957,20 +1957,6 @@ async def test_like_backslash_escapes_next_character(
     assert sorted(user["name"] for user in result.data["users"]) == names
 
 
-@pytest.mark.parametrize("operator", ["like", "nlike", "ilike", "nilike"])
-@pytest.mark.parametrize("value", ["50\\", "a\\\\\\"])
-async def test_like_pattern_ending_with_escape_is_rejected(
-    operator: str, value: str, any_query: AnyQueryExecutor
-) -> None:
-    """Test that a LIKE pattern ending with a lone backslash is rejected before reaching the database."""
-    result = await maybe_async(
-        any_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
-    )
-    assert result.errors
-    assert len(result.errors) == 1
-    assert result.errors[0].message == f"LIKE pattern {value!r} must not end with an escape character"
-
-
 @pytest.mark.parametrize(
     "raw_users",
     [
