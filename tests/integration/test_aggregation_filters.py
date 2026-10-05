@@ -35,7 +35,7 @@ async def test_count_aggregation_filter(
     predicate: str,
     value: int | list[int],
     expected_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -58,7 +58,7 @@ async def test_count_aggregation_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -93,7 +93,7 @@ async def test_min_string_aggregation_filter(
     predicate: str,
     value: str,
     expected_color_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -115,7 +115,7 @@ async def test_min_string_aggregation_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -150,7 +150,7 @@ async def test_max_string_aggregation_filter(
     predicate: str,
     value: str,
     expected_color_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -172,7 +172,7 @@ async def test_max_string_aggregation_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -206,7 +206,7 @@ async def test_sum_aggregation_filter(
     predicate: str,
     value: float,
     expected_color_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -228,7 +228,7 @@ async def test_sum_aggregation_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -262,7 +262,7 @@ async def test_avg_aggregation_filter(
     predicate: str,
     value: float,
     expected_color_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -282,7 +282,7 @@ async def test_avg_aggregation_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -303,7 +303,7 @@ async def test_avg_aggregation_filter(
 
 @pytest.mark.snapshot
 async def test_count_aggregation_filter_nested_under_or(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -327,7 +327,7 @@ async def test_count_aggregation_filter_nested_under_or(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     # Every color has at least one fruit, so the count > 0 predicate matches all of them.
@@ -339,7 +339,7 @@ async def test_count_aggregation_filter_nested_under_or(
 
 @pytest.mark.snapshot
 async def test_aggregation_built_once_across_filter_and_order_by(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -361,7 +361,7 @@ async def test_aggregation_built_once_across_filter_and_order_by(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -382,7 +382,7 @@ async def test_count_aggregation_filter_with_distinct(
     distinct: bool | None,
     expected_count: int,
     expected_color_indices: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -405,7 +405,7 @@ async def test_count_aggregation_filter_with_distinct(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -424,7 +424,7 @@ async def test_count_aggregation_filter_with_distinct(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_aggregate_filtered_and_selected_on_paginated_field(any_query: AnyQueryExecutor) -> None:
+async def test_aggregate_filtered_and_selected_on_paginated_field(any_async_query: AnyQueryExecutor) -> None:
     """Test that filtering on an aggregate and selecting one leaves the parents uncrossed.
 
     Regression test for #224: the aggregate join was emitted without correlation to the
@@ -442,7 +442,7 @@ async def test_aggregate_filtered_and_selected_on_paginated_field(any_query: Any
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -455,7 +455,7 @@ async def test_aggregate_filtered_and_selected_on_paginated_field(any_query: Any
 
 
 async def test_aggregate_filtered_and_selected_paginates_matching_parents(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
 ) -> None:
     """Test that limit and offset index the parents the aggregate filter kept."""
     query = """
@@ -471,7 +471,7 @@ async def test_aggregate_filtered_and_selected_paginates_matching_parents(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -487,7 +487,7 @@ def _order_by_keys(statement: str) -> list[str]:
 
 @pytest.mark.snapshot
 async def test_aggregation_filter_through_to_many_relation_also_selected(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a relation reached by an aggregation filter and selected is joined and ordered once."""
     query = """
@@ -498,7 +498,7 @@ async def test_aggregation_filter_through_to_many_relation_also_selected(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -512,7 +512,7 @@ async def test_aggregation_filter_through_to_many_relation_also_selected(
 
 @pytest.mark.snapshot
 async def test_aggregation_filter_through_to_one_relation_also_selected(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a to-one relation reached by an aggregation filter and selected is joined and ordered once."""
     query = """
@@ -523,7 +523,7 @@ async def test_aggregation_filter_through_to_one_relation_also_selected(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -540,7 +540,7 @@ async def test_aggregation_filter_through_to_one_relation_also_selected(
 
 
 async def test_not_or_of_aggregation_and_to_many_through_to_one_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """A relation-level ``_not`` of an OR on an aggregation and a to-many keeps the fruits of colors matching neither."""
     query = """
@@ -561,7 +561,7 @@ async def test_not_or_of_aggregation_and_to_many_through_to_one_relation(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -569,7 +569,9 @@ async def test_not_or_of_aggregation_and_to_many_through_to_one_relation(
     assert re.search(r"\) IS NOT (TRUE|1) ", query_tracker[0].statement_str, re.IGNORECASE)
 
 
-async def test_aggregation_filter_through_relation_selected_with_its_own_ordering(any_query: AnyQueryExecutor) -> None:
+async def test_aggregation_filter_through_relation_selected_with_its_own_ordering(
+    any_async_query: AnyQueryExecutor,
+) -> None:
     """Test that an ordered selection of a relation the filter also reaches keeps its own ordering."""
     query = """
         {
@@ -579,7 +581,7 @@ async def test_aggregation_filter_through_relation_selected_with_its_own_orderin
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 

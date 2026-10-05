@@ -70,10 +70,13 @@ def seed_insert_statements(raw_geo: RawRecordData) -> list[Insert]:
 
 @pytest.mark.snapshot
 async def test_no_filtering(
-    any_query: AnyQueryExecutor, raw_geo: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_geo: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that querying without filters returns all records."""
-    result = await maybe_async(any_query("{ geoField { id } }"))
+    result = await maybe_async(any_async_query("{ geoField { id } }"))
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == len(raw_geo)
@@ -95,7 +98,7 @@ async def test_contains_geometry(
     field_name: str,
     geometry: dict[str, Any],
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_geo: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -113,7 +116,7 @@ async def test_contains_geometry(
                 }}
             }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == len(expected_ids)
@@ -163,7 +166,7 @@ async def test_within_geometry(
     field_name: str,
     geometry: dict[str, Any],
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_geo: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -181,7 +184,7 @@ async def test_within_geometry(
                 }}
             }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == len(expected_ids)
@@ -194,7 +197,10 @@ async def test_within_geometry(
 
 @pytest.mark.snapshot
 async def test_is_null(
-    any_query: AnyQueryExecutor, raw_geo: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_geo: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test the isNull filter for geometry fields."""
     query = """
@@ -205,7 +211,7 @@ async def test_is_null(
                 }
             }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == 1
@@ -216,8 +222,8 @@ async def test_is_null(
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_not_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
-    result = await maybe_async(any_query("{ geoField(filter: { _not: { point: { isNull: true } } }) { id } }"))
+async def test_not_is_null(any_async_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
+    result = await maybe_async(any_async_query("{ geoField(filter: { _not: { point: { isNull: true } } }) { id } }"))
     assert not result.errors
     assert result.data
 
@@ -229,13 +235,13 @@ async def test_not_is_null(any_query: AnyQueryExecutor, raw_geo: RawRecordData) 
 @pytest.mark.parametrize("operator", ["isNull", "containsGeometry", "withinGeometry"])
 @pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
 async def test_null_operator_is_ignored(
-    operator: str, negated: bool, any_query: AnyQueryExecutor, raw_geo: RawRecordData
+    operator: str, negated: bool, any_async_query: AnyQueryExecutor, raw_geo: RawRecordData
 ) -> None:
     """Test that a geo operator set to null is ignored, directly and under ``_not``."""
     dto_filter = f"{{ point: {{ {operator}: null }} }}"
     if negated:
         dto_filter = f"{{ _not: {dto_filter} }}"
-    result = await maybe_async(any_query(f"{{ geoField(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ geoField(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
 

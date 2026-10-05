@@ -16,7 +16,10 @@ if TYPE_CHECKING:
 
 @pytest.mark.snapshot
 async def test_custom_apply_filter_sweeter_than(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     threshold = 5
     expected_ids = {fruit["id"] for fruit in raw_fruits if fruit["sweetness"] >= threshold}
@@ -27,7 +30,7 @@ async def test_custom_apply_filter_sweeter_than(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["fruitsFineGrained"]} == expected_ids
@@ -36,7 +39,10 @@ async def test_custom_apply_filter_sweeter_than(
 
 @pytest.mark.snapshot
 async def test_custom_apply_filter_in_strategy(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     threshold = 5
     expected_ids = {fruit["id"] for fruit in raw_fruits if fruit["sweetness"] >= threshold}
@@ -47,7 +53,7 @@ async def test_custom_apply_filter_in_strategy(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["fruitsFineGrained"]} == expected_ids
@@ -56,16 +62,16 @@ async def test_custom_apply_filter_in_strategy(
 
 @pytest.mark.parametrize("field", [pytest.param("sweeterThan", id="exists"), pytest.param("sweeterThanIn", id="in")])
 async def test_null_custom_apply_filter_is_ignored(
-    field: str, any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+    field: str, any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
 ) -> None:
     """Test that a custom apply filter set to null filters nothing."""
-    result = await maybe_async(any_query(f"{{ fruitsFineGrained(filter: {{ {field}: null }}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ fruitsFineGrained(filter: {{ {field}: null }}) {{ id }} }}"))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["fruitsFineGrained"]} == {fruit["id"] for fruit in raw_fruits}
 
 
-async def test_custom_apply_filter_under_or(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
+async def test_custom_apply_filter_under_or(any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     threshold = 8
     target_name = raw_fruits[0]["name"]
     expected_ids = {
@@ -85,7 +91,7 @@ async def test_custom_apply_filter_under_or(any_query: AnyQueryExecutor, raw_fru
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["fruitsFineGrained"]} == expected_ids
@@ -93,7 +99,7 @@ async def test_custom_apply_filter_under_or(any_query: AnyQueryExecutor, raw_fru
 
 @pytest.mark.snapshot
 async def test_declared_aggregate_count_filter(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
@@ -115,7 +121,7 @@ async def test_declared_aggregate_count_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["colorsFineGrained"]} == expected_ids
@@ -124,7 +130,7 @@ async def test_declared_aggregate_count_filter(
 
 @pytest.mark.snapshot
 async def test_declared_aggregate_sum_filter(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
@@ -155,7 +161,7 @@ async def test_declared_aggregate_sum_filter(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data is not None
     assert {row["id"] for row in result.data["colorsFineGrained"]} == expected_ids

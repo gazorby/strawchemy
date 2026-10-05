@@ -73,7 +73,7 @@ async def test_timedelta_components(
     component: str,
     value: int,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_intervals: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -86,7 +86,7 @@ async def test_timedelta_components(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["intervals"]) == len(expected_ids)
@@ -99,7 +99,7 @@ async def test_timedelta_components(
 
 @pytest.mark.snapshot
 async def test_timedelta_output(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_intervals: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -112,7 +112,7 @@ async def test_timedelta_output(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["intervals"]) == len(raw_intervals)
@@ -134,10 +134,10 @@ async def test_timedelta_output(
     ],
 )
 async def test_null_part_operator_is_ignored(
-    dto_filter: str, any_query: AnyQueryExecutor, raw_intervals: RawRecordData
+    dto_filter: str, any_async_query: AnyQueryExecutor, raw_intervals: RawRecordData
 ) -> None:
     """Test that an interval part, or one of its operators, set to null is ignored."""
-    result = await maybe_async(any_query(f"{{ intervals(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ intervals(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
     assert sorted(row["id"] for row in result.data["intervals"]) == sorted(row["id"] for row in raw_intervals)

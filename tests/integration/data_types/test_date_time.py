@@ -88,7 +88,7 @@ async def test_date_components(
     component: str,
     value: int,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -101,7 +101,7 @@ async def test_date_components(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
@@ -124,7 +124,7 @@ async def test_time_components(
     component: str,
     value: int,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -137,7 +137,7 @@ async def test_time_components(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
@@ -168,7 +168,7 @@ async def test_datetime_components(
     component: str,
     value: int,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -181,7 +181,7 @@ async def test_datetime_components(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
@@ -202,7 +202,7 @@ async def test_datetime_components(
     ],
 )
 async def test_iso_components_match_isocalendar(
-    component: str, attribute: str, value: int, any_query: AnyQueryExecutor, raw_date_times: RawRecordData
+    component: str, attribute: str, value: int, any_async_query: AnyQueryExecutor, raw_date_times: RawRecordData
 ) -> None:
     """Test that an ISO component filter selects exactly the rows isocalendar() agrees with."""
     query = f"""
@@ -212,7 +212,7 @@ async def test_iso_components_match_isocalendar(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     expected = [row["id"] for row in raw_date_times if getattr(row["date_col"].isocalendar(), attribute) == value]
 
     assert not result.errors
@@ -233,10 +233,10 @@ async def test_iso_components_match_isocalendar(
     ],
 )
 async def test_null_part_operator_is_ignored(
-    dto_filter: str, any_query: AnyQueryExecutor, raw_date_times: RawRecordData
+    dto_filter: str, any_async_query: AnyQueryExecutor, raw_date_times: RawRecordData
 ) -> None:
     """Test that a date or time part, or one of its operators, set to null is ignored."""
-    result = await maybe_async(any_query(f"{{ dateTimes(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ dateTimes(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
     assert sorted(row["id"] for row in result.data["dateTimes"]) == sorted(row["id"] for row in raw_date_times)

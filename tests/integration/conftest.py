@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from tests.integration.fixtures import (
     aiosqlite_engine,
+    any_async_query,
+    any_async_session,
     any_query,
     any_session,
     async_engine,
@@ -53,6 +55,8 @@ from tests.integration.fixtures import (
 
 __all__ = (
     "aiosqlite_engine",
+    "any_async_query",
+    "any_async_session",
     "any_query",
     "any_session",
     "async_engine",

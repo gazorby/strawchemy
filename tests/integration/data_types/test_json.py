@@ -78,7 +78,7 @@ async def test_json_filters(
     filter_name: str,
     value: Any,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -95,7 +95,7 @@ async def test_json_filters(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["json"]) == len(expected_ids)
@@ -121,7 +121,7 @@ async def test_json_not_filters(
     filter_name: str,
     value: Any,
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -133,7 +133,7 @@ async def test_json_not_filters(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert [row["id"] for row in result.data["json"]] == [raw_json[i]["id"] for i in expected_ids]
@@ -190,7 +190,7 @@ async def test_json_has_key_literal(
     filter_name: str,
     value: str | list[str],
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ``hasKey*`` match literal top-level object keys, and that ``_not`` matches every other row."""
@@ -200,7 +200,7 @@ async def test_json_has_key_literal(
         (f"{{ _not: {{ dictCol: {{ {filter_name}: $value }} }} }}", [i for i in _KEY_ROW_IDS if i not in expected_ids]),
     ):
         query = f"query ($value: {variable_type}) {{ json(filter: {dto_filter}) {{ id }} }}"
-        result = await maybe_async(any_query(query, {"value": value}))
+        result = await maybe_async(any_async_query(query, {"value": value}))
         assert not result.errors
         assert result.data
         assert sorted(row["id"] for row in result.data["json"]) == ids
@@ -221,7 +221,7 @@ async def test_json_has_key_literal(
 async def test_json_null_comparison_ignored(
     comparison: str,
     negated: bool,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,  # noqa: ARG001
     db_features: DatabaseFeatures,
 ) -> None:
@@ -231,7 +231,7 @@ async def test_json_null_comparison_ignored(
     dto_filter = f"{{ dictCol: {{ {comparison} }} }}"
     if negated:
         dto_filter = f"{{ _not: {dto_filter} }}"
-    result = await maybe_async(any_query(f"{{ json(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ json(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
     assert sorted(row["id"] for row in result.data["json"]) == _KEY_ROW_IDS
@@ -239,7 +239,7 @@ async def test_json_null_comparison_ignored(
 
 @pytest.mark.snapshot
 async def test_json_output(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -252,7 +252,7 @@ async def test_json_output(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -276,7 +276,7 @@ async def test_json_output(
 @pytest.mark.snapshot
 async def test_json_extract_path(
     path: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -289,7 +289,7 @@ async def test_json_extract_path(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -303,7 +303,10 @@ async def test_json_extract_path(
 
 @pytest.mark.snapshot
 async def test_json_extract_inner_path(
-    any_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor,
+    raw_json: RawRecordData,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
 ) -> None:
     query = """
         {
@@ -313,7 +316,7 @@ async def test_json_extract_inner_path(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 
@@ -326,7 +329,7 @@ async def test_json_extract_inner_path(
 
 
 async def test_json_extract_aliased_paths(
-    any_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases of a JSON column extracting different paths each get their own path."""
     query = """
@@ -338,7 +341,7 @@ async def test_json_extract_aliased_paths(
             }
         }
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
 

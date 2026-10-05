@@ -12,8 +12,10 @@ from tests.utils import maybe_async
 pytestmark = [pytest.mark.integration]
 
 
-async def _data(any_query: AnyQueryExecutor, query: str, variables: dict[str, Any] | None = None) -> dict[str, Any]:
-    result = await maybe_async(any_query(query, variables))
+async def _data(
+    any_async_query: AnyQueryExecutor, query: str, variables: dict[str, Any] | None = None
+) -> dict[str, Any]:
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data
     return result.data
@@ -42,12 +44,12 @@ def _colors_query(selection: str) -> str:
 async def test_excluded_relation_is_not_joined(
     selection: str,
     variables: dict[str, Any],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_colors: RawRecordData,
 ) -> None:
     """Test that a relation excluded by @skip or @include is left out of the query."""
-    data = await _data(any_query, _colors_query(selection), variables)
+    data = await _data(any_async_query, _colors_query(selection), variables)
     assert query_tracker.query_count == 1
     assert "JOIN" not in query_tracker[0].statement_formatted
     assert sorted(data["colors"], key=lambda color: color["id"]) == [{"id": color["id"]} for color in raw_colors]
@@ -65,10 +67,10 @@ async def test_excluded_relation_is_not_joined(
     ],
 )
 async def test_included_relation_is_joined(
-    selection: str, variables: dict[str, Any], any_query: AnyQueryExecutor, query_tracker: QueryTracker
+    selection: str, variables: dict[str, Any], any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that a relation kept by @skip or @include is loaded."""
-    data = await _data(any_query, _colors_query(selection), variables)
+    data = await _data(any_async_query, _colors_query(selection), variables)
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count("JOIN") == 1
     assert all("fruits" in color for color in data["colors"])
@@ -84,23 +86,23 @@ async def test_included_relation_is_joined(
 async def test_excluded_column_is_not_selected(
     directive: str,
     variables: dict[str, Any],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_colors: RawRecordData,
 ) -> None:
     """Test that a column excluded by @skip or @include is left out of the query."""
-    data = await _data(any_query, _colors_query(f"name {directive}"), variables)
+    data = await _data(any_async_query, _colors_query(f"name {directive}"), variables)
     assert query_tracker.query_count == 1
     assert "name" not in query_tracker[0].statement_formatted
     assert sorted(data["colors"], key=lambda color: color["id"]) == [{"id": color["id"]} for color in raw_colors]
 
 
 async def test_excluded_alias_with_other_arguments_adds_no_join(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a skipped alias of a relation, with arguments of its own, adds no join next to the kept alias."""
     data = await _data(
-        any_query, "{ colorsPaginated { id a: fruits { id } b: fruits(limit: null) @skip(if: true) { id } } }"
+        any_async_query, "{ colorsPaginated { id a: fruits { id } b: fruits(limit: null) @skip(if: true) { id } } }"
     )
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count("JOIN") == 1
@@ -114,10 +116,10 @@ async def test_excluded_alias_with_other_arguments_adds_no_join(
 
 
 async def test_excluded_identity_column(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_colors: RawRecordData, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_colors: RawRecordData, raw_fruits: RawRecordData
 ) -> None:
     """Test that skipping the primary key still loads the relations of each row."""
-    data = await _data(any_query, "{ colors { id @skip(if: true) name fruits { name } } }")
+    data = await _data(any_async_query, "{ colors { id @skip(if: true) name fruits { name } } }")
     assert query_tracker.query_count == 1
     expected = [
         {
@@ -134,10 +136,10 @@ async def test_excluded_identity_column(
 
 
 async def test_same_response_key_under_different_directives(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a skipped occurrence of a response key leaves only the fields of the kept occurrence."""
-    data = await _data(any_query, "{ colors { id fruits @skip(if: true) { sweetness } fruits { name } } }")
+    data = await _data(any_async_query, "{ colors { id fruits @skip(if: true) { sweetness } fruits { name } } }")
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count("JOIN") == 1
     assert "sweetness" not in query_tracker[0].statement_formatted

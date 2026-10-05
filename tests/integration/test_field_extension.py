@@ -9,9 +9,9 @@ from tests.utils import maybe_async
 pytestmark = [pytest.mark.integration]
 
 
-async def test_field_extension(any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
+async def test_field_extension(any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             query fruitWithExtension($id: Int!) {
                 fruitWithExtension(id: $id) {

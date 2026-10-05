@@ -17,15 +17,6 @@
             fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_order_by[session-async-tracked-orderedFruits-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
 # name: test_custom_query_hook_order_by[session-async-tracked-orderedFruits-psycopg_async_engine]
   '''
   SELECT fruit.water_percent,
@@ -69,23 +60,6 @@
             fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_order_by[session-async-tracked-orderedFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM (
-          SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.water_percent ASC,
-                    fruit.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
 # name: test_custom_query_hook_order_by[session-async-tracked-orderedFruitsPaginated-psycopg_async_engine]
   '''
   SELECT fruit.water_percent,
@@ -98,58 +72,6 @@
                     fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_order_by[session-sync-tracked-orderedFruits-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_order_by[session-sync-tracked-orderedFruits-sqlite_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_order_by[session-sync-tracked-orderedFruitsPaginated-psycopg_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM (
-          SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.water_percent ASC,
-                    fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.water_percent ASC,
-            fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_order_by[session-sync-tracked-orderedFruitsPaginated-sqlite_engine]
-  '''
-  SELECT fruit.water_percent,
-         fruit.id
-    FROM (
-          SELECT fruit.water_percent AS water_percent,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.water_percent ASC,
-                    fruit.id ASC
-           LIMIT ?
-          OFFSET ?
          ) AS fruit
    ORDER BY fruit.water_percent ASC,
             fruit.id ASC
@@ -170,15 +92,6 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name = %s
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where[session-async-tracked-filteredFruits-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -223,22 +136,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_where[session-async-tracked-filteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = $1::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_custom_query_hook_where[session-async-tracked-filteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -251,56 +148,6 @@
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where[session-sync-tracked-filteredFruits-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where[session-sync-tracked-filteredFruits-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where[session-sync-tracked-filteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = %(name_1)s::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where[session-sync-tracked-filteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = ?
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
   '''
@@ -333,20 +180,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_where_on_unselected_column[session-async-tracked-fieldFilteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = $1::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_custom_query_hook_where_on_unselected_column[session-async-tracked-fieldFilteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT fruit.id
@@ -374,14 +207,6 @@
   SELECT fruit.id
     FROM fruit AS fruit
    WHERE fruit.name = %s
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-async-tracked-filteredFruits-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -421,20 +246,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_where_on_unselected_column[session-async-tracked-filteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = $1::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_custom_query_hook_where_on_unselected_column[session-async-tracked-filteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT fruit.id
@@ -449,78 +260,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-fieldFilteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = %(name_1)s::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-fieldFilteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = ?
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-filteredFruits-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-filteredFruits-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-filteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = %(name_1)s::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_custom_query_hook_where_on_unselected_column[session-sync-tracked-filteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = ?
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_load_columns_hook[session-async-tracked-fruitsHooks-aiosqlite_engine]
   '''
   SELECT fruit.name,
@@ -531,15 +270,6 @@
   '''
 # ---
 # name: test_load_columns_hook[session-async-tracked-fruitsHooks-asyncmy_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_columns_hook[session-async-tracked-fruitsHooks-asyncpg_engine]
   '''
   SELECT fruit.name,
          fruit.color_id,
@@ -591,23 +321,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_load_columns_hook[session-async-tracked-fruitsPaginatedHooks-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 fruit.color_id AS color_id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_load_columns_hook[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -621,58 +334,6 @@
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_columns_hook[session-sync-tracked-fruitsHooks-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_columns_hook[session-sync-tracked-fruitsHooks-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_columns_hook[session-sync-tracked-fruitsPaginatedHooks-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 fruit.color_id AS color_id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_columns_hook[session-sync-tracked-fruitsPaginatedHooks-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.color_id,
-         fruit.id
-    FROM (
-          SELECT fruit.id AS id,
-                 fruit.name AS name,
-                 fruit.color_id AS color_id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
   '''
@@ -714,35 +375,6 @@
   '''
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-asyncmy_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-asyncpg_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-asyncpg_engine].1
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
@@ -863,41 +495,6 @@
    WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
-# name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncpg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT color.id
@@ -912,134 +509,6 @@
   '''
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruits-psycopg_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruits-psycopg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruits-sqlite_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruits-sqlite_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruitsPaginated-psycopg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_nested_relationships_no_columns[session-sync-tracked-colorsWithFilteredFruitsPaginated-sqlite_engine].1
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
@@ -1095,32 +564,6 @@
   '''
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-asyncmy_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-asyncpg_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-asyncpg_engine].1
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
@@ -1229,38 +672,6 @@
    WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
-# name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncpg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT color.id
@@ -1275,122 +686,6 @@
   '''
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruits-psycopg_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruits-psycopg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruits-sqlite_engine]
-  '''
-  SELECT color.id
-    FROM color AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruits-sqlite_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruitsPaginated-psycopg_engine].1
-  '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
-    FROM fruit
-    LEFT OUTER JOIN fruit_farm AS fruit_farm_1
-      ON fruit.id = fruit_farm_1.fruit_id
-   WHERE fruit.color_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT color.id
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-   ORDER BY color.id ASC
-  '''
-# ---
-# name: test_load_relationships_nested[session-sync-tracked-colorsWithFilteredFruitsPaginated-sqlite_engine].1
   '''
   SELECT fruit.color_id AS fruit_color_id,
          fruit.name AS fruit_name,
@@ -1435,24 +730,6 @@
   '''
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-asyncmy_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-asyncpg_engine].1
   '''
   SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
          fruit_farm.name AS fruit_farm_name,
@@ -1529,30 +806,6 @@
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
-# name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-asyncpg_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine]
   '''
   SELECT fruit.id
@@ -1567,90 +820,6 @@
   '''
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsHooks-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsHooks-psycopg_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsHooks-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsHooks-sqlite_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsPaginatedHooks-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsPaginatedHooks-psycopg_engine].1
-  '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
-    FROM fruit_farm
-   WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsPaginatedHooks-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_no_columns[session-sync-tracked-fruitsPaginatedHooks-sqlite_engine].1
   '''
   SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
          fruit_farm.name AS fruit_farm_name,
@@ -1703,29 +872,6 @@
          color.id AS color_id
     FROM fruit AS fruit_1
    INNER JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-asyncpg_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-asyncpg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
       ON color.id = fruit_1.color_id
    WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -1811,35 +957,6 @@
    WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
-# name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-asyncpg_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-asyncpg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-psycopg_async_engine]
   '''
   SELECT color.id,
@@ -1858,110 +975,6 @@
   '''
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-psycopg_async_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-psycopg_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-psycopg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-sqlite_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooks-sqlite_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-psycopg_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-psycopg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-sqlite_engine]
-  '''
-  SELECT color.id,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_load_relationships_on_nested_field[session-sync-tracked-colorsHooksPaginated-sqlite_engine].1
   '''
   SELECT fruit_1.id AS fruit_1_id,
          color.name AS color_name,
@@ -2007,25 +1020,6 @@
          color.id AS color_id
     FROM fruit AS fruit_1
    INNER JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-async-tracked-fruitsHooks-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-async-tracked-fruitsHooks-asyncpg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
       ON color.id = fruit_1.color_id
    WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -2099,31 +1093,6 @@
    WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
   '''
 # ---
-# name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-asyncpg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-asyncpg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine]
   '''
   SELECT fruit.id
@@ -2138,94 +1107,6 @@
   '''
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsHooks-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsHooks-psycopg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsHooks-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsHooks-sqlite_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsPaginatedHooks-psycopg_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsPaginatedHooks-psycopg_engine].1
-  '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
-    FROM fruit AS fruit_1
-    JOIN color
-      ON color.id = fruit_1.color_id
-   WHERE fruit_1.id IN (__[POSTCOMPILE_primary_keys])
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsPaginatedHooks-sqlite_engine]
-  '''
-  SELECT fruit.id
-    FROM (
-          SELECT fruit.id AS id
-            FROM fruit AS fruit
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_load_relationships_with_columns[session-sync-tracked-fruitsPaginatedHooks-sqlite_engine].1
   '''
   SELECT fruit_1.id AS fruit_1_id,
          color.name AS color_name,
@@ -2314,41 +1195,6 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_nested_query_hook_order_by_joined_alias[session-async-tracked-distinct-on-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT anon_2.name AS name,
-                 anon_2.id AS id,
-                 anon_2.color_id AS color_id,
-                 anon_2.name_2 AS name_2,
-                 anon_2.sweetness AS sweetness
-            FROM (
-                  SELECT fruit_1.name AS name,
-                         fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
-                         color_1.name AS name_2,
-                         fruit_1.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS anon_3
-                    FROM fruit AS fruit_1
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit_1.color_id
-                   WHERE color.id = fruit_1.color_id
-                 ) AS anon_2
-           WHERE anon_2.anon_3 = $1::INTEGER
-           ORDER BY anon_2.name_2 DESC,
-                    anon_2.sweetness DESC
-         ) AS anon_1
-      ON TRUE
    ORDER BY color.id ASC,
             anon_1.name_2 DESC,
             anon_1.sweetness DESC
@@ -2453,31 +1299,6 @@
             anon_1.sweetness DESC
   '''
 # ---
-# name: test_nested_query_hook_order_by_joined_alias[session-async-tracked-order-by-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 color_1.name AS name_2,
-                 fruit_1.sweetness AS sweetness
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE color.id = fruit_1.color_id
-           ORDER BY color_1.name DESC,
-                    fruit_1.sweetness DESC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
 # name: test_nested_query_hook_order_by_joined_alias[session-async-tracked-order-by-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -2498,139 +1319,6 @@
                     fruit_1.sweetness DESC
          ) AS anon_1
       ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_nested_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT anon_2.name AS name,
-                 anon_2.id AS id,
-                 anon_2.color_id AS color_id,
-                 anon_2.name_2 AS name_2,
-                 anon_2.sweetness AS sweetness
-            FROM (
-                  SELECT fruit_1.name AS name,
-                         fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
-                         color_1.name AS name_2,
-                         fruit_1.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS anon_3
-                    FROM fruit AS fruit_1
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit_1.color_id
-                   WHERE color.id = fruit_1.color_id
-                 ) AS anon_2
-           WHERE anon_2.anon_3 = %(param_1)s::INTEGER
-           ORDER BY anon_2.name_2 DESC,
-                    anon_2.sweetness DESC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_nested_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT anon_2.name AS name,
-                 anon_2.id AS id,
-                 anon_2.color_id AS color_id,
-                 anon_2.name_2 AS name_2,
-                 anon_2.sweetness AS sweetness,
-                 dense_rank() OVER (PARTITION BY anon_2.color_id ORDER BY anon_2.name_2 DESC, anon_2.sweetness DESC, anon_2.id) AS rank
-            FROM (
-                  SELECT fruit_1.name AS name,
-                         fruit_1.id AS id,
-                         fruit_1.color_id AS color_id,
-                         color_1.name AS name_2,
-                         fruit_1.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit_1.color_id, fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC) AS anon_3
-                    FROM fruit AS fruit_1
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit_1.color_id
-                   WHERE fruit_1.color_id IS NOT NULL
-                 ) AS anon_2
-           WHERE anon_2.anon_3 = ?
-           GROUP BY anon_2.name,
-                    anon_2.id,
-                    anon_2.color_id,
-                    anon_2.name_2,
-                    anon_2.sweetness
-           ORDER BY anon_2.name_2 DESC,
-                    anon_2.sweetness DESC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_nested_query_hook_order_by_joined_alias[session-sync-tracked-order-by-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 color_1.name AS name_2,
-                 fruit_1.sweetness AS sweetness
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE color.id = fruit_1.color_id
-           ORDER BY color_1.name DESC,
-                    fruit_1.sweetness DESC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.name_2 DESC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_nested_query_hook_order_by_joined_alias[session-sync-tracked-order-by-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.color_id AS color_id,
-                 color_1.name AS name_2,
-                 fruit_1.sweetness AS sweetness,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY color_1.name DESC, fruit_1.sweetness DESC, fruit_1.id) AS rank
-            FROM fruit AS fruit_1
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit_1.color_id
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.color_id,
-                    color_1.name,
-                    fruit_1.sweetness
-           ORDER BY color_1.name DESC,
-                    fruit_1.sweetness DESC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
    ORDER BY color.id ASC,
             anon_1.name_2 DESC,
             anon_1.sweetness DESC
@@ -2686,27 +1374,6 @@
             anon_1.id ASC
   '''
 # ---
-# name: test_query_hook_joining_on_relation[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%' || $1::VARCHAR)
-             AND color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
 # name: test_query_hook_joining_on_relation[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -2724,52 +1391,6 @@
              AND color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_joining_on_relation[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
-             AND color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_joining_on_relation[session-sync-tracked-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%' || ?)
-             AND fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.color_id
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -2836,33 +1457,6 @@
             anon_1.id ASC
   '''
 # ---
-# name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%' || $1::VARCHAR)
-             AND color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.name IN (__[POSTCOMPILE_name_3])
-         )
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
 # name: test_query_hook_joining_on_relation_ignored_by_filter[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -2880,64 +1474,6 @@
              AND color.id = fruit_1.color_id
          ) AS anon_1
       ON TRUE
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.name IN (__[POSTCOMPILE_name_3])
-         )
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_joining_on_relation_ignored_by_filter[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%%' || %(name_2)s::VARCHAR)
-             AND color.id = fruit_1.color_id
-         ) AS anon_1
-      ON TRUE
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.name IN (__[POSTCOMPILE_name_3])
-         )
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_joining_on_relation_ignored_by_filter[session-sync-tracked-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.color_id AS color_id
-            FROM fruit AS fruit_1
-            JOIN fruit_farm
-              ON fruit_farm.fruit_id = fruit_1.id
-           WHERE (fruit_farm.name LIKE '%' || ?)
-             AND fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.color_id
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
    WHERE EXISTS (
           SELECT 1
             FROM fruit AS fruit_2
@@ -3008,30 +1544,6 @@
             anon_1.id ASC
   '''
 # ---
-# name: test_query_hook_on_paginated_relation[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness > $1::INTEGER
-             AND color.id = fruit_1.color_id
-           ORDER BY fruit_1.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
 # name: test_query_hook_on_paginated_relation[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -3052,60 +1564,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS anon_1
       ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_paginated_relation[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness > %(sweetness_1)s::INTEGER
-             AND color.id = fruit_1.color_id
-           ORDER BY fruit_1.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_paginated_relation[session-sync-tracked-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent,
-                 fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.id ASC, fruit_1.id) AS rank
-            FROM fruit AS fruit_1
-           WHERE fruit_1.sweetness > ?
-             AND fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.water_percent,
-                    fruit_1.color_id
-           ORDER BY fruit_1.id ASC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
-     AND anon_1.rank > ?
-     AND anon_1.rank <= ?
    ORDER BY color.id ASC,
             anon_1.id ASC
   '''
@@ -3134,20 +1592,6 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > %s
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruits-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $1::INTEGER
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -3208,27 +1652,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $3::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_query_hook_on_relation_field[session-async-tracked-colorsWithSweetFruitsPaginated-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -3246,76 +1669,6 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruits-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruits-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > ?
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruitsPaginated-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_field[session-sync-tracked-colorsWithSweetFruitsPaginated-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -3355,26 +1708,6 @@
             FROM fruit AS fruit_2
            WHERE color.id = fruit_2.color_id
              AND fruit_2.sweetness <= %s
-         )
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruits-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $1::INTEGER
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.sweetness <= $2::INTEGER
          )
    ORDER BY color.id ASC,
             fruit_1.id ASC
@@ -3454,33 +1787,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           WHERE EXISTS (
-                  SELECT 1
-                    FROM fruit AS fruit_2
-                   WHERE color.id = fruit_2.color_id
-                     AND fruit_2.sweetness <= $1::INTEGER
-                 )
-           ORDER BY color.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $4::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_query_hook_on_relation_ignored_by_filter[session-async-tracked-colorsWithSweetFruitsPaginated-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -3504,100 +1810,6 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > %(sweetness_2)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruits-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.sweetness <= %(sweetness_2)s::INTEGER
-         )
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruits-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > ?
-   WHERE EXISTS (
-          SELECT 1
-            FROM fruit AS fruit_2
-           WHERE color.id = fruit_2.color_id
-             AND fruit_2.sweetness <= ?
-         )
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruitsPaginated-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           WHERE EXISTS (
-                  SELECT 1
-                    FROM fruit AS fruit_2
-                   WHERE color.id = fruit_2.color_id
-                     AND fruit_2.sweetness <= %(sweetness_1)s::INTEGER
-                 )
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_2)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_ignored_by_filter[session-sync-tracked-colorsWithSweetFruitsPaginated-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           WHERE EXISTS (
-                  SELECT 1
-                    FROM fruit AS fruit_2
-                   WHERE color.id = fruit_2.color_id
-                     AND fruit_2.sweetness <= ?
-                 )
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -3644,27 +1856,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > $3::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_query_hook_on_relation_keeps_parent_page_full[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -3682,48 +1873,6 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > %(sweetness_1)s::INTEGER
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_relation_keeps_parent_page_full[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM (
-          SELECT color.name AS name,
-                 color.id AS id
-            FROM color AS color
-           ORDER BY color.id ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.sweetness > ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -3756,20 +1905,6 @@
             fruit_1.id ASC
   '''
 # ---
-# name: test_query_hook_on_type[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.name = $1::VARCHAR
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
 # name: test_query_hook_on_type[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -3780,34 +1915,6 @@
     LEFT OUTER JOIN fruit AS fruit_1
       ON color.id = fruit_1.color_id
      AND fruit_1.name = %(name_2)s::VARCHAR
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_type[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.name = %(name_2)s::VARCHAR
-   ORDER BY color.id ASC,
-            fruit_1.id ASC
-  '''
-# ---
-# name: test_query_hook_on_type[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         fruit_1.name AS name_1,
-         fruit_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN fruit AS fruit_1
-      ON color.id = fruit_1.color_id
-     AND fruit_1.name = ?
    ORDER BY color.id ASC,
             fruit_1.id ASC
   '''
@@ -3863,35 +1970,6 @@
                       ON color_1.id = fruit.color_id
                  ) AS anon_1
            WHERE anon_1.anon_2 = %s
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-async-tracked-distinct-on-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = $1::INTEGER
            ORDER BY anon_1.name_1 DESC,
                     anon_1.sweetness ASC
          ) AS fruit
@@ -3956,37 +2034,6 @@
                     anon_1.sweetness ASC
            LIMIT %s,
                  %s
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-async-tracked-distinct-on-paginated-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = $1::INTEGER
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
          ) AS fruit
    ORDER BY fruit.name_1 DESC,
             fruit.sweetness ASC
@@ -4094,27 +2141,6 @@
             fruit.sweetness ASC
   '''
 # ---
-# name: test_query_hook_order_by_joined_alias[session-async-tracked-paginated-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id,
-                 color_1.name AS name_1,
-                 fruit.sweetness AS sweetness
-            FROM fruit AS fruit
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit.color_id
-           ORDER BY color_1.name DESC,
-                    fruit.sweetness ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
 # name: test_query_hook_order_by_joined_alias[session-async-tracked-paginated-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -4158,202 +2184,7 @@
             fruit.sweetness ASC
   '''
 # ---
-# name: test_query_hook_order_by_joined_alias[session-async-tracked-plain-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   ORDER BY color_1.name DESC,
-            fruit.sweetness ASC
-  '''
-# ---
 # name: test_query_hook_order_by_joined_alias[session-async-tracked-plain-psycopg_async_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   ORDER BY color_1.name DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-paginated-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-           LIMIT %(param_2)s::INTEGER
-          OFFSET %(param_3)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-paginated-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = ?
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = %(param_1)s::INTEGER
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-distinct-on-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT anon_1.name AS name,
-                 anon_1.id AS id,
-                 anon_1.color_id AS color_id,
-                 anon_1.name_1 AS name_1,
-                 anon_1.sweetness AS sweetness
-            FROM (
-                  SELECT fruit.name AS name,
-                         fruit.id AS id,
-                         fruit.color_id AS color_id,
-                         color_1.name AS name_1,
-                         fruit.sweetness AS sweetness,
-                         row_number() OVER (PARTITION BY fruit.color_id ORDER BY color_1.name DESC, fruit.sweetness ASC) AS anon_2
-                    FROM fruit AS fruit
-                    LEFT OUTER JOIN color AS color_1
-                      ON color_1.id = fruit.color_id
-                 ) AS anon_1
-           WHERE anon_1.anon_2 = ?
-           ORDER BY anon_1.name_1 DESC,
-                    anon_1.sweetness ASC
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-paginated-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id,
-                 color_1.name AS name_1,
-                 fruit.sweetness AS sweetness
-            FROM fruit AS fruit
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit.color_id
-           ORDER BY color_1.name DESC,
-                    fruit.sweetness ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-paginated-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id,
-                 color_1.name AS name_1,
-                 fruit.sweetness AS sweetness
-            FROM fruit AS fruit
-            LEFT OUTER JOIN color AS color_1
-              ON color_1.id = fruit.color_id
-           ORDER BY color_1.name DESC,
-                    fruit.sweetness ASC
-           LIMIT ?
-          OFFSET ?
-         ) AS fruit
-   ORDER BY fruit.name_1 DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-plain-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-    LEFT OUTER JOIN color AS color_1
-      ON color_1.id = fruit.color_id
-   ORDER BY color_1.name DESC,
-            fruit.sweetness ASC
-  '''
-# ---
-# name: test_query_hook_order_by_joined_alias[session-sync-tracked-plain-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.id
@@ -4426,31 +2257,6 @@
             anon_1.id ASC
   '''
 # ---
-# name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.id ASC
-           LIMIT $1::INTEGER
-          OFFSET $2::INTEGER
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
 # name: test_query_hook_ordering_on_paginated_relation[session-async-tracked-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -4471,62 +2277,6 @@
           OFFSET %(param_2)s::INTEGER
          ) AS anon_1
       ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_ordering_on_paginated_relation[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_ordering_on_paginated_relation[session-sync-tracked-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent,
-                 fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id ASC, fruit_1.id) AS rank
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.water_percent,
-                    fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.id ASC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
-     AND anon_1.rank > ?
-     AND anon_1.rank <= ?
    ORDER BY color.id ASC,
             anon_1.water_percent ASC,
             anon_1.id ASC
@@ -4591,31 +2341,6 @@
     FROM color AS color
     LEFT OUTER JOIN anon_1
       ON color.id = anon_1.color_id
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_query_hook_ordering_on_relation[session-async-tracked-client-order-by-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.sweetness,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.sweetness AS sweetness,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.sweetness DESC
-         ) AS anon_1
-      ON TRUE
    ORDER BY color.id ASC,
             anon_1.water_percent ASC,
             anon_1.sweetness DESC
@@ -4702,28 +2427,6 @@
             anon_1.id ASC
   '''
 # ---
-# name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-asyncpg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
 # name: test_query_hook_ordering_on_relation[session-async-tracked-hook-only-psycopg_async_engine]
   '''
   SELECT color.name,
@@ -4741,113 +2444,6 @@
            ORDER BY fruit_1.water_percent ASC
          ) AS anon_1
       ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_ordering_on_relation[session-sync-tracked-client-order-by-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.sweetness,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.sweetness AS sweetness,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.sweetness DESC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_query_hook_ordering_on_relation[session-sync-tracked-client-order-by-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.sweetness AS sweetness,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent,
-                 fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.sweetness DESC, fruit_1.id) AS rank
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.sweetness,
-                    fruit_1.id,
-                    fruit_1.water_percent,
-                    fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC,
-                    fruit_1.sweetness DESC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.sweetness,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.sweetness DESC
-  '''
-# ---
-# name: test_query_hook_ordering_on_relation[session-sync-tracked-hook-only-psycopg_engine]
-  '''
-  SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN LATERAL (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent
-            FROM fruit AS fruit_1
-           WHERE color.id = fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC
-         ) AS anon_1
-      ON TRUE
-   ORDER BY color.id ASC,
-            anon_1.water_percent ASC,
-            anon_1.id ASC
-  '''
-# ---
-# name: test_query_hook_ordering_on_relation[session-sync-tracked-hook-only-sqlite_engine]
-  '''
-  WITH anon_1 AS (
-          SELECT fruit_1.name AS name,
-                 fruit_1.id AS id,
-                 fruit_1.water_percent AS water_percent,
-                 fruit_1.color_id AS color_id,
-                 dense_rank() OVER (PARTITION BY fruit_1.color_id ORDER BY fruit_1.water_percent ASC, fruit_1.id) AS rank
-            FROM fruit AS fruit_1
-           WHERE fruit_1.color_id IS NOT NULL
-           GROUP BY fruit_1.name,
-                    fruit_1.id,
-                    fruit_1.water_percent,
-                    fruit_1.color_id
-           ORDER BY fruit_1.water_percent ASC
-         ) SELECT color.name,
-         color.id,
-         anon_1.name AS name_1,
-         anon_1.water_percent,
-         anon_1.id AS id_1
-    FROM color AS color
-    LEFT OUTER JOIN anon_1
-      ON color.id = anon_1.color_id
    ORDER BY color.id ASC,
             anon_1.water_percent ASC,
             anon_1.id ASC
@@ -4871,34 +2467,7 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_root_field_query_hook_load[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_root_field_query_hook_load[session-async-tracked-psycopg_async_engine]
-  '''
-  SELECT fruit.name,
-         fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_load[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.water_percent,
-         fruit.id
-    FROM fruit AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_load[session-sync-tracked-sqlite_engine]
   '''
   SELECT fruit.name,
          fruit.water_percent,
@@ -4922,15 +2491,6 @@
          fruit.id
     FROM fruit AS fruit
    WHERE fruit.name = %s
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruits-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -4975,22 +2535,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = $1::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT $2::INTEGER
-          OFFSET $3::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_root_field_query_hook_where[session-async-tracked-fieldFilteredFruitsPaginated-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -5003,56 +2547,6 @@
            ORDER BY fruit.id ASC
            LIMIT %(param_1)s::INTEGER
           OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruits-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruits-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruitsPaginated-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = %(name_1)s::VARCHAR
-           ORDER BY fruit.id ASC
-           LIMIT %(param_1)s::INTEGER
-          OFFSET %(param_2)s::INTEGER
-         ) AS fruit
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where[session-sync-tracked-fieldFilteredFruitsPaginated-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM (
-          SELECT fruit.name AS name,
-                 fruit.id AS id
-            FROM fruit AS fruit
-           WHERE fruit.name = ?
-           ORDER BY fruit.id ASC
-           LIMIT ?
-          OFFSET ?
          ) AS fruit
    ORDER BY fruit.id ASC
   '''
@@ -5074,16 +2568,6 @@
     FROM fruit AS fruit
    WHERE fruit.name = %s
      AND fruit.id = %s
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-False-None-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
-     AND fruit.id = $2::INTEGER
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -5117,16 +2601,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
-     AND fruit.id = $2::INTEGER
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_root_field_query_hook_where_get_by_id[session-async-tracked-True-expected0-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -5134,46 +2608,6 @@
     FROM fruit AS fruit
    WHERE fruit.name = %(name_1)s::VARCHAR
      AND fruit.id = %(id_1)s::INTEGER
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-False-None-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-     AND fruit.id = %(id_1)s::INTEGER
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-False-None-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
-     AND fruit.id = ?
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-True-expected0-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-     AND fruit.id = %(id_1)s::INTEGER
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_get_by_id[session-sync-tracked-True-expected0-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
-     AND fruit.id = ?
    ORDER BY fruit.id ASC
   '''
 # ---
@@ -5197,16 +2631,6 @@
    ORDER BY fruit.id ASC
   '''
 # ---
-# name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-asyncpg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         count(*) OVER () AS anon_1
-    FROM fruit AS fruit
-   WHERE fruit.name = $1::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
 # name: test_root_field_query_hook_where_root_aggregations[session-async-tracked-psycopg_async_engine]
   '''
   SELECT fruit.name,
@@ -5214,26 +2638,6 @@
          count(*) OVER () AS anon_1
     FROM fruit AS fruit
    WHERE fruit.name = %(name_1)s::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_root_aggregations[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         count(*) OVER () AS anon_1
-    FROM fruit AS fruit
-   WHERE fruit.name = %(name_1)s::VARCHAR
-   ORDER BY fruit.id ASC
-  '''
-# ---
-# name: test_root_field_query_hook_where_root_aggregations[session-sync-tracked-sqlite_engine]
-  '''
-  SELECT fruit.name,
-         fruit.id,
-         count(*) OVER () AS anon_1
-    FROM fruit AS fruit
-   WHERE fruit.name = ?
    ORDER BY fruit.id ASC
   '''
 # ---

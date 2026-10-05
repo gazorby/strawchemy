@@ -59,7 +59,7 @@ async def test_postgres_array_filters(
     filter_name: str,
     value: list[str],
     expected_ids: list[int],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_arrays: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
@@ -73,7 +73,7 @@ async def test_postgres_array_filters(
             }}
         }}
     """
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     assert len(result.data["array"]) == len(expected_ids)
@@ -94,9 +94,11 @@ async def test_postgres_array_filters(
     ],
 )
 async def test_postgres_array_filters_empty_list(
-    filter_name: str, expected_ids: list[int], any_query: AnyQueryExecutor
+    filter_name: str, expected_ids: list[int], any_async_query: AnyQueryExecutor
 ) -> None:
-    result = await maybe_async(any_query(f"{{ array(filter: {{ arrayStrCol: {{ {filter_name}: [] }} }}) {{ id }} }}"))
+    result = await maybe_async(
+        any_async_query(f"{{ array(filter: {{ arrayStrCol: {{ {filter_name}: [] }} }}) {{ id }} }}")
+    )
     assert not result.errors
     assert result.data is not None
     assert sorted(row["id"] for row in result.data["array"]) == expected_ids
@@ -105,13 +107,13 @@ async def test_postgres_array_filters_empty_list(
 @pytest.mark.parametrize("operator", ["contains", "containedIn", "overlap"])
 @pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
 async def test_postgres_array_null_operator_is_ignored(
-    operator: str, negated: bool, any_query: AnyQueryExecutor, raw_arrays: RawRecordData
+    operator: str, negated: bool, any_async_query: AnyQueryExecutor, raw_arrays: RawRecordData
 ) -> None:
     """Test that an array operator set to null is ignored, directly and under ``_not``."""
     dto_filter = f"{{ arrayStrCol: {{ {operator}: null }} }}"
     if negated:
         dto_filter = f"{{ _not: {dto_filter} }}"
-    result = await maybe_async(any_query(f"{{ array(filter: {dto_filter}) {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ array(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data is not None
     assert sorted(row["id"] for row in result.data["array"]) == sorted(row["id"] for row in raw_arrays)

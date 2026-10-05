@@ -24,12 +24,14 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.snapshot
 async def test_order_by(
     order_by: Literal["ASC", "DESC"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ fruits(orderBy: {{ sweetness: {order_by} }}) {{ id sweetness }} }}"))
+    result = await maybe_async(
+        any_async_query(f"{{ fruits(orderBy: {{ sweetness: {order_by} }}) {{ id sweetness }} }}")
+    )
     assert not result.errors
     assert result.data
     # Sort records
@@ -45,12 +47,12 @@ async def test_order_by(
 @pytest.mark.snapshot
 async def test_nulls(
     order_by: Literal["ASC_NULLS_FIRST", "ASC_NULLS_LAST", "DESC_NULLS_FIRST", "DESC_NULLS_LAST"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_users: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ users(orderBy: {{ bio: {order_by} }}) {{ id bio }} }}"))
+    result = await maybe_async(any_async_query(f"{{ users(orderBy: {{ bio: {order_by} }}) {{ id bio }} }}"))
     assert not result.errors
     assert result.data
     # Sort records
@@ -74,7 +76,7 @@ async def test_nulls(
 async def test_order_by_aggregations(
     order_by: Literal["ASC", "DESC"],
     aggregation: Literal["max", "min", "sum", "avg", "varPop", "stddevPop", "varSamp", "stddevSamp"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
@@ -85,7 +87,7 @@ async def test_order_by_aggregations(
         pytest.skip(f"{db_features.dialect} does not support {aggregation} aggregation function")
 
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""{{
             colors(orderBy: {{ fruitsAggregate: {{ {aggregation}: {{ waterPercent: {order_by} }} }} }}) {{
                 id
@@ -117,13 +119,13 @@ async def test_order_by_aggregations(
 @pytest.mark.snapshot
 async def test_relation_order_by(
     order_by: Literal["ASC", "DESC"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""{{
             colors {{
                 id
@@ -152,13 +154,13 @@ async def test_relation_order_by(
 @pytest.mark.snapshot
 async def test_relation_order_by_unselected_column(
     order_by: Literal["ASC", "DESC"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""{{
             colors {{
                 id
@@ -199,13 +201,13 @@ def _farm_count(raw_farms: RawRecordData, fruit_id: int) -> int:
 
 @pytest.mark.snapshot
 async def test_relation_order_by_nested_relation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """{
             colors {
                 id
@@ -236,14 +238,14 @@ async def test_relation_order_by_nested_relation(
 @pytest.mark.snapshot
 async def test_relation_order_by_nested_aggregation(
     order_by: Literal["ASC", "DESC"],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""{{
             colors {{
                 id
@@ -276,13 +278,13 @@ async def test_relation_order_by_nested_aggregation(
 
 @pytest.mark.snapshot
 async def test_relation_order_by_nested_relation_aggregation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """{
             colors {
                 id
@@ -311,14 +313,14 @@ async def test_relation_order_by_nested_relation_aggregation(
 
 @pytest.mark.snapshot
 async def test_paginated_relation_order_by_nested_aggregation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """{
             colorsPaginated {
                 id
@@ -347,13 +349,13 @@ async def test_paginated_relation_order_by_nested_aggregation(
 
 @pytest.mark.snapshot
 async def test_paginated_relation_order_by_nested_relation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """{
             colorsPaginated {
                 id
@@ -379,14 +381,14 @@ async def test_paginated_relation_order_by_nested_relation(
 
 @pytest.mark.snapshot
 async def test_distinct_on_with_relation_order_by_nested_aggregation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """{
             colors(distinctOn: [name], orderBy: [{ name: ASC }]) {
                 id
@@ -418,11 +420,11 @@ async def test_distinct_on_with_relation_order_by_nested_aggregation(
 
 @pytest.mark.snapshot
 async def test_deterministic_ordering(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that list resolvers return ordered results even if no order by is specified."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors {
@@ -452,11 +454,11 @@ async def test_deterministic_ordering(
 
 @pytest.mark.snapshot
 async def test_deterministic_ordering_mixed_with_user_ordering(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that list resolvers return ordered results even if no order by is specified."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 colors(orderBy: { name: ASC }) {
@@ -532,11 +534,11 @@ def _default_colors(raw_colors: RawRecordData, raw_fruits: RawRecordData) -> lis
 async def test_empty_order_by_is_ignored(
     query: str,
     variables: dict[str, Any] | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(query, variables))
+    result = await maybe_async(any_async_query(query, variables))
     assert not result.errors
     assert result.data
     assert result.data["colors"] == _default_colors(raw_colors, raw_fruits)
@@ -556,12 +558,12 @@ async def test_empty_order_by_is_ignored(
 async def test_empty_order_by_entry_keeps_other_entries(
     empty_entry: str,
     variables: dict[str, Any] | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
 ) -> None:
     signature = "query ($d: OrderByEnum) " if variables is not None else ""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"{signature}{{ fruits(orderBy: [{{ color: {{}}, sweetness: ASC }}, {empty_entry}, {{ id: DESC }}]) {{ id }} }}",
             variables,
         )
@@ -584,13 +586,13 @@ async def test_empty_order_by_entry_keeps_other_entries(
 async def test_empty_order_by_entry_keeps_other_entries_nested(
     empty_entry: str,
     variables: dict[str, Any] | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
     signature = "query ($d: OrderByEnum) " if variables is not None else ""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             f"""{signature}{{
             colors(orderBy: [{empty_entry}, {{ id: DESC }}]) {{
                 id

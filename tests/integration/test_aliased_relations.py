@@ -19,8 +19,8 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration]
 
 
-async def _data(any_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
-    result = await maybe_async(any_query(query))
+async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     return result.data
@@ -38,11 +38,11 @@ def _ids_by_color(colors: list[dict[str, Any]], *aliases: str) -> dict[int, tupl
 
 
 async def test_aliased_relations_with_different_order_by(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that two aliases of a relation ordered differently are each ordered their own way, in one query."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -61,11 +61,11 @@ async def test_aliased_relations_with_different_order_by(
 
 
 async def test_aliased_relations_with_different_pagination(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that two aliases of a relation paginated differently each get their own page, in one query."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsPaginated(limit: 3, offset: 1) {
@@ -87,11 +87,11 @@ async def test_aliased_relations_with_different_pagination(
 
 
 async def test_aliased_relations_with_different_arguments_and_selections(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData
 ) -> None:
     """Test that aliases with different arguments keep their own selection, sub-relations included."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -113,11 +113,11 @@ async def test_aliased_relations_with_different_arguments_and_selections(
 
 
 async def test_aliased_relations_with_and_without_arguments(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
 ) -> None:
     """Test that an alias without arguments is unaffected by another alias of the same relation that has some."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -143,11 +143,11 @@ async def test_aliased_relations_with_and_without_arguments(
     dialects=("sqlite", "mysql"),
 )
 async def test_aliased_relations_nested_in_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that aliases of a relation with different arguments, below another relation, are each ordered."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             fruits {
@@ -169,11 +169,11 @@ async def test_aliased_relations_nested_in_relation(
 
 
 async def test_aliased_relations_with_same_arguments_share_one_join(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that aliases of a relation with the same arguments share one join and both get the merged selection."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -193,11 +193,11 @@ async def test_aliased_relations_with_same_arguments_share_one_join(
 
 
 async def test_aliased_relations_with_computed_values(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
 ) -> None:
     """Test that computed values under one alias still map to the right objects when another alias has arguments."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -220,11 +220,11 @@ async def test_aliased_relations_with_computed_values(
 
 
 async def test_aliased_relations_with_query_hook(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a relation query hook applies to every alias of the relation, each keeping its own page."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsWithPaginatedSweetFruits {
@@ -250,11 +250,11 @@ async def test_aliased_relations_with_query_hook(
     dialects=("sqlite", "mysql"),
 )
 async def test_aliased_relations_under_to_one_relation_selected_twice(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that aliases of a to-one relation merge, and the differently-argued relations below each keep theirs."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             fruits {
@@ -273,12 +273,12 @@ async def test_aliased_relations_under_to_one_relation_selected_twice(
 
 
 async def test_mutation_returning_aliased_relations(
-    any_query: AnyQueryExecutor, raw_colors: RawRecordData, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_colors: RawRecordData, raw_fruits: RawRecordData
 ) -> None:
     """Test that a mutation result selecting aliases of a relation with different arguments returns each alias."""
     color_id = raw_colors[0]["id"]
     data = await _data(
-        any_query,
+        any_async_query,
         f"""
         mutation {{
             updateColor(data: {{ id: {to_graphql_representation(color_id, "input")}, name: "updated" }}) {{
@@ -294,11 +294,11 @@ async def test_mutation_returning_aliased_relations(
 
 
 async def test_aliased_relations_with_same_query_hook_apply_it_once(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that aliases of a hooked relation sharing one node run the relation's query hook only once."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsWithSweetFruits {
@@ -318,7 +318,7 @@ async def test_aliased_relations_with_same_query_hook_apply_it_once(
 
 
 async def test_aliased_relations_queried_twice(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
 ) -> None:
     """Test that an aliased query runs again once its compiled statement is cached."""
     query = """
@@ -332,7 +332,7 @@ async def test_aliased_relations_queried_twice(
     """
     farm_counts = Counter(farm["fruit_id"] for farm in raw_farms)
     for _ in range(2):
-        data = await _data(any_query, query)
+        data = await _data(any_async_query, query)
         for color in data["colors"]:
             assert color["a"] == [
                 {"id": fruit["id"], "farmsAggregate": {"count": farm_counts[fruit["id"]]}}
@@ -343,10 +343,12 @@ async def test_aliased_relations_queried_twice(
             ]
 
 
-async def test_aliases_mixing_bounded_and_unbounded(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_aliases_mixing_bounded_and_unbounded(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
+) -> None:
     """Test that two pages next to an unbounded alias each keep their own rows, in their own order."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsPaginated {
@@ -368,10 +370,10 @@ async def test_aliases_mixing_bounded_and_unbounded(any_query: AnyQueryExecutor,
     }
 
 
-async def test_alias_with_offset_page(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_alias_with_offset_page(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that an alias with an offset and no limit keeps every row after the offset."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsPaginated {
@@ -393,19 +395,19 @@ async def test_alias_with_offset_page(any_query: AnyQueryExecutor, query_tracker
 
 
 async def test_aliases_ordered_with_nulls(
-    any_query: AnyQueryExecutor, any_session: AnySession, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, any_async_session: AnySession, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases ordered on a column holding NULL values place them as each alias asks."""
     products = [{"id": 1, "name": "Jam"}, {"id": 2, "name": "Juice"}]
-    await maybe_async(any_session.execute(insert(DerivedProduct).values(products)))
+    await maybe_async(any_async_session.execute(insert(DerivedProduct).values(products)))
     for fruit_id, product_id in ((1, 1), (3, 2), (5, 1)):
         statement = update(Fruit).where(Fruit.id == fruit_id).values(derived_product_id=product_id)
-        await maybe_async(any_session.execute(statement))
-    await maybe_async(any_session.flush())
+        await maybe_async(any_async_session.execute(statement))
+    await maybe_async(any_async_session.flush())
     query_tracker.executions.clear()
 
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -426,10 +428,10 @@ async def test_aliases_ordered_with_nulls(
     }
 
 
-async def test_nested_to_one_under_one_alias(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_nested_to_one_under_one_alias(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that a to-one relation selected under one alias only reaches that alias's objects."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -452,10 +454,10 @@ async def test_nested_to_one_under_one_alias(any_query: AnyQueryExecutor, query_
     }
 
 
-async def test_row_in_one_alias_page_only(any_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
+async def test_row_in_one_alias_page_only(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that shared rows inside both pages or one page only appear in the collections of the pages holding them."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsPaginated {
@@ -477,11 +479,11 @@ async def test_row_in_one_alias_page_only(any_query: AnyQueryExecutor, query_tra
 
 
 async def test_hooked_aliases_with_an_unbounded_alias(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a hooked relation's bounded and unbounded aliases each keep the hook's rows and their own page."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsWithPaginatedSweetFruits {
@@ -507,11 +509,11 @@ async def test_hooked_aliases_with_an_unbounded_alias(
     dialects=("postgresql",),
 )
 async def test_aliases_on_both_paths(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that aliases of a relation and aliases of the same relation through another path each keep their rows."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -535,11 +537,11 @@ async def test_aliases_on_both_paths(
 
 
 async def test_aggregate_two_levels_under_aliases(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that an aggregate two levels under both aliases of a relation counts the rows of each alias's objects."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -566,11 +568,11 @@ async def test_aggregate_two_levels_under_aliases(
     )
 )
 async def test_relation_aliased_under_one_shared_alias(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a relation aliased under one alias and selected once under another keeps each alias's rows."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -594,11 +596,11 @@ async def test_relation_aliased_under_one_shared_alias(
 
 
 async def test_argless_aliases_with_different_nested_selections(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
 ) -> None:
     """Test that argument-free aliases of a relation each keep their own nested selection."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -622,11 +624,11 @@ async def test_argless_aliases_with_different_nested_selections(
 
 
 async def test_argless_to_one_aliases_with_different_nested_selections(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
 ) -> None:
     """Test that argument-free aliases of a to-one relation each keep their own nested relations and selections."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             fruits {
@@ -661,11 +663,11 @@ async def test_argless_to_one_aliases_with_different_nested_selections(
     dialects=("postgresql",),
 )
 async def test_argless_aliases_with_partly_shared_nested_arguments(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that argument-free aliases keep their own nested selections when only some share nested arguments."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {

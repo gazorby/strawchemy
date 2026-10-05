@@ -143,78 +143,6 @@
    ORDER BY interval_model.id ASC
   '''
 # ---
-# name: test_timedelta_components[session-sync-tracked-days-psycopg_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-days-sqlite_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-hours-psycopg_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-hours-sqlite_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-minutes-psycopg_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) / CAST(%(param_1)s::INTEGER AS NUMERIC) = %(param_2)s
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-minutes-sqlite_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) / (? + 0.0) = ?
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-totalSeconds-psycopg_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE EXTRACT(EPOCH FROM interval_model.time_delta_col) = %(param_1)s
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_components[session-sync-tracked-totalSeconds-sqlite_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   WHERE CAST(strftime(?, interval_model.time_delta_col) AS INTEGER) = ?
-   ORDER BY interval_model.id ASC
-  '''
-# ---
 # name: test_timedelta_output[session-async-tracked-aiosqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
@@ -240,22 +168,6 @@
   '''
 # ---
 # name: test_timedelta_output[session-async-tracked-psycopg_async_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_output[session-sync-tracked-psycopg_engine]
-  '''
-  SELECT interval_model.time_delta_col,
-         interval_model.id
-    FROM interval_model AS interval_model
-   ORDER BY interval_model.id ASC
-  '''
-# ---
-# name: test_timedelta_output[session-sync-tracked-sqlite_engine]
   '''
   SELECT interval_model.time_delta_col,
          interval_model.id

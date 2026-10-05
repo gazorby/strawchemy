@@ -20,12 +20,12 @@ pytestmark = [pytest.mark.integration]
 @pytest.mark.snapshot
 async def test_load_columns_hook(
     fruits_query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {fruits_query} {{ description }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {fruits_query} {{ description }} }}"))
 
     assert not result.errors
     assert result.data
@@ -41,13 +41,13 @@ async def test_load_columns_hook(
 @pytest.mark.snapshot
 async def test_load_relationships_with_columns(
     fruits_query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {fruits_query} {{ prettyColor }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {fruits_query} {{ prettyColor }} }}"))
 
     assert not result.errors
     assert result.data
@@ -63,13 +63,13 @@ async def test_load_relationships_with_columns(
 @pytest.mark.snapshot
 async def test_load_relationships_no_columns(
     fruits_query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {fruits_query} {{ prettyFarms }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {fruits_query} {{ prettyFarms }} }}"))
 
     assert not result.errors
     assert result.data
@@ -85,14 +85,14 @@ async def test_load_relationships_no_columns(
 @pytest.mark.snapshot
 async def test_load_relationships_nested(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ farms }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ farms }} }}"))
 
     assert not result.errors
     assert result.data
@@ -119,14 +119,14 @@ async def test_load_relationships_nested(
 @pytest.mark.snapshot
 async def test_load_nested_relationships_no_columns(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
     raw_farms: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ farmsNoColumns }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ farmsNoColumns }} }}"))
 
     assert not result.errors
     assert result.data
@@ -152,13 +152,13 @@ async def test_load_nested_relationships_no_columns(
 @pytest.mark.snapshot
 async def test_load_relationships_on_nested_field(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ id fruits {{ prettyColor }} }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ id fruits {{ prettyColor }} }} }}"))
 
     assert not result.errors
     assert result.data
@@ -177,8 +177,10 @@ async def test_load_relationships_on_nested_field(
 
 
 @pytest.mark.parametrize("fruits_query", ["fruitsHooks", "fruitsPaginatedHooks"])
-async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
-    result = await maybe_async(any_query(f"{{ {fruits_query} {{ emptyQueryHook }} }}"))
+async def test_empty_query_hook(
+    fruits_query: str, any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
+) -> None:
+    result = await maybe_async(any_async_query(f"{{ {fruits_query} {{ emptyQueryHook }} }}"))
 
     assert not result.errors
     assert result.data
@@ -189,9 +191,9 @@ async def test_empty_query_hook(fruits_query: str, any_query: AnyQueryExecutor, 
 @pytest.mark.parametrize("query", ["filteredFruits", "filteredFruitsPaginated"])
 @pytest.mark.snapshot
 async def test_custom_query_hook_where(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ name }} }}"))
 
     assert not result.errors
     assert result.data
@@ -206,13 +208,13 @@ async def test_custom_query_hook_where(
 @pytest.mark.snapshot
 async def test_custom_query_hook_where_on_unselected_column(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that a root query hook filters on a column the query does not select."""
-    result = await maybe_async(any_query(f"{{ {query} {{ id }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ id }} }}"))
 
     assert not result.errors
     assert result.data
@@ -227,12 +229,12 @@ async def test_custom_query_hook_where_on_unselected_column(
 @pytest.mark.snapshot
 async def test_custom_query_hook_order_by(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_fruits: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query(f"{{ {query} {{ waterPercent }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ waterPercent }} }}"))
 
     assert not result.errors
     assert result.data
@@ -264,12 +266,12 @@ async def test_custom_query_hook_order_by(
 async def test_query_hook_loaded_column_selected_once(
     query: str,
     path: tuple[str, ...],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that a column loaded by a hook and selected by the query is selected once and read correctly."""
-    result = await maybe_async(any_query(query))
+    result = await maybe_async(any_async_query(query))
 
     assert not result.errors
     assert result.data
@@ -285,12 +287,12 @@ async def test_query_hook_loaded_column_selected_once(
 
 @pytest.mark.snapshot
 async def test_query_hook_on_type(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
 ) -> None:
-    result = await maybe_async(any_query("{ colorsWithFilteredFruits { name fruits { name } } }"))
+    result = await maybe_async(any_async_query("{ colorsWithFilteredFruits { name fruits { name } } }"))
 
     assert not result.errors
     assert result.data
@@ -305,10 +307,10 @@ async def test_query_hook_on_type(
 @pytest.mark.parametrize("query", ["fieldFilteredFruits", "fieldFilteredFruitsPaginated"])
 @pytest.mark.snapshot
 async def test_root_field_query_hook_where(
-    query: str, any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    query: str, any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root list field's query hook filters the root rows."""
-    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ name }} }}"))
 
     assert not result.errors
     assert result.data
@@ -323,14 +325,14 @@ async def test_root_field_query_hook_where(
 async def test_root_field_query_hook_where_get_by_id(
     apple: bool,
     expected: dict[str, str] | None,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root get-by-id field's query hook hides the rows it filters out."""
     fruit_id = next(fruit["id"] for fruit in raw_fruits if (fruit["name"] == "Apple") is apple)
-    result = await maybe_async(any_query(f"{{ fieldFilteredFruit(id: {fruit_id}) {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ fieldFilteredFruit(id: {fruit_id}) {{ name }} }}"))
 
     assert not result.errors
     assert result.data == {"fieldFilteredFruit": expected}
@@ -341,11 +343,11 @@ async def test_root_field_query_hook_where_get_by_id(
 
 @pytest.mark.snapshot
 async def test_root_field_query_hook_where_root_aggregations(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a root aggregation field's query hook filters both nodes and aggregations."""
     result = await maybe_async(
-        any_query("{ fieldFilteredFruitAggregations { aggregations { count } nodes { name } } }")
+        any_async_query("{ fieldFilteredFruitAggregations { aggregations { count } nodes { name } } }")
     )
 
     assert not result.errors
@@ -358,13 +360,13 @@ async def test_root_field_query_hook_where_root_aggregations(
 
 @pytest.mark.snapshot
 async def test_root_field_query_hook_load(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root field's query hook loads its columns on the root model."""
-    result = await maybe_async(any_query("{ fieldLoadFruits { name } }"))
+    result = await maybe_async(any_async_query("{ fieldLoadFruits { name } }"))
 
     assert not result.errors
     assert result.data
@@ -379,14 +381,14 @@ async def test_root_field_query_hook_load(
 @pytest.mark.snapshot
 async def test_query_hook_on_relation_field(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that a relation field's `query_hook` applies to the related model, not the parent."""
-    result = await maybe_async(any_query(f"{{ {query} {{ name fruits {{ name }} }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ name fruits {{ name }} }} }}"))
 
     assert not result.errors
     assert result.data
@@ -406,10 +408,10 @@ async def test_query_hook_on_relation_field(
 
 @pytest.mark.snapshot
 async def test_query_hook_on_relation_keeps_parent_page_full(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a relation hook does not drop parents from a page, when none of their related rows match it."""
-    result = await maybe_async(any_query("{ colorsWithSweetFruitsPaginated(limit: 2) { name fruits { name } } }"))
+    result = await maybe_async(any_async_query("{ colorsWithSweetFruitsPaginated(limit: 2) { name fruits { name } } }"))
 
     assert not result.errors
     assert result.data
@@ -424,14 +426,14 @@ async def test_query_hook_on_relation_keeps_parent_page_full(
 
 @pytest.mark.snapshot
 async def test_query_hook_on_paginated_relation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that a relation hook filters the related rows before their pagination applies."""
-    result = await maybe_async(any_query("{ colorsWithPaginatedSweetFruits { name fruits(limit: 1) { name } } }"))
+    result = await maybe_async(any_async_query("{ colorsWithPaginatedSweetFruits { name fruits(limit: 1) { name } } }"))
 
     assert not result.errors
     assert result.data
@@ -456,10 +458,13 @@ async def test_query_hook_on_paginated_relation(
 
 @pytest.mark.snapshot
 async def test_query_hook_joining_on_relation(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion, raw_colors: RawRecordData
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+    raw_colors: RawRecordData,
 ) -> None:
     """Test that a relation hook adding a join restricts the related rows only."""
-    result = await maybe_async(any_query("{ colorsWithMultiFarmFruits { name fruits { name } } }"))
+    result = await maybe_async(any_async_query("{ colorsWithMultiFarmFruits { name fruits { name } } }"))
 
     assert not result.errors
     assert result.data
@@ -496,14 +501,14 @@ def _fruits_by_water_percent(raw_colors: RawRecordData, raw_fruits: RawRecordDat
 @pytest.mark.snapshot
 async def test_query_hook_ordering_on_relation(
     fruits_field: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
     raw_fruits: RawRecordData,
 ) -> None:
     """Test that the ORDER BY of a hook on a related type orders the related rows, ahead of the client ordering."""
-    result = await maybe_async(any_query(f"{{ colorsWithOrderedFruits {{ name {fruits_field} }} }}"))
+    result = await maybe_async(any_async_query(f"{{ colorsWithOrderedFruits {{ name {fruits_field} }} }}"))
 
     assert not result.errors
     assert result.data
@@ -518,7 +523,7 @@ async def test_query_hook_ordering_on_relation(
 
 @pytest.mark.snapshot
 async def test_query_hook_ordering_on_paginated_relation(
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
@@ -526,7 +531,7 @@ async def test_query_hook_ordering_on_paginated_relation(
 ) -> None:
     """Test that the ORDER BY of a hook on a related type decides which related rows a page keeps."""
     result = await maybe_async(
-        any_query("{ colorsWithPaginatedOrderedFruits { name fruits(limit: 2, offset: 1) { name } } }")
+        any_async_query("{ colorsWithPaginatedOrderedFruits { name fruits(limit: 2, offset: 1) { name } } }")
     )
 
     assert not result.errors
@@ -544,7 +549,7 @@ async def test_query_hook_ordering_on_paginated_relation(
 @pytest.mark.snapshot
 async def test_query_hook_on_relation_ignored_by_filter(
     query: str,
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     raw_colors: RawRecordData,
@@ -552,7 +557,9 @@ async def test_query_hook_on_relation_ignored_by_filter(
 ) -> None:
     """Test that a filter on a hooked relation considers the related rows the hook leaves out."""
     result = await maybe_async(
-        any_query(f"{{ {query}(filter: {{ fruits: {{ sweetness: {{ lte: 5 }} }} }}) {{ name fruits {{ name }} }} }}")
+        any_async_query(
+            f"{{ {query}(filter: {{ fruits: {{ sweetness: {{ lte: 5 }} }} }}) {{ name fruits {{ name }} }} }}"
+        )
     )
 
     assert not result.errors
@@ -574,11 +581,11 @@ async def test_query_hook_on_relation_ignored_by_filter(
 
 @pytest.mark.snapshot
 async def test_query_hook_joining_on_relation_ignored_by_filter(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
 ) -> None:
     """Test that a filter on a relation whose hook adds a join considers the related rows the hook leaves out."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             '{ colorsWithMultiFarmFruits(filter: { fruits: { name: { in: ["Apple", "Banana"] } } }) { name fruits { name } } }'
         )
     )
@@ -595,11 +602,11 @@ async def test_query_hook_joining_on_relation_ignored_by_filter(
 
 
 async def test_order_by_aggregation_of_relation_with_ordering_hook(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test ordering by an aggregate of a to-one relation whose query hook orders its rows."""
     result = await maybe_async(
-        any_query(
+        any_async_query(
             """
             {
                 fruitsWithOrderedColorPaginated(orderBy: { color: { fruitsAggregate: { count: DESC } } }, limit: 3) {
@@ -627,11 +634,11 @@ async def test_order_by_aggregation_of_relation_with_ordering_hook(
 
 
 async def test_order_by_relation_with_ordering_hook(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData, query_tracker: QueryTracker
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData, query_tracker: QueryTracker
 ) -> None:
     """Test ordering by a column of a to-one relation whose query hook orders its rows."""
     result = await maybe_async(
-        any_query("{ fruitsWithOrderedColor(orderBy: { color: { name: DESC } }) { id color { id name } } }")
+        any_async_query("{ fruitsWithOrderedColor(orderBy: { color: { name: DESC } }) { id color { id name } } }")
     )
     assert not result.errors
     assert result.data
@@ -687,12 +694,12 @@ async def test_order_by_relation_with_ordering_hook(
 async def test_query_hook_order_by_joined_alias(
     query: str,
     expected: list[str],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a root query hook ordering by an alias it joins orders by that joined alias."""
-    result = await maybe_async(any_query(f"{{ {query} {{ name }} }}"))
+    result = await maybe_async(any_async_query(f"{{ {query} {{ name }} }}"))
     assert not result.errors
     assert result.data
 
@@ -732,13 +739,13 @@ async def test_query_hook_order_by_joined_alias(
 async def test_nested_query_hook_order_by_joined_alias(
     arguments: str,
     expected: dict[str, list[str]],
-    any_query: AnyQueryExecutor,
+    any_async_query: AnyQueryExecutor,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a relation query hook ordering by an alias it joins orders by that joined alias."""
     result = await maybe_async(
-        any_query(f"{{ colorsWithColorNameOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}")
+        any_async_query(f"{{ colorsWithColorNameOrderedFruits {{ name fruits({arguments}) {{ name }} }} }}")
     )
     assert not result.errors
     assert result.data

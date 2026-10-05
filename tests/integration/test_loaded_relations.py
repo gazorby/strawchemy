@@ -21,8 +21,8 @@ if TYPE_CHECKING:
 pytestmark = [pytest.mark.integration]
 
 
-async def _data(any_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
-    result = await maybe_async(any_query(query))
+async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
+    result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
     return result.data
@@ -32,21 +32,24 @@ def _sweetness_of(raw_fruits: RawRecordData, color_id: int, *, descending: bool 
     return sorted((fruit["sweetness"] for fruit in raw_fruits if fruit["color_id"] == color_id), reverse=descending)
 
 
-async def _load_colors_with_fruits(any_session: AnySession) -> Sequence[Color]:
-    result = await maybe_async(any_session.execute(select(Color).options(selectinload(Color.fruits))))
+async def _load_colors_with_fruits(any_async_session: AnySession) -> Sequence[Color]:
+    result = await maybe_async(any_async_session.execute(select(Color).options(selectinload(Color.fruits))))
     return result.scalars().all()
 
 
 async def test_nested_order_by_ignores_collection_loaded_in_session(
-    any_query: AnyQueryExecutor, any_session: AnySession, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor,
+    any_async_session: AnySession,
+    query_tracker: QueryTracker,
+    raw_fruits: RawRecordData,
 ) -> None:
     """Test that a nested relation is ordered as asked when the session already holds that collection."""
-    await _data(any_query, "{ colors { id } }")
-    kept = await _load_colors_with_fruits(any_session)
+    await _data(any_async_query, "{ colors { id } }")
+    kept = await _load_colors_with_fruits(any_async_session)
     kept_fruits = {color.id: [fruit.id for fruit in color.fruits] for color in kept}
     query_tracker.executions.clear()
 
-    data = await _data(any_query, "{ colors { id fruits(orderBy: { sweetness: DESC }) { sweetness } } }")
+    data = await _data(any_async_query, "{ colors { id fruits(orderBy: { sweetness: DESC }) { sweetness } } }")
 
     assert query_tracker.query_count == 1
     for color in data["colors"]:
@@ -56,13 +59,13 @@ async def test_nested_order_by_ignores_collection_loaded_in_session(
 
 
 async def test_nested_pagination_ignores_collection_loaded_in_session(
-    any_query: AnyQueryExecutor, any_session: AnySession, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, any_async_session: AnySession, raw_fruits: RawRecordData
 ) -> None:
     """Test that a nested relation is paginated as asked when the session already holds that collection."""
-    kept = await _load_colors_with_fruits(any_session)
+    kept = await _load_colors_with_fruits(any_async_session)
 
     data = await _data(
-        any_query,
+        any_async_query,
         "{ colorsPaginated { id fruits(orderBy: { sweetness: DESC }, limit: 1, offset: 1) { sweetness } } }",
     )
 
@@ -73,12 +76,12 @@ async def test_nested_pagination_ignores_collection_loaded_in_session(
 
 
 async def test_nested_filter_ignores_collection_loaded_in_session(
-    any_query: AnyQueryExecutor, any_session: AnySession, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, any_async_session: AnySession, raw_fruits: RawRecordData
 ) -> None:
     """Test that a nested relation is filtered as asked when the session already holds that collection."""
-    kept = await _load_colors_with_fruits(any_session)
+    kept = await _load_colors_with_fruits(any_async_session)
 
-    data = await _data(any_query, "{ colorsWithSweetFruits { id fruits { sweetness } } }")
+    data = await _data(any_async_query, "{ colorsWithSweetFruits { id fruits { sweetness } } }")
 
     assert kept
     for color in data["colorsWithSweetFruits"]:
@@ -87,19 +90,22 @@ async def test_nested_filter_ignores_collection_loaded_in_session(
 
 
 async def test_to_one_relation_ignores_stale_attribute_loaded_in_session(
-    any_query: AnyQueryExecutor, any_session: AnySession, raw_fruits: RawRecordData, raw_colors: RawRecordData
+    any_async_query: AnyQueryExecutor,
+    any_async_session: AnySession,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
 ) -> None:
     """Test that a to-one relation follows the foreign key when the session holds the previously related object."""
     fruit_id = raw_fruits[0]["id"]
     new_color_id = next(color["id"] for color in raw_colors if color["id"] != raw_fruits[0]["color_id"])
     result = await maybe_async(
-        any_session.execute(select(Fruit).options(selectinload(Fruit.color)).where(Fruit.id == fruit_id))
+        any_async_session.execute(select(Fruit).options(selectinload(Fruit.color)).where(Fruit.id == fruit_id))
     )
     fruit = result.scalar_one()
     fruit.color_id = new_color_id
-    await maybe_async(any_session.flush())
+    await maybe_async(any_async_session.flush())
 
-    data = await _data(any_query, "{ fruits { id color { id } } }")
+    data = await _data(any_async_query, "{ fruits { id color { id } } }")
 
     assert next(item for item in data["fruits"] if item["id"] == fruit_id)["color"] == {"id": new_color_id}
 
@@ -113,11 +119,11 @@ async def test_to_one_relation_ignores_stale_attribute_loaded_in_session(
     dialects=("postgresql",),
 )
 async def test_same_object_reached_through_two_paths_keeps_each_path_arguments(
-    any_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
 ) -> None:
     """Test that a model reached through two selection paths with different arguments gets each path's collection."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colors {
@@ -142,11 +148,11 @@ async def test_same_object_reached_through_two_paths_keeps_each_path_arguments(
 
 
 async def test_same_object_reached_through_two_paths_keeps_each_path_filter(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
 ) -> None:
     """Test that a model reached through a filtered and an unfiltered selection path gets each path's collection."""
     data = await _data(
-        any_query,
+        any_async_query,
         """
         {
             colorsWithSweetFruits {
@@ -165,10 +171,10 @@ async def test_same_object_reached_through_two_paths_keeps_each_path_filter(
 
 
 async def test_relation_selected_and_loaded_by_query_hook(
-    any_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, raw_colors: RawRecordData
+    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData, raw_colors: RawRecordData
 ) -> None:
     """Test that a relation both selected and loaded by a query hook gets the selection's rows and the hook's."""
-    data = await _data(any_query, "{ colorsWithFilteredFruits { id fruits { name } farms } }")
+    data = await _data(any_async_query, "{ colorsWithFilteredFruits { id fruits { name } farms } }")
 
     assert {color["id"] for color in data["colorsWithFilteredFruits"]} == {color["id"] for color in raw_colors}
     for color in data["colorsWithFilteredFruits"]:
@@ -180,14 +186,17 @@ async def test_relation_selected_and_loaded_by_query_hook(
 
 
 async def test_mutation_result_ignores_collection_loaded_in_session(
-    any_query: AnyQueryExecutor, any_session: AnySession, raw_fruits: RawRecordData, raw_colors: RawRecordData
+    any_async_query: AnyQueryExecutor,
+    any_async_session: AnySession,
+    raw_fruits: RawRecordData,
+    raw_colors: RawRecordData,
 ) -> None:
     """Test that a mutation result lists the created object when the session already holds the parent collection."""
     color_id = raw_colors[0]["id"]
-    kept = await _load_colors_with_fruits(any_session)
+    kept = await _load_colors_with_fruits(any_async_session)
 
     data = await _data(
-        any_query,
+        any_async_query,
         f"""
         mutation {{
             createFruit(data: {{
