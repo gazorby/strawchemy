@@ -90,8 +90,8 @@ async def test_nested_filter_ignores_collection_loaded_in_session(
 
 
 async def test_to_one_relation_ignores_stale_attribute_loaded_in_session(
-    any_async_query: AnyQueryExecutor,
-    any_async_session: AnySession,
+    any_query: AnyQueryExecutor,
+    any_session: AnySession,
     raw_fruits: RawRecordData,
     raw_colors: RawRecordData,
 ) -> None:
@@ -99,13 +99,13 @@ async def test_to_one_relation_ignores_stale_attribute_loaded_in_session(
     fruit_id = raw_fruits[0]["id"]
     new_color_id = next(color["id"] for color in raw_colors if color["id"] != raw_fruits[0]["color_id"])
     result = await maybe_async(
-        any_async_session.execute(select(Fruit).options(selectinload(Fruit.color)).where(Fruit.id == fruit_id))
+        any_session.execute(select(Fruit).options(selectinload(Fruit.color)).where(Fruit.id == fruit_id))
     )
     fruit = result.scalar_one()
     fruit.color_id = new_color_id
-    await maybe_async(any_async_session.flush())
+    await maybe_async(any_session.flush())
 
-    data = await _data(any_async_query, "{ fruits { id color { id } } }")
+    data = await _data(any_query, "{ fruits { id color { id } } }")
 
     assert next(item for item in data["fruits"] if item["id"] == fruit_id)["color"] == {"id": new_color_id}
 
