@@ -84,6 +84,16 @@ Install documentation site dependencies
 
 Preview the built documentation site
 
+## `docs:preview-cleanup`
+
+Delete the Cloudflare Pages deployments of a documentation preview branch
+
+
+- **Usage:** `docs:preview-cleanup <branch>`
+
+### Arguments
+- **`<branch>`**
+
 ## `docs:reference`
 
 - **Usage:** `docs:reference`

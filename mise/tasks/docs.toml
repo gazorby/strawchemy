@@ -7,6 +7,11 @@ run = "bun install --frozen-lockfile"
 description = "Generate the reference pages from the source tree"
 run = "{{vars.uv_run}} --extra geo --extra pydantic --group docs python tools/docs_reference.py"
 
+["docs:preview-cleanup"]
+description = "Delete the Cloudflare Pages deployments of a documentation preview branch"
+usage = 'arg "<branch>"'
+run = '{{vars.uv_run}} --no-default-groups --group docs python tools/docs_preview_cleanup.py "${usage_branch?}"'
+
 ["docs:dev"]
 description = "Serve the documentation site locally"
 alias = "d"
