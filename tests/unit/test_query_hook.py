@@ -437,11 +437,12 @@ def test_key_not_loadable(attribute: Any) -> None:
         QueryHook(load=[(attribute, [])])
 
 
-def test_class_load_attribute_not_loadable() -> None:
+@pytest.mark.parametrize("attribute", _NOT_LOADABLE_ATTRIBUTES[:1])
+def test_class_load_attribute_not_loadable(attribute: Any) -> None:
     """Test that a class-level ``load`` with an attribute neither a column nor a relationship raises."""
 
     class NotLoadableHook(QueryHook[UserWithGreeting]):
-        load: Sequence[LoadType] = [UserWithGreeting.name, UserWithGreeting.greeting_hybrid_property]
+        load: Sequence[LoadType] = [UserWithGreeting.name, attribute]
 
     with pytest.raises(QueryHookError, match=_NOT_LOADABLE_MESSAGE):
         NotLoadableHook()

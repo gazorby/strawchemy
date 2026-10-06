@@ -354,4 +354,4 @@ class StrawchemyRepository(Generic[T]):
 
 
 def _composite_type(graphql_type: GraphQLType | None) -> GraphQLCompositeType:
-    return cast("GraphQLCompositeType", assert_composite_type(get_named_type(graphql_type)))
+    return assert_composite_type(get_named_type(graphql_type))
