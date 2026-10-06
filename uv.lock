@@ -613,6 +613,23 @@ wheels = [
 ]
 
 [[package]]
+name = "cloudflare"
+version = "5.9.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "anyio" },
+    { name = "distro" },
+    { name = "httpx" },
+    { name = "pydantic" },
+    { name = "sniffio" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/4b/52/5e736d63637e79c2381045250dbb6154a1fb4da8f3fd47518bff406c24d2/cloudflare-5.9.0.tar.gz", hash = "sha256:1c9b9e243602c754e03636204272422dc45776f3babdc67f8341ca4d559d49e8", size = 3664424, upload-time = "2026-10-03T02:55:24.989Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/13/d4/6d3ed77313ce1fbcf209c4aca50407c338114e71d864cbc49b1cd686b966/cloudflare-5.9.0-py3-none-any.whl", hash = "sha256:70f0c966c26802837fe7ebe95a7b4a14c723159e742bc49d34642b21a2dc11b5", size = 7707263, upload-time = "2026-10-03T02:55:22.596Z" },
+]
+
+[[package]]
 name = "colorama"
 version = "0.4.6"
 source = { registry = "https://pypi.org/simple" }
@@ -978,6 +995,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/c9/02/bd72be9134d25ed783ecbbc38a539ffaefbf90c78418c7fb7229600dbac7/distlib-0.4.3.tar.gz", hash = "sha256:f152097224a0ae24be5a0f6bae1b9359af82133bce63f98a95f86cae1aede9ed", size = 615141, upload-time = "2026-06-12T08:04:52.847Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/02/08/9c41fb51ab5b43eb21674aff13df270e8ba6c4b29c8624e328dc7a9482af/distlib-0.4.3-py2.py3-none-any.whl", hash = "sha256:4b0ce306c966eb73bc3a7b6abad017c556dadd92c44701562cd528ac7fde4d5b", size = 470628, upload-time = "2026-06-12T08:04:50.506Z" },
+]
+
+[[package]]
+name = "distro"
+version = "1.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/fc/f8/98eea607f65de6527f8a2e8885fc8015d3e6f5775df186e443e0964a11c3/distro-1.9.0.tar.gz", hash = "sha256:2fa77c6fd8940f116ee1d6b94a2f90b13b5ea8d019b98bc8bafdcabcdd9bdbed", size = 60722, upload-time = "2023-12-24T09:54:32.31Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/12/b3/231ffd4ab1fc9d679809f356cebee130ac7daa00d6d6f3206dd4fd137e9e/distro-1.9.0-py3-none-any.whl", hash = "sha256:7bffd925d65168f85027d8da9af6bddab658135b840670a223589bc0c8ef02b2", size = 20277, upload-time = "2023-12-24T09:54:30.421Z" },
 ]
 
 [[package]]
@@ -3151,6 +3177,7 @@ dev = [
     { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg" },
+    { name = "cloudflare" },
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "cyclopts", version = "4.25.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-dev') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra != 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
@@ -3181,6 +3208,7 @@ dev = [
     { name = "vulture" },
 ]
 docs = [
+    { name = "cloudflare" },
     { name = "cyclopts", version = "4.25.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "cyclopts", version = "5.1.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11' or (extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "griffe" },
@@ -3207,6 +3235,7 @@ postgres = [
     { name = "psycopg", extra = ["binary", "pool"] },
 ]
 test = [
+    { name = "cloudflare" },
     { name = "covdefaults" },
     { name = "cyclopts", version = "4.25.3", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version < '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version >= '3.11' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
     { name = "cyclopts", version = "5.1.1", source = { registry = "https://pypi.org/simple" }, marker = "(python_full_version >= '3.11' and extra == 'group-10-strawchemy-test') or (python_full_version < '3.11' and extra == 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-unasyncd') or (extra != 'group-10-strawchemy-dev' and extra == 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd') or (extra == 'group-10-strawchemy-dev' and extra != 'group-10-strawchemy-test' and extra == 'group-10-strawchemy-unasyncd')" },
@@ -3249,6 +3278,7 @@ dev = [
     { name = "aiosqlite" },
     { name = "asyncmy" },
     { name = "asyncpg", specifier = ">=0.29.0" },
+    { name = "cloudflare" },
     { name = "covdefaults" },
     { name = "cryptography" },
     { name = "cyclopts" },
@@ -3278,6 +3308,7 @@ dev = [
     { name = "vulture" },
 ]
 docs = [
+    { name = "cloudflare" },
     { name = "cyclopts" },
     { name = "griffe" },
     { name = "griffe2md", specifier = ">=1.5.0" },
@@ -3303,6 +3334,7 @@ postgres = [
     { name = "psycopg", extras = ["binary", "pool"], specifier = ">=3.2.3" },
 ]
 test = [
+    { name = "cloudflare" },
     { name = "covdefaults" },
     { name = "cyclopts" },
     { name = "diff-cover", specifier = ">=10.3.0" },
