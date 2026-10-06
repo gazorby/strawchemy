@@ -1077,13 +1077,15 @@ def test_custom_apply_annotation_is_the_input_type() -> None:
         pytest.param(
             "projects",
             "{ ticketsAggregate: { avg: { arguments: [id], predicate: { gt: 1 } } } }",
-            "Field 'avg' is not defined by type 'TicketAggregateFilter'.",
+            "Expected value of type 'TicketAggregateFilter' not to include unknown field 'avg', "
+            "found: { avg: { arguments: [id], predicate: { gt: 1 } } }.",
             id="function-outside-functions",
         ),
         pytest.param(
             "projects",
             "{ ticketsAggregate: { count: { arguments: [id], predicate: { lt: 1 } } } }",
-            "Field 'lt' is not defined by type 'OrderComparisonIntEqGt'. Did you mean 'gt'?",
+            "Expected value of type 'OrderComparisonIntEqGt' not to include unknown field 'lt'. "
+            "Did you mean 'gt'? Found: { lt: 1 }.",
             id="operator-outside-ops",
         ),
         pytest.param(
@@ -1101,7 +1103,8 @@ def test_custom_apply_annotation_is_the_input_type() -> None:
         pytest.param(
             "tickets",
             '{ name: { contains: "x" } }',
-            "Field 'contains' is not defined by type 'TextComparisonStrEq'.",
+            "Expected value of type 'TextComparisonStrEq' not to include unknown field 'contains', "
+            'found: { contains: "x" }.',
             id="column-operator-outside-ops",
         ),
     ],
