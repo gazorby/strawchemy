@@ -86,6 +86,7 @@ test = [
   "sqlparse",
   "syrupy>=6.1.1",
   "testapp",
+  { include-group = "docs" },
 ]
 unasyncd = ["unasyncd"]
 
