@@ -5,15 +5,20 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
+from sqlalchemy import Float, Integer, TypeDecorator, func, inspect
 from sqlalchemy import distinct as sqla_distinct
-from sqlalchemy import func, inspect
 
 from strawchemy.exceptions import TranspilingError
 from strawchemy.utils.postgres import comparable
 
 if TYPE_CHECKING:
-    from sqlalchemy import Label
+    from collections.abc import Sequence
+
+    from sqlalchemy import Dialect, Label
+    from sqlalchemy.orm import QueryableAttribute
     from sqlalchemy.orm.util import AliasedClass
+    from sqlalchemy.sql.operators import OperatorType
+    from sqlalchemy.types import TypeEngine
 
     from strawchemy.repository.typing import FunctionGenerator
     from strawchemy.typing import QueryNodeType, SupportedDialect
@@ -32,6 +37,27 @@ _FUNCTIONS: dict[str, FunctionGenerator] = {
     "var_samp": func.var_samp,
     "var_pop": func.var_pop,
 }
+_STATISTICAL_FUNCTIONS = frozenset({"avg", "stddev_samp", "stddev_pop", "var_samp", "var_pop"})
+
+
+class _IntegerResult(TypeDecorator[int]):
+    impl = Integer
+    cache_ok = True
+
+    def process_result_value(self, value: Any, dialect: Dialect) -> int | None:
+        return None if value is None else int(value)
+
+    def coerce_compared_value(self, op: OperatorType | None, value: Any) -> TypeEngine[Any]:
+        return self.impl_instance.coerce_compared_value(op, value)
+
+
+def _result_type(name: str, attributes: Sequence[QueryableAttribute[Any]]) -> TypeEngine[Any] | None:
+    """Returns the type matching the GraphQL output of an aggregate over integers, which drivers may give as ``Decimal``."""
+    if name == "sum" and attributes[0].type.python_type is int:
+        return _IntegerResult()
+    if name in _STATISTICAL_FUNCTIONS and attributes[0].type.python_type is int:
+        return Float()
+    return None
 
 
 @dataclass(frozen=True)
@@ -80,9 +106,10 @@ def build(
         alias_inspect.mapper.attrs[argument.value.model_field_name].class_attribute.adapt_to_entity(alias_inspect)
         for argument in function.arguments
     ]
+    result_type = _result_type(function.name, attributes)
     if function.distinct:
         attributes = [sqla_distinct(*[comparable(attribute, dialect) for attribute in attributes])]
-    expression = sqla_function(*attributes)
+    expression = sqla_function(*attributes) if result_type is None else sqla_function(*attributes, type_=result_type)
     if over:
         expression = expression.over()
     return expression.label(None)
