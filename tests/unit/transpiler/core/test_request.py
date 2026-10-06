@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import typing
+from decimal import Decimal
 from typing import Any, cast
 
 import pytest
 from inline_snapshot import snapshot
-from sqlalchemy.dialects import postgresql
+from sqlalchemy.dialects import mysql, postgresql
 from sqlalchemy.orm import aliased
 
 from strawchemy import Strawchemy
@@ -200,6 +201,36 @@ def test_build_distinct_argument_function() -> None:
     label = build(function, aliased(Fruit.__mapper__), "postgresql")
 
     assert str(label.element.compile(dialect=postgresql.dialect())) == snapshot("count(DISTINCT fruit_1.sweetness)")
+
+
+@pytest.mark.parametrize(
+    ("name", "value", "expected"),
+    [
+        pytest.param("avg", Decimal("1.5"), 1.5, id="statistical-float"),
+        pytest.param("sum", Decimal(2), 2, id="sum-int"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("dialect", "numeric_coltype"),
+    [
+        pytest.param(postgresql.dialect(), 1700, id="postgresql"),
+        pytest.param(mysql.dialect(), 246, id="mysql"),
+    ],
+)
+def test_build_integer_argument_result_has_graphql_python_type(
+    name: str, value: Decimal, expected: float, dialect: Any, numeric_coltype: int
+) -> None:
+    """Drivers return ``Decimal`` for these aggregates over integers; the result must be what GraphQL serializes."""
+    argument = next(iter(_selection_with_max_sweetness().leaves()))
+    function = AggregateFunction(node=argument, name=name, arguments=(argument,), distinct=False)
+
+    label = build(function, aliased(Fruit.__mapper__), "postgresql")
+    processor = label.type.dialect_impl(dialect).result_processor(dialect, numeric_coltype)
+
+    assert processor is not None
+    result = processor(value)
+    assert result == expected
+    assert type(result) is type(expected)
 
 
 def _count_filter() -> object:

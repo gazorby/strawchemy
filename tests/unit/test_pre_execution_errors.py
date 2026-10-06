@@ -194,5 +194,5 @@ def test_required_id_single() -> None:
     assert len(result.errors) == 1
     assert isinstance(result.errors[0], GraphQLError)
     assert (
-        result.errors[0].message == "Field 'user' argument 'id' of type 'UUID!' is required, but it was not provided."
+        result.errors[0].message == "Argument 'Query.user(id:)' of type 'UUID!' is required, but it was not provided."
     )
