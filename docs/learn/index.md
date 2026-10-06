@@ -73,19 +73,19 @@ query to batch.
 - **Single-statement resolution**\
   Each root field's selection set compiles to one SQL query, however deep. No dataloaders, no N+1.
 - **Type-aware filtering**\
-  Each column gets the comparisons its type supports, from text and dates to arrays, JSON and PostGIS geometry, combined with and, or and not to any depth.
+  Each column gets the comparisons its type supports, from text and dates to arrays, JSON, and PostGIS geometry, combined with and, or, and not to any depth.
 - **Full aggregation support**\
   Aggregate a relationship or the whole result set, and filter on the result — "users with more than three posts" is a filter argument.
 - **Nested mutation trees**\
   Create a parent, its children and their children in one mutation. Link, unlink and insert-or-update in the same call.
 - **Generated GraphQL types**\
-  Output types and the filtering, ordering and mutation inputs all come from the model, and you opt into each separately.
+  Output types and the filtering, ordering, and mutation inputs all come from the model, and you opt into each separately.
 - **Layered configuration**\
   Set defaults once on the mapper, override them on a type, and override them again on a single field.
 - **Custom fields**\
   A field you write yourself declares what it reads, and the main query loads it.
 - **Multi-dialect**\
-  Target PostgreSQL, MySQL and SQLite from one mapping; Strawchemy absorbs the dialect differences.
+  Target PostgreSQL, MySQL, and SQLite from one mapping; Strawchemy absorbs the dialect differences.
 - **Sync/Async compatible**\
   The same mapped types work against a sync or an async session, chosen per schema or per field.
 
