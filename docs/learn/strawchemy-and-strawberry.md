@@ -1,20 +1,19 @@
 # Strawchemy and Strawberry
 
-Strawchemy generates GraphQL types, resolvers and inputs from SQLAlchemy models, but the schema
-underneath is Strawberry's own. This page marks what carries over unchanged, what Strawchemy
-takes off your hands and the types it needs to do so, two Strawberry patterns that don't apply to
-a mapped model, and the two places a generated type and a hand-written field share one class.
+Strawchemy is built on top of Strawberry, not beside it. It reads your SQLAlchemy models and
+produces ordinary Strawberry types, inputs, and fields. The schema, the server integration, the
+extensions, and the permissions all stay Strawberry's. You can therefore adopt it in an existing
+Strawberry codebase without a rewrite, one field at a time.
 
-## What still works
+## Strawberry compatibility
 
-A Strawchemy type is a Strawberry type: you can add your own `@strawberry.type` classes beside
-the generated ones, or a plain resolver that never touches a mapped model. `Query`
-and `Mutation` are ordinary Strawberry classes too — fields Strawchemy builds sit next to fields
-you wrote yourself.
+A Strawchemy type is a Strawberry type: your own `@strawberry.type` classes sit beside the
+generated ones, and so do plain resolvers that never touch a mapped model. `Query` and `Mutation`
+are ordinary Strawberry classes too, and the fields Strawchemy builds sit beside your own.
 
-`strawchemy.field()` and the mutation factories also forward `strawberry.field` arguments you
-already know onto the generated field — `description`, `deprecation_reason`, `directives`,
-`permission_classes` and `extensions` reach it unchanged:
+`strawchemy.field()` and the mutation factories accept the `strawberry.field` arguments
+`description`, `deprecation_reason`, `directives`, `permission_classes`, and `extensions`, and pass
+them to the generated field unchanged:
 
 ```python
 posts: list[PostType] = strawchemy.field(
@@ -33,28 +32,57 @@ type Query {
 }
 ```
 
-And because the result is an ordinary `strawberry.Schema`, any Strawberry server integration works
-without change — the quickstart app wires it into Litestar with nothing beyond passing `schema` to
-`make_graphql_controller`.
+Since the result is an ordinary `strawberry.Schema`, any Strawberry server integration serves it.
+The quickstart app plugs it into Litestar by passing `schema` to `make_graphql_controller`.
 
-## What Strawchemy replaces
+## Migrating an existing schema
 
-For a mapped model, Strawchemy takes over the parts that would otherwise be near-identical
-boilerplate on every type: the resolver, the input types mutations read data from, and the
-filter/order-by/pagination arguments those resolvers accept.
+Strawchemy starts resolving fields while the rest of your schema stays as it is. A typical
+migration takes four steps:
 
-```python
-users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True)
-```
+1. **Give it the session you already have.** By default Strawchemy reads `session` from
+   `info.context`, then from `info.context.request`; a context that already carries one needs no
+   setup. Otherwise, set [`session_getter`](/learn/configuration#session-getter) on
+   `StrawchemyConfig`. An async session also needs `repository_type`, as
+   [async sessions](/learn/async) shows.
+2. **Map one model and add one field.** The new field joins the hand-written ones on the same
+   `Query`:
 
-One declaration provides the resolver, the `filter`/`orderBy`/`limit`/`offset` arguments, and the
-session-fetching code all at once. See [architecture](/learn/architecture#generated-fields) for
-what the generated resolver does, and [filtering](/learn/filtering), [ordering](/learn/ordering) and
-[pagination](/learn/pagination) for the arguments it adds. Mutations get the same treatment —
-[mutations](/learn/mutations/) covers the input types Strawchemy generates in place of hand-written
-ones.
+   ```python
+   strawchemy = Strawchemy(StrawchemyConfig("postgresql"))
 
-## Which types a field accepts
+
+   @strawchemy.type(Post, include="all")
+   class PostType: ...
+
+
+   @strawberry.type
+   class Query:
+       @strawberry.field
+       def users(self, info: strawberry.Info) -> list[UserType]: ...  # existing resolver, untouched
+
+       posts: list[PostType] = strawchemy.field()
+   ```
+
+3. **Replace hand-written resolvers one at a time.** For a mapped model, one declaration replaces
+   the resolver, the session-fetching code, and the arguments it reads:
+
+   ```python
+   users: list[UserType] = strawchemy.field(filter_input=UserFilter, order_by_input=UserOrderBy, pagination=True)
+   ```
+
+   This field accepts `filter`, `orderBy`, `limit`, and `offset`. [Filtering](/learn/filtering),
+   [ordering](/learn/ordering), and [pagination](/learn/pagination) describe these arguments;
+   [architecture](/learn/architecture#generated-fields) describes the generated resolver.
+   [Mutation](/learn/mutations/) fields work the same way, with generated input types in place of
+   hand-written ones.
+4. **Keep the resolvers no generated field can replace.** Decorate such a resolver with
+   `@strawchemy.field` and fetch its data through a repository; Strawchemy still builds the query.
+   [Custom resolvers](/learn/resolvers) shows how.
+
+Each step leaves a working schema; you can stop after any of them.
+
+## Accepted field types
 
 A field Strawchemy resolves itself builds its query from a Strawchemy type. On a
 `strawchemy.field()` or mutation field without a resolver of its own, the first member of the
@@ -82,13 +110,12 @@ an annotation naming a type declared further down the module, where Strawberry w
 `StrawchemyFieldError` in a `TypeError`. Under `from __future__ import annotations`, a name
 Strawchemy has registered takes precedence over a module-level name when the annotation resolves.
 
-## What doesn't apply
+## Replacing dataloaders
 
 Dataloaders batch a relationship across the N+1 resolver calls a naive implementation would make.
-Strawchemy makes no separate call per relationship for a dataloader to batch: it compiles the whole
-selection set into one SQL statement before running it, so a nested `posts` selection is a join in
-that same statement. A three-level selection plus a relationship aggregate still compiles to one
-statement:
+Strawchemy leaves a dataloader nothing to batch: it compiles the whole selection set into one SQL
+statement before running it, and a nested `posts` selection becomes a join in that statement. A
+three-level selection plus a relationship aggregate still compiles to one statement:
 
 ```graphql
 {
@@ -107,10 +134,12 @@ statement:
 }
 ```
 
-This query leaves nothing to batch — see [architecture](/learn/architecture) for the execution model
-that makes it so.
+[Architecture](/learn/architecture) describes the execution model behind this. Your existing
+dataloaders keep serving the fields Strawchemy leaves to hand-written resolvers.
 
-`strawberry.auto` also changes meaning on a Strawchemy input. In plain Strawberry it means "infer
+## Generating relationship inputs
+
+`strawberry.auto` changes meaning on a Strawchemy input. In plain Strawberry, it means "infer
 this field's type." On a Strawchemy input it means "generate the relationship input for this
 field," built from up to four operations — a to-many field gets all four, a to-one field all but
 `add`:
@@ -129,11 +158,11 @@ class PostCreateWithAuthorInput:
 See [create mutations with relationships](/learn/mutations/relationships-create) for what each
 operation accepts.
 
-## Where the two meet
+## Adding computed fields
 
-A Strawchemy type isn't limited to generated fields. Add a `ModelInstance` attribute to reach the
-underlying SQLAlchemy instance, then write a plain method decorated with `@strawchemy.field` to
-expose it as a computed field beside the generated ones:
+A Strawchemy type can also hold fields you write. Add a `ModelInstance` attribute to reach the
+underlying SQLAlchemy instance, then expose a computed field as a method decorated with
+`@strawchemy.field`:
 
 ```python
 @strawchemy.type(User, include="all")
@@ -145,9 +174,9 @@ class UserType:
         return len(self.instance.posts)
 ```
 
-`post_count` needs `instance.posts` loaded, which the generated query never does: relationships
-the client selects are not set on the instance. A `QueryHook` loads it by adding the load to the
-statement Strawchemy is already building:
+`post_count` reads `instance.posts`, but the generated query never loads relationships onto the
+instance, even those the client selects. A `QueryHook` adds that load to the statement Strawchemy
+already builds:
 
 ```python
 @strawchemy.field(query_hook=QueryHook(load=[User.posts]))
