@@ -31,9 +31,9 @@ classifiers = [
 dependencies = ["msgspec>=0.20.0", "sqlalchemy>=2.0.10", "strawberry-graphql>=0.283.2", "typing-extensions"]
 
 [project.urls]
-Changelog = "https://github.com/gazorby/strawchemy/blob/main/CHANGELOG.md"
-Documentation = "https://github.com/gazorby/strawchemy"
-Homepage = "https://github.com/gazorby/strawchemy"
+Changelog = "https://strawchemy.pages.dev/changelog.html"
+Documentation = "https://strawchemy.pages.dev/"
+Homepage = "https://strawchemy.pages.dev/"
 Issues = "https://github.com/gazorby/strawchemy/issues"
 Repository = "https://github.com/gazorby/strawchemy"
 "Sponsor on GitHub" = "https://github.com/sponsors/gazorby"
