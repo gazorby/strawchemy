@@ -11,6 +11,7 @@ cocogitto = "latest"
 tombi = "latest"
 yq = "latest"
 gh = "latest"
+bun = "latest"
 usage = "latest"
 
 [vars]

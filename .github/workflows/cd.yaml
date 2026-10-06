@@ -98,3 +98,9 @@ jobs:
           body_path: RELEASE_CHANGELOG.md
           token: ${{ secrets.PAT }}
           files: dist/*
+
+  docs:
+    name: Deploy documentation
+    needs: release
+    uses: ./.github/workflows/docs-deploy.yaml
+    secrets: inherit

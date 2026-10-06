@@ -1,0 +1,16 @@
+[project]
+name = "quickstart"
+version = "0.1.0"
+description = "The app built by the Getting started guide"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+  "aiosqlite",
+  "litestar[sqlalchemy,standard]",
+  "sqlalchemy",
+  "strawberry-graphql",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

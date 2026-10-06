@@ -1,0 +1,27 @@
+["docs:install"]
+description = "Install documentation site dependencies"
+dir = "docs"
+run = "bun install --frozen-lockfile"
+
+["docs:reference"]
+description = "Generate the reference pages from the source tree"
+run = "{{vars.uv_run}} --extra geo --extra pydantic --group docs python tools/docs_reference.py"
+
+["docs:dev"]
+description = "Serve the documentation site locally"
+alias = "d"
+dir = "docs"
+depends = ["docs:install", "docs:reference"]
+run = "bun run dev"
+
+["docs:build"]
+description = "Build the documentation site"
+dir = "docs"
+depends = ["docs:install", "docs:reference"]
+run = "bun run build"
+
+["docs:preview"]
+description = "Preview the built documentation site"
+dir = "docs"
+depends = ["docs:build"]
+run = "bun run preview"

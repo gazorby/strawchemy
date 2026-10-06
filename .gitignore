@@ -205,3 +205,11 @@ CLAUDE.md
 .windsurf
 .serena
 docs/superpowers
+
+# Docs website
+docs/node_modules/
+docs/.vitepress/dist
+docs/.vitepress/cache
+docs/reference/
+docs/.vitepress/reference-sidebar.json
+.wrangler/

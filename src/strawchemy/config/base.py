@@ -19,21 +19,7 @@ if TYPE_CHECKING:
 
 @dataclass
 class StrawchemyConfig:
-    """Global configuration for Strawchemy.
-
-    Attributes:
-        dialect: The SQLAlchemy dialect being used.
-        session_getter: Function to retrieve SQLAlchemy session from strawberry `Info` object.
-        auto_snake_case: Automatically convert snake cased names to camel case.
-        repository_type: Repository class to use for auto resolvers.
-        filter_overrides: Override default filters with custom filters.
-        execution_options: SQLAlchemy execution options for strawberry operations.
-        pagination_default_limit: Default pagination limit when `pagination=True`.
-        pagination: Enable/disable pagination on list resolvers.
-        default_id_field_name: Name for primary key fields arguments on primary key resolvers.
-        deterministic_ordering: Force deterministic ordering for list resolvers.
-        inspector: The SQLAlchemyGraphQLInspector instance.
-    """
+    """Global configuration for Strawchemy."""
 
     dialect: SupportedDialect
     session_getter: AnySessionGetter = default_session_getter
@@ -63,13 +49,13 @@ class StrawchemyConfig:
     include: FieldSpec = "all"
     """Globally included fields."""
     exclude: FieldSpec | None = None
-    """Globally included fields."""
+    """Globally excluded fields."""
     pagination: FieldSpec | None = None
     """Enable/disable pagination on list resolvers."""
     order_by: FieldSpec | None = None
     """Enable/disable order by on list resolvers."""
     distinct_on: FieldSpec | None = None
-    """Enable/disable order by on list resolvers."""
+    """Enable/disable distinct on on list resolvers."""
     pagination_default_limit: int = 100
     """Default pagination limit when `pagination=True`."""
     pagination_default_offset: int = 0

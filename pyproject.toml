@@ -45,6 +45,7 @@ pydantic = ["pydantic"]
 [dependency-groups]
 dev = [
   "debugpy",
+  "quickstart",
   "testapp",
   { include-group = "aiosqlite" },
   { include-group = "lint" },
@@ -54,6 +55,12 @@ dev = [
   { include-group = "test" },
 ]
 aiosqlite = ["aiosqlite"]
+docs = [
+  "cyclopts",
+  "griffe",
+  "griffe2md>=1.5.0",
+  "testapp",
+]
 lint = [
   "ruff",
   "slotscheck>=0.16.5",
@@ -75,9 +82,11 @@ test = [
   "pytest-lazy-fixtures",
   "pytest-pretty",
   "pytest-xdist[psutil]",
+  "quickstart",
   "sqlparse",
   "syrupy>=6.1.1",
   "testapp",
+  { include-group = "docs" },
 ]
 unasyncd = ["unasyncd"]
 
@@ -86,7 +95,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.codespell]
-skip = "*.po,*.ts,./src/3rdParty,./src/Test"
+skip = "*.po,*.ts,./src/3rdParty,./src/Test,*.lock"
 ignore-words-list = "nin"
 
 [tool.coverage.run]
@@ -189,6 +198,7 @@ convention = "google"
 [tool.ruff.lint.per-file-ignores]
 "tests/*" = ["TC001", "UP037", "PLR2004", "PLC0415", "PLR0917"]
 "src/strawchemy/strawberry/factories/*" = ["UP007", "UP045"]
+"tools/*" = ["INP001", "T201"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["strawchemy", "tests"]
@@ -268,6 +278,7 @@ conflicts = [[{ group = "test" }, { group = "unasyncd" }]]
 exclude-newer = "3 days"
 
 [tool.uv.sources]
+quickstart = { workspace = true }
 testapp = { workspace = true }
 
 [tool.uv.workspace]
