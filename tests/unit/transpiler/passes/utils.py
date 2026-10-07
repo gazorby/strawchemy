@@ -10,7 +10,7 @@ from strawchemy.transpiler import AsyncQueryExecutor, SyncQueryExecutor
 from tests.duplicate_reads import assert_no_duplicate_reads
 from tests.unit.conftest import empty_query_result
 from tests.unit.schemas.optimizations import schema
-from tests.unit.utils import SQLA_DIALECTS, DialectContext
+from tests.unit.utils import SQLA_DIALECTS, MockContext
 from tests.utils import format_sql
 
 if TYPE_CHECKING:
@@ -47,7 +47,7 @@ def plan_sql(
             patch.setattr("strawchemy.transpiler._transpiler.DEFAULT_PIPELINES", pipelines)
         patch.setattr(SyncQueryExecutor[Any], "execute", _execute)
         patch.setattr(AsyncQueryExecutor[Any], "execute", _async_execute)
-        context = DialectContext(cast("SupportedDialect", dialect_name))
+        context = MockContext(cast("SupportedDialect", dialect_name))
         result = schema.execute_sync(query, context_value=context)
     assert not result.errors, result.errors
     assert len(captured) == 1
