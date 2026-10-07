@@ -37,19 +37,14 @@ resolvers — boilerplate that also invites N+1 queries.
 
 ## Documentation
 
-Full documentation is at **<https://strawchemy.pages.dev>** — guides for
-[mapping models](https://strawchemy.pages.dev/learn/mapping-models),
-[filtering](https://strawchemy.pages.dev/learn/filtering),
-[aggregations](https://strawchemy.pages.dev/learn/aggregations) and
-[mutations](https://strawchemy.pages.dev/learn/mutations/), plus a generated
-[API reference](https://strawchemy.pages.dev/reference/api/mapper).
+Full documentation is at **<https://strawchemy.pages.dev>**
 
 ## Installation
 
 Strawchemy is available on PyPi
 
 ```console
-pip install strawchemy
+uv add strawchemy
 ```
 
 Strawchemy has the following optional dependencies:
@@ -60,7 +55,7 @@ Strawchemy has the following optional dependencies:
 To install these dependencies along with strawchemy:
 
 ```console
-pip install strawchemy[geo]
+uv add strawchemy[geo]
 ```
 
 ## A first look
