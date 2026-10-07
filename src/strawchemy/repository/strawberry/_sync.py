@@ -22,13 +22,12 @@ from strawchemy.utils.strawberry import default_session_getter, dto_model_from_t
 if TYPE_CHECKING:
     import builtins
 
-    from sqlalchemy import Select
     from strawberry import Info
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.repository.typing import AnySyncSession, SyncSessionGetter
     from strawchemy.schema.mutation import Input, InputModel
-    from strawchemy.typing import OrderByExpr
+    from strawchemy.typing import OrderByExpr, SelectOf
 
 __all__ = ()
 
@@ -60,7 +59,7 @@ class StrawchemySyncRepository(StrawchemyRepository[T]):
     # strawberry related settings
     session_getter: SyncSessionGetter = default_session_getter
     session: AnySyncSession | None = None
-    filter_statement: Select[tuple[Any]] | None = None
+    filter_statement: SelectOf[Any] | None = None
     execution_options: dict[str, Any] | None = None
     deterministic_ordering: bool = False
     default_order_by: builtins.list[OrderByExpr] = field(default_factory=list)

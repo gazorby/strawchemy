@@ -3,7 +3,8 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from sqlalchemy import ForeignKey, inspect
+from sqlalchemy import ARRAY, JSON, ForeignKey, Integer, inspect
+from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
@@ -12,12 +13,20 @@ from sqlalchemy.orm import (
     registry,
     relationship,
 )
+from sqlalchemy.sql.sqltypes import NullType
+from sqlalchemy.sql.type_api import TypeDecorator, TypeEngine
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
+from strawchemy.dto.types import DTOMissing
 
 
 class _Base(DeclarativeBase):
     registry = registry()
+
+
+class _JSONDecorator(TypeDecorator[Any]):
+    impl = JSON
+    cache_ok = True
 
 
 class Department(_Base):
@@ -85,3 +94,20 @@ _ALL_RELATIONSHIPS = [
 def test_reverse_relationships_matches_private(rel: RelationshipProperty[Any]) -> None:
     """`_reverse_relationships` equals SQLAlchemy's private `_reverse_property` for every relationship."""
     assert SQLAlchemyInspector._reverse_relationships(rel) == set(rel._reverse_property)  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    ("type_engine", "expected"),
+    [
+        pytest.param(Integer(), int, id="integer"),
+        pytest.param(JSON(), dict, id="json"),
+        pytest.param(postgresql.JSONB(), dict, id="jsonb"),
+        pytest.param(JSON().with_variant(postgresql.JSONB(), "postgresql"), dict, id="json-variant"),
+        pytest.param(_JSONDecorator(), dict, id="json-decorator"),
+        pytest.param(ARRAY(Integer), list, id="array"),
+        pytest.param(NullType(), DTOMissing, id="no-python-type"),
+    ],
+)
+def test_python_type(type_engine: TypeEngine[Any], expected: type[Any]) -> None:
+    """Test that column types map to the same Python type on SQLAlchemy 2.0 and 2.1."""
+    assert SQLAlchemyInspector._python_type(type_engine) is expected  # noqa: SLF001

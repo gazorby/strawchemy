@@ -54,6 +54,7 @@ pip install strawchemy
 
 Strawchemy has the following optional dependencies:
 
+- `asyncio` : Async sessions, through SQLAlchemy's `asyncio` extra (installs `greenlet`)
 - `geo` : Enable Postgis support through [geoalchemy2](https://github.com/geoalchemy/geoalchemy2)
 
 To install these dependencies along with strawchemy:

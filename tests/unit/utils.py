@@ -10,7 +10,7 @@ from sqlalchemy.orm import Session
 from strawchemy.typing import SupportedDialect
 
 SQLA_DIALECTS: dict[str, Dialect] = {
-    "postgresql": postgresql.dialect(),
+    "postgresql": postgresql.psycopg2.dialect(),
     "sqlite": sqlite.dialect(),
     "mysql": mysql.dialect(),
 }

@@ -39,6 +39,7 @@ Repository = "https://github.com/gazorby/strawchemy"
 "Sponsor on GitHub" = "https://github.com/sponsors/gazorby"
 
 [project.optional-dependencies]
+asyncio = ["sqlalchemy[asyncio]"]
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
 pydantic = ["pydantic"]
 
@@ -276,7 +277,6 @@ StrawchemyAsyncRepository = "StrawchemySyncRepository"
 [tool.uv]
 default-groups = ["dev"]
 conflicts = [[{ group = "test" }, { group = "unasyncd" }]]
-constraint-dependencies = ["sqlalchemy<2.1"]
 exclude-newer = "3 days"
 
 [tool.uv.sources]

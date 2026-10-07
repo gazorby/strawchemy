@@ -221,7 +221,9 @@ def distinct_rows(
     ranked_statement = add_missing_columns(statement, [ordered_column(expression) for expression in order_by])
     ranked = ranked_statement.add_columns(rank).subquery()
     ranked_rank = require_corresponding_column(ranked, rank)
-    kept_rows = select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
+    kept_rows = cast(
+        "Select[Any]", select(*[column for column in ranked.c if column is not ranked_rank]).where(ranked_rank == 1)
+    )
     return kept_rows, ClauseAdapter(ranked)
 
 
@@ -243,7 +245,7 @@ def render_rows(
     The columns the ORDER BY reads are selected, so that it can be adapted onto a wrapper of the statement.
     """
     statement, order_by = _assemble(
-        select(*columns).select_from(rows.source),
+        cast("Select[Any]", select(*columns).select_from(rows.source)),
         rows=rows,
         joins=_by_depth(rows.joins),
         where=rows.where,
@@ -265,7 +267,7 @@ def render_plan(plan: QueryPlan) -> Select[Any]:
     statement = select(*entities).select_from(rows.source).add_columns(*projection.columns)
     ranks = {id(page.rank): page.rank for page in projection.pages.values()}
     statement = statement.add_columns(
-        *[rank for rank in ranks.values() if all(rank is not selected for selected in statement.selected_columns)]
+        *[rank for rank in ranks.values() if all(rank is not column for column in projection.columns)]
     )
     if rows.distinct_on:
         msg = "rows with DISTINCT ON must be wrapped before rendering the plan"

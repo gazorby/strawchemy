@@ -274,9 +274,12 @@ def _moved(
     ``aliased`` matches columns by the table columns they proxy, which is ambiguous when the body selects two aliases
     of one table.
     """
-    mapper = inspect(entity).mapper
+    insp = inspect(entity)
+    mapper = insp.mapper
     moved = aliased(mapper, alias)
     for prop in mapper.column_attrs:
+        if insp.selectable.corresponding_column(prop.columns[0]) is None:
+            continue
         column = clause_element(getattr(entity, prop.key))
         # Attributes read ORM-annotated copies, which hash as the column they copy.
         if column in columns and hash(clause_element(getattr(moved, prop.key))) != hash(columns[column]):

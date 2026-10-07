@@ -50,7 +50,6 @@ if TYPE_CHECKING:
     import builtins
     from collections.abc import Awaitable, Callable, Coroutine, Mapping
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
     from strawberry import BasePermission, Info
     from strawberry.extensions.field_extension import FieldExtension
@@ -71,6 +70,7 @@ if TYPE_CHECKING:
         GetByIdResolverResult,
         ListResolverResult,
         OrderByExpr,
+        SelectOf,
         StrawchemyObjectWithStrawberryObjectDefinition,
     )
 
@@ -592,7 +592,7 @@ class StrawchemyField(StrawberryField):
             return ()
         return self.query_hook if isinstance(self.query_hook, Sequence) else (self.query_hook,)
 
-    def filter_statement(self, info: Info[Any, Any]) -> Select[tuple[DeclarativeBase]] | None:
+    def filter_statement(self, info: Info[Any, Any]) -> SelectOf[DeclarativeBase] | None:
         return self._filter_statement(info) if self._filter_statement else None
 
     @cached_property

@@ -238,15 +238,11 @@ class ArrayModel(ArrayBase):
 class IntervalModel(IntervalBase):
     __tablename__ = "interval_model"
 
-    registry = Registry(metadata=interval_metadata)
-
     time_delta_col: Mapped[timedelta] = mapped_column(Interval)
 
 
 class JSONModel(JSONBase):
     __tablename__ = "json_model"
-
-    registry = Registry(metadata=json_metadata)
 
     dict_col: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
 
@@ -267,8 +263,6 @@ class PostgresJSONChildModel(PostgresJSONBase):
 
 class DateTimeModel(DateTimeBase):
     __tablename__ = "date_time_model"
-
-    registry = Registry(metadata=date_time_metadata)
 
     date_col: Mapped[date] = mapped_column(DateType)
     time_col: Mapped[time] = mapped_column(TimeType)

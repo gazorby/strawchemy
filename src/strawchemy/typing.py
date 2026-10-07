@@ -3,10 +3,12 @@ from __future__ import annotations
 from types import UnionType
 from typing import TYPE_CHECKING, Any, ClassVar, Literal, Protocol, TypeAlias, TypeVar, Union
 
+import sqlalchemy
+from sqlalchemy import Select
+
 if TYPE_CHECKING:
     from collections.abc import Callable, Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import InstrumentedAttribute
     from sqlalchemy.sql.elements import UnaryExpression
     from strawberry import Info
@@ -30,6 +32,7 @@ if TYPE_CHECKING:
     from strawchemy.validation.pydantic import MappedPydanticGraphQLDTO
 
 __all__ = (
+    "STRAWCHEMY_SQLALCHEMY_20",
     "UNION_TYPES",
     "AggregateDTOT",
     "AggregationFilterFunction",
@@ -62,6 +65,7 @@ __all__ = (
     "OrderOperator",
     "QueryNodeType",
     "QueryObject",
+    "SelectOf",
     "StrawberryGraphQLDTO",
     "StrawchemyObjectWithStrawberryObjectDefinition",
     "SupportedDialect",
@@ -83,6 +87,14 @@ AggregateDTOT = TypeVar("AggregateDTOT", bound="AggregateDTO")
 GraphQLDTOT = TypeVar("GraphQLDTOT", bound="GraphQLDTO[Any]")
 OrderByDTOT = TypeVar("OrderByDTOT", bound="OrderByDTO")
 EnumDTOT = TypeVar("EnumDTOT", bound="EnumDTO")
+
+STRAWCHEMY_SQLALCHEMY_20 = sqlalchemy.__version__.startswith("2.0")
+
+# SQLAlchemy 2.1 types Select as variadic; pyright/mypy take the first branch unless the constant is defined for them.
+if not STRAWCHEMY_SQLALCHEMY_20:
+    SelectOf: TypeAlias = Select[T]
+else:
+    SelectOf: TypeAlias = Select[tuple[T]]
 
 SupportedDialect: TypeAlias = Literal["postgresql", "mysql", "sqlite"]
 """Must match SQLAlchemy dialect."""
@@ -157,7 +169,7 @@ GraphQLType = Literal["input", "object", "interface", "enum"]
 
 AnyRepository: TypeAlias = "StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]"
 AnyRepositoryType: TypeAlias = "type[AnyRepository]"
-FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], Select[tuple[Any]]]"
+FilterStatementCallable: TypeAlias = "Callable[[Info[Any, Any]], SelectOf[Any]]"
 GraphQLPurpose: TypeAlias = Literal[
     "type",
     "aggregate_type",

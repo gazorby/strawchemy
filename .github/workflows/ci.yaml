@@ -114,16 +114,16 @@ jobs:
 
       - name: Rename coverage and junit files
         run: |
-          mv .coverage* .coverage.${{ matrix.session.session }}
-          mv junit* junit-${{ matrix.session.session }}.xml
+          mv .coverage* .coverage.${{ matrix.session.slug }}
+          mv junit* junit-${{ matrix.session.slug }}.xml
 
       - name: Upload coverage data
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         id: upload-coverage-data
         if: ${{ always() }}
         with:
-          name: coverage-${{ matrix.session.session }}
-          path: .coverage.${{ matrix.session.session }}
+          name: coverage-${{ matrix.session.slug }}
+          path: .coverage.${{ matrix.session.slug }}
           include-hidden-files: true
 
       - name: Upload test results data
@@ -131,8 +131,8 @@ jobs:
         id: upload-test-results-data
         if: ${{ always() }}
         with:
-          name: test-results-${{ matrix.session.session }}
-          path: junit-${{ matrix.session.session }}.xml
+          name: test-results-${{ matrix.session.slug }}
+          path: junit-${{ matrix.session.slug }}.xml
 
   upload-coverage:
     name: 🆙 Upload Coverage
@@ -194,7 +194,7 @@ jobs:
           name: ${{env.PROJECT_NAME}}-test-results
           report_type: test_results
           token: ${{ secrets.CODECOV_TOKEN }}
-          flags: ${{ matrix.session.session }}
+          flags: ${{ matrix.session.slug }}
           verbose: true
 
   lint:

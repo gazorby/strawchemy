@@ -30,7 +30,11 @@ __all__ = ("fx_sqlalchemy_pydantic_factory", "graphql_snapshot", "sql_snapshot",
 
 EXTRAS_ENV_VAR = "STRAWCHEMY_TEST_EXTRAS"
 
-_EXTRA_MODULES = {"geo": ("geoalchemy2", "geojson_pydantic", "shapely"), "pydantic": ("pydantic",)}
+_EXTRA_MODULES = {
+    "asyncio": ("greenlet",),
+    "geo": ("geoalchemy2", "geojson_pydantic", "shapely"),
+    "pydantic": ("pydantic",),
+}
 
 # ``DockerService`` locks on ``<tmp_path>/<container name>`` before creating a container. The path pytest
 # hands out is unique to the session, so two checkouts starting at once both try to create the container

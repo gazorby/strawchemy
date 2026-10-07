@@ -19,12 +19,12 @@ if TYPE_CHECKING:
     from collections import defaultdict
     from collections.abc import Sequence
 
-    from sqlalchemy import Dialect, Select
+    from sqlalchemy import Dialect
     from sqlalchemy.sql import ColumnElement
 
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import OrderByExpr, QueryNodeType
+    from strawchemy.typing import OrderByExpr, QueryNodeType, SelectOf
 
 __all__ = ("Transpiler",)
 
@@ -37,7 +37,7 @@ class Transpiler(Generic[DeclarativeT]):
         model: type[DeclarativeT],
         dialect: Dialect,
         *,
-        statement: Select[tuple[DeclarativeT]] | None = None,
+        statement: SelectOf[DeclarativeT] | None = None,
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[Any]]] | None = None,
         deterministic_ordering: bool = False,
         default_order_by: Sequence[OrderByExpr] | None = None,

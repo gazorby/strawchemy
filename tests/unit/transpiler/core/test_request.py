@@ -188,8 +188,8 @@ def test_build_count_without_arguments() -> None:
     plain = build(function, alias, "postgresql")
     windowed = build(function, alias, "postgresql", over=True)
 
-    assert str(plain.element.compile(dialect=postgresql.dialect())) == "count(*)"
-    assert str(windowed.element.compile(dialect=postgresql.dialect())) == snapshot("count(*) OVER ()")
+    assert str(plain.element.compile(dialect=postgresql.psycopg2.dialect())) == "count(*)"
+    assert str(windowed.element.compile(dialect=postgresql.psycopg2.dialect())) == snapshot("count(*) OVER ()")
 
 
 def test_build_distinct_argument_function() -> None:
@@ -200,7 +200,9 @@ def test_build_distinct_argument_function() -> None:
 
     label = build(function, aliased(Fruit.__mapper__), "postgresql")
 
-    assert str(label.element.compile(dialect=postgresql.dialect())) == snapshot("count(DISTINCT fruit_1.sweetness)")
+    assert str(label.element.compile(dialect=postgresql.psycopg2.dialect())) == snapshot(
+        "count(DISTINCT fruit_1.sweetness)"
+    )
 
 
 @pytest.mark.parametrize(
@@ -213,7 +215,7 @@ def test_build_distinct_argument_function() -> None:
 @pytest.mark.parametrize(
     ("dialect", "numeric_coltype"),
     [
-        pytest.param(postgresql.dialect(), 1700, id="postgresql"),
+        pytest.param(postgresql.psycopg2.dialect(), 1700, id="postgresql"),
         pytest.param(mysql.dialect(), 246, id="mysql"),
     ],
 )

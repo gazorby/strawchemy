@@ -6,7 +6,7 @@ import pytest
 from syrupy.data import Snapshot, SnapshotCollection
 from syrupy.extensions.amber.serializer import AmberDataSerializer
 
-from tests.syrupy import SnapshotMergeError, VerifiedAmberSnapshotExtension
+from tests.syrupy import SnapshotMergeError, SnapshotWriteError, VerifiedAmberSnapshotExtension
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -63,8 +63,31 @@ def test_merge_dropping_entries_raises(tmp_path: Path, monkeypatch: pytest.Monke
         write_file(snapshot_collection, merge=False, file_lock=True, _already_locked=True)
 
     monkeypatch.setattr(VerifiedAmberSnapshotExtension.serializer_class, "write_file", clobber)
+    monkeypatch.setattr("tests.syrupy.IS_SQLALCHEMY_20", False)
 
     with pytest.raises(SnapshotMergeError, match="dropped 2 entries, starting with 'test_first'"):
         VerifiedAmberSnapshotExtension.write_snapshot_collection(
             snapshot_collection=_collection(location, ["test_third"])
         )
+
+
+def test_snapshot_write_refused_on_sqlalchemy_20(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that writing snapshots fails on SQLAlchemy 2.0 and leaves the file untouched."""
+    location = tmp_path / "snapshots.ambr"
+    monkeypatch.setattr("tests.syrupy.IS_SQLALCHEMY_20", True)
+
+    with pytest.raises(SnapshotWriteError, match=r"SQLAlchemy 2\.1"):
+        VerifiedAmberSnapshotExtension.write_snapshot_collection(
+            snapshot_collection=_collection(location, ["test_first"])
+        )
+
+    assert not location.exists()
+
+
+@pytest.mark.parametrize("is_20", [True, False])
+def test_snapshot_matches_ignores_loader_labels_on_sqlalchemy_20(is_20: bool, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Test that loader labels only stop mattering when running on SQLAlchemy 2.0."""
+    monkeypatch.setattr("tests.syrupy.IS_SQLALCHEMY_20", is_20)
+    extension = VerifiedAmberSnapshotExtension()
+
+    assert extension.matches(serialized_data="SELECT t.c", snapshot_data="SELECT t.c AS t_c") is is_20

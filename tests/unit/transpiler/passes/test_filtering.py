@@ -23,9 +23,8 @@ from tests.utils import format_sql
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-    from sqlalchemy import Select
-
     from strawchemy.dto.strawberry import AggregateFilterDTO, BooleanFilterDTO
+    from strawchemy.typing import SelectOf
 
 _DIALECTS = pytest.mark.parametrize("dialect_name", ["postgresql", "sqlite", "mysql"])
 _SEEDED_TABLES = ("color", "fruit", "tag", "group", "user", "department", "user_department_join_table")
@@ -47,7 +46,7 @@ class _Pair(_PairBase):
     name: Mapped[str]
 
 
-def _named_pair(statement: Select[tuple[_Pair]], value: str, **_ctx: object) -> Select[tuple[_Pair]]:
+def _named_pair(statement: SelectOf[_Pair], value: str, **_ctx: object) -> SelectOf[_Pair]:
     return statement.where(_Pair.name == value)
 
 

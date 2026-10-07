@@ -105,7 +105,7 @@ def test_entity_over_relabelled_nested_subquery_finds_its_own_columns() -> None:
 def test_table_alias_targets_table_columns() -> None:
     """``aliased(Model, Model.__table__)`` compiles to the table's own columns, with no second FROM in DML."""
     alias = aliased(Color, Color.__table__)
-    dialect = postgresql.dialect()
+    dialect = postgresql.psycopg2.dialect()
 
     assert str(alias.name == "x") == "color.name = :name_1"
     update_sql = str(update(Color).where(alias.name == "x").values(name="y").compile(dialect=dialect))

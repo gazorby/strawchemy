@@ -41,7 +41,7 @@ def _level(model: type[Color | Fruit], default_order_by: Sequence[OrderByExpr] =
         allow_null=False,
     )
     plan_context = PlanContext.create(
-        model, postgresql.dialect(), pipelines=DEFAULT_PIPELINES, default_order_by=default_order_by
+        model, postgresql.psycopg2.dialect(), pipelines=DEFAULT_PIPELINES, default_order_by=default_order_by
     )
     return Level.root(request, plan_context)
 

@@ -34,7 +34,7 @@ if TYPE_CHECKING:
 
     from strawchemy.typing import QueryNodeType
 
-_Edit: TypeAlias = "Callable[[Select[Any], type[Fruit]], Select[Any]]"
+_Edit: TypeAlias = "Callable[[Select, type[Fruit]], Select[Any]]"
 _RankBy: TypeAlias = "Callable[[type[Fruit]], list[Any]]"
 
 _SQLITE = DatabaseFeatures(dialect="sqlite")

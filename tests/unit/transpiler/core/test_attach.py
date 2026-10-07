@@ -43,7 +43,7 @@ POSTGRES = DatabaseFeatures.new("postgresql")
 SQLITE = DatabaseFeatures.new("sqlite")
 MYSQL = DatabaseFeatures.new("mysql")
 _DIALECTS: dict[str, Dialect] = {
-    "postgresql": postgresql.dialect(),
+    "postgresql": postgresql.psycopg2.dialect(),
     "sqlite": sqlite.dialect(),
     "mysql": mysql.dialect(),
 }

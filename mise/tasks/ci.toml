@@ -7,7 +7,7 @@ description = "Run tests in CI"
 usage = 'arg "<session>"'
 depends = "ci:install"
 env = { UV_PYTHON_PREFERENCE = "only-managed" }
-run = "uv run {{vars.ci_uv_run_options}} nox -s \"${usage_session-}\" -- -n=2 {{vars.ci_pytest_coverage_options}}"
+run = "uv run {{vars.ci_uv_run_options}} nox -s \"${usage_session-}\" -- {{vars.ci_pytest_coverage_options}}"
 
 ["ci:lint"]
 description = "Lint CI yaml files"
@@ -21,6 +21,7 @@ run = '''
     jq 'map(
         {
         session,
+        slug: (.session | gsub("\\("; "-") | gsub("\\)"; "")),
         tags,
         python,
         name,

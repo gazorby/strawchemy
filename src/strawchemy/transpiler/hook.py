@@ -23,11 +23,12 @@ from strawchemy.repository.typing import DeclarativeT
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase, InstrumentedAttribute, Mapper
     from sqlalchemy.orm.strategy_options import _AbstractLoad
     from sqlalchemy.orm.util import AliasedClass
     from strawberry import Info
+
+    from strawchemy.typing import SelectOf
 
 
 ColumnLoadingMode: TypeAlias = Literal["undefer", "add"]
@@ -178,8 +179,8 @@ class QueryHook(Generic[DeclarativeT]):
         return [undefer(getattr(alias, column.key)) for column in self._columns]
 
     def load_columns(
-        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[Any], mode: ColumnLoadingMode
-    ) -> tuple[Select[tuple[DeclarativeT]], list[_AbstractLoad]]:
+        self, statement: SelectOf[DeclarativeT], alias: AliasedClass[Any], mode: ColumnLoadingMode
+    ) -> tuple[SelectOf[DeclarativeT], list[_AbstractLoad]]:
         """Loads the columns in ``load``, as ``undefer`` options or, in ``"add"`` mode, as selected columns."""
         load_options: list[_AbstractLoad] = []
         if mode == "undefer":
@@ -192,8 +193,8 @@ class QueryHook(Generic[DeclarativeT]):
         return statement, load_options
 
     def apply_hook(
-        self, statement: Select[tuple[DeclarativeT]], alias: AliasedClass[DeclarativeT]
-    ) -> Select[tuple[DeclarativeT]]:
+        self, statement: SelectOf[DeclarativeT], alias: AliasedClass[DeclarativeT]
+    ) -> SelectOf[DeclarativeT]:
         """Returns ``statement`` edited, for instance with a filter or a join; unchanged by default.
 
         ``alias`` is the alias of the model the hook runs on: the related model for a relation field.

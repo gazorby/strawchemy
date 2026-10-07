@@ -28,7 +28,7 @@ from tests.unit.models import Color, Group, SponsoredUser, Tag, User
 from tests.utils import as_dto, format_sql
 
 if typing.TYPE_CHECKING:
-    from sqlalchemy import ClauseElement, Select
+    from sqlalchemy import ClauseElement
     from sqlalchemy.engine import Dialect
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
@@ -36,7 +36,7 @@ if typing.TYPE_CHECKING:
 
     from strawchemy.dto.strawberry import BooleanFilterDTO
     from strawchemy.transpiler._core.plan import QueryPlan
-    from strawchemy.typing import QueryNodeType
+    from strawchemy.typing import QueryNodeType, SelectOf
 
 
 class _PairBase(DeclarativeBase):
@@ -142,7 +142,7 @@ class _PaginateByName(PassBase):
 
 @dataclass
 class _HideArchived(QueryHook[Color]):
-    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+    def apply_hook(self, statement: SelectOf[Color], alias: AliasedClass[Color]) -> SelectOf[Color]:
         return statement.where(alias.name != "archived")
 
 
@@ -157,7 +157,7 @@ def _context(
         root=Pipeline(()), relation=Pipeline(relation), exists=Pipeline((_Filters(),)), dml=Pipeline(())
     )
     return PlanContext.create(
-        model, dialect or postgresql.dialect(), pipelines=pipelines, query_hooks=query_hooks or {}
+        model, dialect or postgresql.psycopg2.dialect(), pipelines=pipelines, query_hooks=query_hooks or {}
     )
 
 
@@ -206,7 +206,7 @@ def _root(model: type[DeclarativeBase], type_: type[Any], *fields: str) -> tuple
 
 
 def _sql(statement: ClauseElement, dialect: Dialect | None = None) -> list[str]:
-    return format_sql(str(statement.compile(dialect=dialect or postgresql.dialect()))).splitlines()
+    return format_sql(str(statement.compile(dialect=dialect or postgresql.psycopg2.dialect()))).splitlines()
 
 
 def _exists_sql(level: Level, dto_filter: BooleanFilterDTO, dialect: Dialect | None = None) -> list[str]:

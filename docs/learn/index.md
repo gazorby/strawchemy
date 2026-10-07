@@ -88,6 +88,8 @@ query to batch.
   Target PostgreSQL, MySQL, and SQLite from one mapping; Strawchemy absorbs the dialect differences.
 - **Sync/Async compatible**\
   The same mapped types work against a sync or an async session, chosen per schema or per field.
+- **SQLAlchemy 2.0 and 2.1**\
+  Runs on either release line, with type annotations that follow the installed version.
 
 ::: warning
 Strawchemy is in pre-release and under active development, and its initial API may change. We
