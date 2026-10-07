@@ -39,6 +39,7 @@ Repository = "https://github.com/gazorby/strawchemy"
 "Sponsor on GitHub" = "https://github.com/sponsors/gazorby"
 
 [project.optional-dependencies]
+asyncio = ["sqlalchemy[asyncio]"]
 geo = ["GeoAlchemy2", "geojson-pydantic", "shapely"]
 pydantic = ["pydantic"]
 

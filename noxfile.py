@@ -38,7 +38,7 @@ def extras_env(*extras: str) -> dict[str, str]:
 def unit_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     args: list[str] = ["-m=not integration", "tests/unit", *session.posargs]
-    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("geo", "pydantic"))
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("asyncio", "geo", "pydantic"))
 
 
 @session(
@@ -59,13 +59,13 @@ def unit_tests_no_extras(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration"],
     uv_groups=["test", "postgres", "mysql", "aiosqlite"],
-    uv_extras=["geo"],
+    uv_extras=["asyncio", "geo"],
     uv_sync_locked=False,
 )
 def integration_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     args: list[str] = ["-m=integration", *session.posargs]
-    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("geo"))
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("asyncio", "geo"))
 
 
 @session(
@@ -73,13 +73,13 @@ def integration_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "postgres"],
     uv_groups=["test", "postgres"],
-    uv_extras=["geo"],
+    uv_extras=["asyncio", "geo"],
     uv_sync_locked=False,
 )
 def integration_postgres_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     args: list[str] = ["-m=asyncpg or psycopg_async or psycopg_sync", "--snapshot-warn-unused", *session.posargs]
-    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("geo"))
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("asyncio", "geo"))
 
 
 @session(
@@ -87,13 +87,13 @@ def integration_postgres_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "mysql"],
     uv_groups=["test", "mysql"],
-    uv_extras=["geo"],
+    uv_extras=["asyncio", "geo"],
     uv_sync_locked=False,
 )
 def integration_mysql_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     args: list[str] = ["-m=asyncmy", "--snapshot-warn-unused", *session.posargs]
-    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("geo"))
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("asyncio", "geo"))
 
 
 @session(
@@ -101,9 +101,10 @@ def integration_mysql_tests(session: Session) -> None:
     python=SUPPORTED_PYTHON_VERSIONS,
     tags=["tests", "docker", "integration", "ci", "sqlite"],
     uv_groups=["test", "aiosqlite"],
+    uv_extras=["asyncio"],
     uv_sync_locked=False,
 )
 def integration_sqlite_tests(session: Session) -> None:
     (here / ".coverage").unlink(missing_ok=True)
     args: list[str] = ["-m aiosqlite or sqlite", "--snapshot-warn-unused", *session.posargs]
-    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args)
+    session.run("pytest", *COMMON_PYTEST_OPTIONS, *args, env=extras_env("asyncio"))

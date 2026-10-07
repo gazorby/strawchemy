@@ -2,6 +2,8 @@
 
 Strawchemy runs against a synchronous or an asynchronous SQLAlchemy session. This page shows how to switch a schema to async, write async resolvers, and mix both kinds of field.
 
+Async sessions need the `asyncio` extra: `uv add "strawchemy[asyncio]"`.
+
 ## Async repository
 
 Set `repository_type` on `StrawchemyConfig` to make every generated field run async. This option

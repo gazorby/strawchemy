@@ -8,10 +8,10 @@ code lives in a `quickstart` package with four modules built up over the next st
 ## Installation
 
 ```console
-uv add strawchemy "litestar[sqlalchemy,standard]" aiosqlite strawberry-graphql
+uv add "strawchemy[asyncio]" "litestar[sqlalchemy,standard]" aiosqlite strawberry-graphql
 ```
 
-`strawchemy[geo]` adds PostGIS support through [GeoAlchemy2](https://github.com/geoalchemy/geoalchemy2).
+`strawchemy[asyncio]` brings what async sessions need; `strawchemy[geo]` adds PostGIS support through [GeoAlchemy2](https://github.com/geoalchemy/geoalchemy2).
 
 ## Models
 
