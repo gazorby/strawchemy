@@ -31,7 +31,7 @@ def _linted_sql(statement: Select[Any]) -> str:
     """
     with warnings.catch_warnings():
         warnings.simplefilter("error", category=SAWarning)
-        return format_sql(str(statement.compile(dialect=postgresql.dialect(), linting=FROM_LINTING)))
+        return format_sql(str(statement.compile(dialect=postgresql.psycopg2.dialect(), linting=FROM_LINTING)))
 
 
 @pytest.mark.parametrize(

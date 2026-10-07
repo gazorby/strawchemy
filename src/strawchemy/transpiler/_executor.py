@@ -20,11 +20,11 @@ from strawchemy.repository.typing import AnyAsyncSession, AnySyncSession, Declar
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Mapping, Sequence
 
-    from sqlalchemy import ColumnElement, Label, Result, Select, StatementLambdaElement
+    from sqlalchemy import ColumnElement, Label, Result, StatementLambdaElement
 
     from strawchemy.dto.strawberry import GraphQLFieldDefinition
     from strawchemy.transpiler._core.plan import QueryPlan
-    from strawchemy.typing import QueryNodeType
+    from strawchemy.typing import QueryNodeType, SelectOf
 
 
 __all__ = ("AsyncQueryExecutor", "NodeResult", "QueryExecutor", "QueryResult", "SyncQueryExecutor")
@@ -172,9 +172,7 @@ class QueryExecutor(Generic[DeclarativeT]):
 
         return visitors.replacement_traverse(predicate, {}, replace)
 
-    def _to_query_result(
-        self, result: Result[tuple[DeclarativeT, Any]], fetch: Literal["one_or_none", "all"]
-    ) -> QueryResult[DeclarativeT]:
+    def _to_query_result(self, result: Result, fetch: Literal["one_or_none", "all"]) -> QueryResult[DeclarativeT]:
         """Groups result rows by root model into a ``QueryResult``.
 
         A root model spans one row per combination of its related objects, and each row holds the computed values of
@@ -243,7 +241,7 @@ class QueryExecutor(Generic[DeclarativeT]):
             },
         )
 
-    def statement(self) -> Select[tuple[DeclarativeT]] | StatementLambdaElement:
+    def statement(self) -> SelectOf[DeclarativeT] | StatementLambdaElement:
         """Returns the planned statement with the extra WHERE predicates and execution options."""
         statement = self.plan.emit()
         if self.extra_where:
@@ -257,7 +255,7 @@ class QueryExecutor(Generic[DeclarativeT]):
 class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
     """Query executor for async sessions."""
 
-    async def execute(self, session: AnyAsyncSession) -> Result[tuple[DeclarativeT, Any]]:
+    async def execute(self, session: AnyAsyncSession) -> Result:
         """Runs the statement and returns the raw result."""
         return await session.execute(self.statement())
 
@@ -274,7 +272,7 @@ class AsyncQueryExecutor(QueryExecutor[DeclarativeT]):
 class SyncQueryExecutor(QueryExecutor[DeclarativeT]):
     """Query executor for sync sessions."""
 
-    def execute(self, session: AnySyncSession) -> Result[tuple[DeclarativeT, Any]]:
+    def execute(self, session: AnySyncSession) -> Result:
         """Runs the statement and returns the raw result."""
         return session.execute(self.statement())
 

@@ -596,7 +596,7 @@ ALLOWED: tuple[Callable[[Read, Read], bool], ...] = (
 )
 
 
-def duplicate_reads(statement: Select[Any], dialect: Dialect) -> list[str]:
+def duplicate_reads(statement: Select, dialect: Dialect) -> list[str]:
     """Returns one message per pair of reads of the same rows that no allowed duplicate covers."""
     reads: list[Read] = []
     _walk(statement, dialect, _Path(), "query", "", reads)
@@ -607,7 +607,7 @@ def duplicate_reads(statement: Select[Any], dialect: Dialect) -> list[str]:
     ]
 
 
-def assert_no_duplicate_reads(statement: Select[Any], dialect: Dialect) -> None:
+def assert_no_duplicate_reads(statement: Select, dialect: Dialect) -> None:
     """Raises ``AssertionError`` listing the duplicate reads of ``statement``, unless the test allows them."""
     allowed = _allowed_reason is not None and (_allowed_dialects is None or dialect.name in _allowed_dialects)
     if not allowed and (messages := duplicate_reads(statement, dialect)):

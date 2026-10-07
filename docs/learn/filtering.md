@@ -156,13 +156,15 @@ class PostFineGrainedFilter:
 
 Add a filter backed by no column at all with `apply=`: a callable that adds its own `WHERE` predicate to an isolated `select(Post)` statement, driven by whatever value the client passes. Add `more_viewed_than` to the filter above as a virtual scalar field, and reuse the same callable for `more_viewed_than_in` with `join="in"` — a different correlation strategy for the same predicate:
 
+On SQLAlchemy 2.0, pyright and mypy need a one-line setting for `SelectOf`: see [type checking](/learn/query-hooks).
+
 ```python
 from typing import Any
 
-from sqlalchemy import Select
+from strawchemy.typing import SelectOf
 
 
-def _post_more_viewed_than(statement: Select[tuple[Post]], value: int, **_ctx: Any) -> Select[tuple[Post]]:
+def _post_more_viewed_than(statement: SelectOf[Post], value: int, **_ctx: Any) -> SelectOf[Post]:
     return statement.where(Post.views >= value)
 
 

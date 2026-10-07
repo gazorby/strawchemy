@@ -19,45 +19,46 @@ from strawchemy import QueryHook, Strawchemy
 from tests.unit.models import Color, Fruit, Group
 
 if TYPE_CHECKING:
-    from sqlalchemy import Select
     from sqlalchemy.orm.util import AliasedClass
+
+    from strawchemy.typing import SelectOf
 
 strawchemy = Strawchemy("postgresql")
 
 
 class SweetFruitHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         return statement.where(alias.sweetness > 5)
 
 
 class FirstFruitsHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         return statement.order_by(alias.name.asc()).limit(3)
 
 
 class VisibleColorHook(QueryHook[Color]):
     @override
-    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+    def apply_hook(self, statement: SelectOf[Color], alias: AliasedClass[Color]) -> SelectOf[Color]:
         return statement.where(alias.name != "hidden")
 
 
 class NameOrderedColorHook(QueryHook[Color]):
     @override
-    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+    def apply_hook(self, statement: SelectOf[Color], alias: AliasedClass[Color]) -> SelectOf[Color]:
         return statement.order_by(alias.name.asc())
 
 
 class FirstColorHook(QueryHook[Color]):
     @override
-    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+    def apply_hook(self, statement: SelectOf[Color], alias: AliasedClass[Color]) -> SelectOf[Color]:
         return statement.order_by(alias.name.asc()).limit(1)
 
 
 class ColoredFruitHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         color = aliased(Color, name="hook_color")
         return statement.join(color, color.id == alias.color_id).where(color.name != "hidden")
 
@@ -86,7 +87,7 @@ class ColorAggregationType: ...
 class ColorFilter: ...
 
 
-def _named(statement: Select[tuple[Color]], value: str, **_ctx: Any) -> Select[tuple[Color]]:
+def _named(statement: SelectOf[Color], value: str, **_ctx: Any) -> SelectOf[Color]:
     return statement.where(Color.name == value)
 
 

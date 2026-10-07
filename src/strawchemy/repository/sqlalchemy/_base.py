@@ -20,7 +20,6 @@ from strawchemy.transpiler import Transpiler
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
-    from sqlalchemy import Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
@@ -28,7 +27,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, OrderByDTO
     from strawchemy.schema.mutation import Input, LevelInput, UpsertData
     from strawchemy.transpiler.hook import QueryHook
-    from strawchemy.typing import OrderByExpr, QueryNodeType, SupportedDialect
+    from strawchemy.typing import OrderByExpr, QueryNodeType, SelectOf, SupportedDialect
 
 
 __all__ = ("InsertData", "InsertOrUpdate", "MutationData", "RowLike", "SQLAlchemyGraphQLRepository")
@@ -127,7 +126,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         model: type[DeclarativeT],
         session: SessionT,
         *,
-        statement: Select[tuple[DeclarativeT]] | None = None,
+        statement: SelectOf[DeclarativeT] | None = None,
         execution_options: dict[str, Any] | None = None,
         deterministic_ordering: bool = False,
         default_order_by: Sequence[OrderByExpr] | None = None,

@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Annotated, Any, TypeAlias, cast
 
 import strawberry
 from pydantic import AfterValidator
-from sqlalchemy import Select, select
+from sqlalchemy import select
 from sqlalchemy.orm import aliased
 from strawberry.extensions.field_extension import FieldExtension
 from typing_extensions import override
@@ -44,6 +44,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm.util import AliasedClass
 
     from strawchemy.transpiler.hook import LoadType
+    from strawchemy.typing import SelectOf
 
 SyncExtensionResolver: TypeAlias = Callable[..., Any]
 AsyncExtensionResolver: TypeAlias = Callable[..., Awaitable[Any]]
@@ -79,7 +80,7 @@ class SomeExtension(FieldExtension):
 
 class FruitFilterHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         if self.info.context.role == "user":
             return statement.where(alias.name == "Apple")
         return statement
@@ -89,32 +90,32 @@ class FruitOrderingHook(QueryHook[Fruit]):
     load: Sequence[LoadType] = [Fruit.water_percent]
 
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         return statement.order_by(alias.water_percent.asc())
 
 
 class SweetFruitHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         return statement.where(alias.sweetness > 5)
 
 
 class MultiFarmFruitHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         return statement.join(FruitFarm, FruitFarm.fruit_id == alias.id).where(FruitFarm.name.endswith(" 2"))
 
 
 class FruitColorNameOrderingHook(QueryHook[Fruit]):
     @override
-    def apply_hook(self, statement: Select[tuple[Fruit]], alias: AliasedClass[Fruit]) -> Select[tuple[Fruit]]:
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
         color = aliased(Color)
         return statement.outerjoin(color, color.id == alias.color_id).order_by(color.name.desc())
 
 
 class ColorOrderingHook(QueryHook[Color]):
     @override
-    def apply_hook(self, statement: Select[tuple[Color]], alias: AliasedClass[Color]) -> Select[tuple[Color]]:
+    def apply_hook(self, statement: SelectOf[Color], alias: AliasedClass[Color]) -> SelectOf[Color]:
         return statement.order_by(alias.name.asc())
 
 
@@ -199,7 +200,7 @@ class FruitTypeWithPaginationAndOrderBy: ...
 class FruitFilter: ...
 
 
-def _fruit_sweeter_than(statement: Select[tuple[Fruit]], value: int, **_ctx: Any) -> Select[tuple[Fruit]]:
+def _fruit_sweeter_than(statement: SelectOf[Fruit], value: int, **_ctx: Any) -> SelectOf[Fruit]:
     return statement.where(Fruit.sweetness >= value)
 
 

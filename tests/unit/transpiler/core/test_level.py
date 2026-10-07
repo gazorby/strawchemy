@@ -78,7 +78,7 @@ def _level(
         offset=None,
         allow_null=False,
     )
-    context = PlanContext.create(model, dialect or postgresql.dialect(), pipelines=_PIPELINES)
+    context = PlanContext.create(model, dialect or postgresql.psycopg2.dialect(), pipelines=_PIPELINES)
     return Level.root(request, context)
 
 
@@ -148,7 +148,7 @@ def test_column_extracts_the_json_path() -> None:
     dict_col.metadata.data.json_path = "$.key"
     level = _level(SQLDataTypes, root)
 
-    assert str(level.column(dict_col).compile(dialect=postgresql.dialect())) == snapshot(
+    assert str(level.column(dict_col).compile(dialect=postgresql.psycopg2.dialect())) == snapshot(
         "coalesce(jsonb_path_query_first(sql_data_types.dict_col, CAST(%(param_1)s AS JSONPATH)), CAST(%(param_2)s::JSONB AS JSONB))"
     )
 

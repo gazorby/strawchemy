@@ -16,7 +16,7 @@ if TYPE_CHECKING:
     from sqlalchemy import Dialect, Select
     from sqlalchemy.sql.selectable import CTE, LateralFromClause
 
-DIALECT = postgresql.dialect()
+DIALECT = postgresql.psycopg2.dialect()
 
 
 def _color_count_lateral(color: type[Color], name: str) -> LateralFromClause:
@@ -288,7 +288,7 @@ def _dml_filter(name: str) -> Select[Any]:
     ("name", "dialect", "flagged"),
     [
         pytest.param("dml_matched", mysql.dialect(), False, id="mysql-dml_matched"),
-        pytest.param("dml_matched", postgresql.dialect(), True, id="postgresql-dml_matched"),
+        pytest.param("dml_matched", postgresql.psycopg2.dialect(), True, id="postgresql-dml_matched"),
         pytest.param("matched", mysql.dialect(), True, id="mysql-other-name"),
     ],
 )
@@ -732,7 +732,7 @@ def _sibling_pages(
     first_offset: int | None = None,
     nested: bool = False,
     counted: bool = False,
-) -> Select[Any]:
+) -> Select:
     """Selects two user pages per group, with each page's departments count if ``nested``, its user count if ``counted``."""
     group = aliased(Group, name="group")
     first = _users_page(group, "a", first_limit, first_offset, descending=False)

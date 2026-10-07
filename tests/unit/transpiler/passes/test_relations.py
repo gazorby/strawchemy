@@ -829,7 +829,7 @@ def _level(root: QueryNodeType, query_hooks: dict[QueryNodeType, list[QueryHook[
         allow_null=False,
     )
     context = PlanContext.create(
-        request.model, postgresql.dialect(), pipelines=_PIPELINES, query_hooks=query_hooks or {}
+        request.model, postgresql.psycopg2.dialect(), pipelines=_PIPELINES, query_hooks=query_hooks or {}
     )
     return Level.root(request, context)
 

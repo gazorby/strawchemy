@@ -8,12 +8,12 @@ A `QueryHook` subclass overriding `apply_hook` applies to every query against a 
 
 ```python
 from strawchemy import QueryHook
-from sqlalchemy import Select
+from strawchemy.typing import SelectOf
 from sqlalchemy.orm.util import AliasedClass
 
 
 class PublishedPostsHook(QueryHook[Post]):
-    def apply_hook(self, statement: Select[tuple[Post]], alias: AliasedClass[Post]) -> Select[tuple[Post]]:
+    def apply_hook(self, statement: SelectOf[Post], alias: AliasedClass[Post]) -> SelectOf[Post]:
         return statement.where(alias.published_at.is_not(None))
 
 
@@ -23,6 +23,10 @@ class PublishedPostType:
 ```
 
 Pass a `QueryHook` instance to `@strawchemy.field`'s `query_hook` argument instead of `@strawchemy.type`'s to apply it to one field rather than every query for the type.
+
+::: tip Type checking with SQLAlchemy 2.0
+`SelectOf[Post]` is `Select[Post]` on SQLAlchemy 2.1 and `Select[tuple[Post]]` on 2.0. ty needs no setup. On SQLAlchemy 2.0, pyright and mypy (which assume 2.1) need `defineConstant = { STRAWCHEMY_SQLALCHEMY_20 = true }` under `[tool.pyright]`, or `always_true = ["STRAWCHEMY_SQLALCHEMY_20"]` under `[tool.mypy]`.
+:::
 
 ::: warning
 When implementing `apply_hook`:

@@ -347,20 +347,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-aiosqlite_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -376,20 +376,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-asyncmy_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -405,20 +405,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruits-psycopg_async_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -440,20 +440,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-aiosqlite_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -475,20 +475,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncmy_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -510,20 +510,20 @@
 # ---
 # name: test_load_nested_relationships_no_columns[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.fruit_id AS fruit_farm_1_fruit_id,
-         fruit_farm_1.created_at AS fruit_farm_1_created_at,
-         fruit_farm_1.updated_at AS fruit_farm_1_updated_at,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.fruit_id,
+         fruit_farm_1.created_at,
+         fruit_farm_1.updated_at,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -539,17 +539,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-aiosqlite_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -565,17 +565,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-asyncmy_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -591,17 +591,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruits-psycopg_async_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -623,17 +623,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-aiosqlite_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -655,17 +655,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-asyncmy_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -687,17 +687,17 @@
 # ---
 # name: test_load_relationships_nested[session-async-tracked-colorsWithFilteredFruitsPaginated-psycopg_async_engine].1
   '''
-  SELECT fruit.color_id AS fruit_color_id,
-         fruit.name AS fruit_name,
-         fruit.derived_product_id AS fruit_derived_product_id,
-         fruit.sweetness AS fruit_sweetness,
-         fruit.water_percent AS fruit_water_percent,
-         fruit.best_time_to_pick AS fruit_best_time_to_pick,
-         fruit.created_at AS fruit_created_at,
-         fruit.updated_at AS fruit_updated_at,
-         fruit.id AS fruit_id,
-         fruit_farm_1.name AS fruit_farm_1_name,
-         fruit_farm_1.id AS fruit_farm_1_id
+  SELECT fruit.color_id,
+         fruit.name,
+         fruit.derived_product_id,
+         fruit.sweetness,
+         fruit.water_percent,
+         fruit.best_time_to_pick,
+         fruit.created_at,
+         fruit.updated_at,
+         fruit.id,
+         fruit_farm_1.name,
+         fruit_farm_1.id
     FROM fruit
     LEFT OUTER JOIN fruit_farm AS fruit_farm_1
       ON fruit.id = fruit_farm_1.fruit_id
@@ -713,11 +713,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-aiosqlite_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -731,11 +731,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-asyncmy_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -749,11 +749,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsHooks-psycopg_async_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -773,11 +773,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-aiosqlite_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -797,11 +797,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-asyncmy_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -821,11 +821,11 @@
 # ---
 # name: test_load_relationships_no_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine].1
   '''
-  SELECT fruit_farm.fruit_id AS fruit_farm_fruit_id,
-         fruit_farm.name AS fruit_farm_name,
-         fruit_farm.created_at AS fruit_farm_created_at,
-         fruit_farm.updated_at AS fruit_farm_updated_at,
-         fruit_farm.id AS fruit_farm_id
+  SELECT fruit_farm.fruit_id,
+         fruit_farm.name,
+         fruit_farm.created_at,
+         fruit_farm.updated_at,
+         fruit_farm.id
     FROM fruit_farm
    WHERE fruit_farm.fruit_id IN (__[POSTCOMPILE_primary_keys])
   '''
@@ -843,10 +843,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-aiosqlite_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -866,10 +866,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-asyncmy_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
    INNER JOIN color
       ON color.id = fruit_1.color_id
@@ -889,10 +889,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooks-psycopg_async_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -918,10 +918,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-aiosqlite_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -947,10 +947,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-asyncmy_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
    INNER JOIN color
       ON color.id = fruit_1.color_id
@@ -976,10 +976,10 @@
 # ---
 # name: test_load_relationships_on_nested_field[session-async-tracked-colorsHooksPaginated-psycopg_async_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -995,10 +995,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsHooks-aiosqlite_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -1014,10 +1014,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsHooks-asyncmy_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
    INNER JOIN color
       ON color.id = fruit_1.color_id
@@ -1033,10 +1033,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsHooks-psycopg_async_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -1058,10 +1058,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-aiosqlite_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id
@@ -1083,10 +1083,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-asyncmy_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
    INNER JOIN color
       ON color.id = fruit_1.color_id
@@ -1108,10 +1108,10 @@
 # ---
 # name: test_load_relationships_with_columns[session-async-tracked-fruitsPaginatedHooks-psycopg_async_engine].1
   '''
-  SELECT fruit_1.id AS fruit_1_id,
-         color.name AS color_name,
-         color.created_at AS color_created_at,
-         color.id AS color_id
+  SELECT fruit_1.id,
+         color.name,
+         color.created_at,
+         color.id
     FROM fruit AS fruit_1
     JOIN color
       ON color.id = fruit_1.color_id

@@ -11,6 +11,7 @@ from sqlalchemy import (
     ColumnElement,
     Dialect,
     Integer,
+    Numeric,
     Text,
     and_,
     false,
@@ -104,6 +105,14 @@ def _sqlite_regexp(
 def is_set(value: T | None) -> TypeIs[T]:
     """Whether a comparison operator was given a value, an explicit ``null`` counting as absent."""
     return value is not UNSET and value is not None
+
+
+class _CompareAsNumeric(Numeric[Any]):
+    """Numeric whose comparison operands bind as itself; SQLAlchemy 2.1 would bind a Python float as Double."""
+
+    @override
+    def coerce_compared_value(self, op: Any, value: Any) -> Any:
+        return self
 
 
 @dataclass(frozen=True)
@@ -594,6 +603,12 @@ class TimeDeltaFilter(OrderFilter):
     comparison: TimeDeltaComparison
     _seconds_in_day: ClassVar[int] = 60 * 60 * 24
 
+    @classmethod
+    def _epoch_in(
+        cls, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta], divisor: int
+    ) -> ColumnElement[Any]:
+        return type_coerce(func.extract("EPOCH", model_attribute) / divisor, _CompareAsNumeric())
+
     def _postgres_interval(
         self, dialect: Dialect, model_attribute: ColumnElement[timedelta] | QueryableAttribute[timedelta]
     ) -> list[ColumnElement[bool]]:
@@ -601,18 +616,12 @@ class TimeDeltaFilter(OrderFilter):
 
         if is_set(self.comparison.days):
             expressions.extend(
-                self.comparison.days.to_expressions(
-                    dialect, func.extract("EPOCH", model_attribute) / self._seconds_in_day
-                )
+                self.comparison.days.to_expressions(dialect, self._epoch_in(model_attribute, self._seconds_in_day))
             )
         if is_set(self.comparison.hours):
-            expressions.extend(
-                self.comparison.hours.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 3600)
-            )
+            expressions.extend(self.comparison.hours.to_expressions(dialect, self._epoch_in(model_attribute, 3600)))
         if is_set(self.comparison.minutes):
-            expressions.extend(
-                self.comparison.minutes.to_expressions(dialect, func.extract("EPOCH", model_attribute) / 60)
-            )
+            expressions.extend(self.comparison.minutes.to_expressions(dialect, self._epoch_in(model_attribute, 60)))
         if is_set(self.comparison.seconds):
             expressions.extend(self.comparison.seconds.to_expressions(dialect, func.extract("EPOCH", model_attribute)))
 

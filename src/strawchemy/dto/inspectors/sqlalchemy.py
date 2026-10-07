@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any, Optional, TypeVar, cast, get_args, get_or
 
 from sqlalchemy import (
     ARRAY,
+    JSON,
     Column,
     ColumnDefault,
     ColumnElement,
@@ -19,6 +20,7 @@ from sqlalchemy import (
     Sequence,
     SQLColumnExpression,
     Table,
+    TypeDecorator,
     UniqueConstraint,
     event,
     inspect,
@@ -71,6 +73,7 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import MapperProperty
     from sqlalchemy.schema import DefaultGenerator
     from sqlalchemy.sql.schema import ColumnCollectionConstraint
+    from sqlalchemy.sql.type_api import TypeEngine
 
     from strawchemy.repository.typing import FilterMap
     from strawchemy.typing import SupportedDialect
@@ -322,6 +325,18 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             (type_hint,) = get_args(type_hint)
         return type_hint
 
+    @classmethod
+    def _python_type(cls, type_engine: TypeEngine[Any]) -> type[Any]:
+        try:
+            python_type = type_engine.python_type
+        except NotImplementedError:
+            python_type = object
+        if python_type is not object:
+            return python_type
+        while isinstance(type_engine, TypeDecorator):
+            type_engine = type_engine.impl_instance
+        return dict if isinstance(type_engine, JSON) else DTOMissing
+
     def _relationship_required(self, prop: RelationshipProperty[Any]) -> bool:
         if prop.direction is RelationshipDirection.MANYTOONE:
             return any(not column.nullable for column in prop.local_columns)
@@ -413,12 +428,13 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         if type_hint is DTOMissing:
             if isinstance(prop, RelationshipProperty):
                 type_hint = prop.argument
-            elif isinstance(prop, Column):
-                type_hint = prop.type.python_type
-            elif isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
-                type_hint = prop.columns[0].type.python_type
             else:
-                type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTOMissing)
+                if isinstance(prop, Column):
+                    type_hint = self._python_type(prop.type)
+                elif isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
+                    type_hint = self._python_type(prop.columns[0].type)
+                if type_hint is DTOMissing:
+                    type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTOMissing)
 
         type_hint = self._resolve_model_type_hint(type_hint)
 
@@ -476,10 +492,10 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
 
     @override
     def model_field_type(self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]) -> Any:
-        try:
-            return field_definition.model_field.type.python_type
-        except NotImplementedError:
+        python_type = self._python_type(field_definition.model_field.type)
+        if python_type is DTOMissing:
             return super().model_field_type(field_definition)
+        return python_type
 
     @override
     def relation_cycle(

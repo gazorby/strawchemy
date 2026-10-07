@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -11,12 +10,7 @@ if TYPE_CHECKING:
     from nox import Session
 
 SUPPORTED_PYTHON_VERSIONS = ["3.10", "3.11", "3.12", "3.13", "3.14"]
-COMMON_PYTEST_OPTIONS = ["--showlocals", "-vv"]
-
-if os.environ.get("GITHUB_ACTIONS", None):
-    COMMON_PYTEST_OPTIONS.append("-n=2")
-else:
-    COMMON_PYTEST_OPTIONS.append("-n=auto")
+COMMON_PYTEST_OPTIONS = ["--showlocals", "-vv", "-n=auto"]
 
 here = Path(__file__).parent
 

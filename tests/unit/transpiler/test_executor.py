@@ -39,7 +39,7 @@ class _Node:
 
 def _plan(limit: int | None = None) -> QueryPlan:
     """Plans a query over the Fruit model for executor tests."""
-    context = PlanContext.create(Fruit, postgresql.dialect(), pipelines=DEFAULT_PIPELINES)
+    context = PlanContext.create(Fruit, postgresql.psycopg2.dialect(), pipelines=DEFAULT_PIPELINES)
     request = QueryRequest(Fruit, None, None, (), (), limit, None, False)
     return context.pipelines.root.plan(Level.root(request, context))
 

@@ -90,7 +90,7 @@ class _JSONDecorator(TypeDecorator[Any]):
 )
 def test_as_jsonb(type_: TypeEngine[Any], expected: str) -> None:
     column = Table("t", MetaData(), Column("c", type_)).c.c
-    assert str(as_jsonb(column).compile(dialect=postgresql.dialect())) == expected
+    assert str(as_jsonb(column).compile(dialect=postgresql.psycopg2.dialect())) == expected
 
 
 @pytest.mark.parametrize(
@@ -106,7 +106,7 @@ def test_as_jsonb(type_: TypeEngine[Any], expected: str) -> None:
 )
 def test_comparable(type_: TypeEngine[Any], expected: str) -> None:
     column = Table("t", MetaData(), Column("c", type_)).c.c
-    assert str(comparable(column, "postgresql").compile(dialect=postgresql.dialect())) == expected
+    assert str(comparable(column, "postgresql").compile(dialect=postgresql.psycopg2.dialect())) == expected
 
 
 @pytest.mark.parametrize("dialect", ["mysql", "sqlite"])

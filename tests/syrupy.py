@@ -8,6 +8,8 @@ from syrupy.extensions.single_file import SingleFileSnapshotExtension, WriteMode
 from syrupy.utils import exclusive_file_lock
 from typing_extensions import override
 
+from tests.utils import IS_SQLALCHEMY_20, strip_loader_labels
+
 if TYPE_CHECKING:
     from syrupy.data import SnapshotCollection
     from syrupy.types import PropertyFilter, PropertyMatcher, SerializableData, SerializedData
@@ -15,12 +17,17 @@ if TYPE_CHECKING:
 __all__ = (
     "GraphQLFileExtension",
     "SnapshotMergeError",
+    "SnapshotWriteError",
     "VerifiedAmberSnapshotExtension",
 )
 
 
 class SnapshotMergeError(RuntimeError):
     """A merged amber write dropped entries that were on disk."""
+
+
+class SnapshotWriteError(RuntimeError):
+    """SQL snapshots were written on a SQLAlchemy version other than 2.1."""
 
 
 class GraphQLFileExtension(SingleFileSnapshotExtension):
@@ -40,11 +47,20 @@ class GraphQLFileExtension(SingleFileSnapshotExtension):
 
 
 class VerifiedAmberSnapshotExtension(AmberSnapshotExtension):
+    @override
+    def matches(self, *, serialized_data: SerializedData, snapshot_data: SerializedData) -> bool:
+        if IS_SQLALCHEMY_20:
+            return strip_loader_labels(str(serialized_data)) == strip_loader_labels(str(snapshot_data))
+        return super().matches(serialized_data=serialized_data, snapshot_data=snapshot_data)
+
     @classmethod
     @override
     def write_snapshot_collection(
         cls, *, snapshot_collection: SnapshotCollection, name_order: dict[str, int] | None = None
     ) -> None:
+        if IS_SQLALCHEMY_20:
+            msg = "SQL snapshots are only written on SQLAlchemy 2.1"
+            raise SnapshotWriteError(msg)
         location = snapshot_collection.location
         # Reading the entries before and after the merge only proves anything while no other
         # process can write in between, so the whole check runs inside the write lock.

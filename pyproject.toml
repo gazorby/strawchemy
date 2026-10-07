@@ -275,7 +275,6 @@ StrawchemyAsyncRepository = "StrawchemySyncRepository"
 [tool.uv]
 default-groups = ["dev"]
 conflicts = [[{ group = "test" }, { group = "unasyncd" }]]
-constraint-dependencies = ["sqlalchemy<2.1"]
 exclude-newer = "3 days"
 
 [tool.uv.sources]

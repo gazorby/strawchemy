@@ -31,7 +31,7 @@ if TYPE_CHECKING:
 POSTGRES = DatabaseFeatures(dialect="postgresql", supports_distinct_on=True, supports_null_ordering=True)
 SQLITE = DatabaseFeatures(dialect="sqlite")
 _DIALECTS: dict[str, Dialect] = {
-    "postgresql": postgresql.dialect(),
+    "postgresql": postgresql.psycopg2.dialect(),
     "sqlite": sqlite.dialect(),
     "mysql": mysql.dialect(),
 }

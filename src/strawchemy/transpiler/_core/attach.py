@@ -255,7 +255,7 @@ def _grouped_cte(
 
 
 def _secondary_grouped_cte(
-    statement: Select[Any],
+    statement: Select,
     relation: QueryableAttribute[Any],
     parent_alias: AliasedClass[Any],
     function_alias: AliasedClass[Any],
@@ -289,9 +289,7 @@ def _secondary_grouped_cte(
     return cte, cte, onclause
 
 
-def correlate_relation(
-    statement: Select[Any], relation: QueryableAttribute[Any], target: AliasedClass[Any]
-) -> Select[Any]:
+def correlate_relation(statement: Select, relation: QueryableAttribute[Any], target: AliasedClass[Any]) -> Select[Any]:
     """Restricts ``statement``, a future LATERAL subquery, to the rows related to the outer query's row.
 
     With a secondary table, the ``secondaryjoin`` becomes a JOIN rather than a WHERE predicate. In the WHERE clause

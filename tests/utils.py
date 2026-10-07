@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import dataclasses
 import inspect
+import re
 from dataclasses import dataclass
 from enum import Enum, auto
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any, Protocol, TypeVar, cast, overload
 
+import sqlalchemy
 import sqlparse
 import strawberry
+from packaging.version import Version
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing_extensions import TypeIs, override
 
@@ -29,10 +32,38 @@ if TYPE_CHECKING:
     from strawchemy.typing import DataclassProtocol
     from tests.typing import AnyQueryExecutor, AsyncQueryExecutor, SyncQueryExecutor
 
-__all__ = ("DTOInspect", "as_dto", "generate_query", "sqlalchemy_pydantic_factory")
-
+__all__ = (
+    "IS_SQLALCHEMY_20",
+    "DTOInspect",
+    "as_dto",
+    "generate_query",
+    "sqlalchemy_pydantic_factory",
+    "strip_loader_labels",
+)
 
 T = TypeVar("T")
+
+_LOADER_LABEL = re.compile(
+    r"""
+    (?<![\w"`])                                  # a whole column reference, not the tail of a longer name
+    (?P<ref>                                     # <table>.<column>, kept as is
+        (?P<q1>["`]?)(?P<table>\w+)(?P=q1)       # table, optionally quoted
+        \.
+        (?P<q2>["`]?)(?P<column>\w+)(?P=q2)      # column, optionally quoted
+    )
+    \s+AS\s+
+    (?P<q3>["`]?)(?P=table)_(?P=column)(?P=q3)   # the label SQLAlchemy derives from them: <table>_<column>
+    (?!\w)                                       # not a longer user label such as <table>_<column>_1
+    """,
+    re.VERBOSE,
+)
+
+IS_SQLALCHEMY_20 = Version(sqlalchemy.__version__) < Version("2.1")
+
+
+def strip_loader_labels(sql: str) -> str:
+    """Remove the ` AS <table>_<column>` labels SQLAlchemy 2.0 adds to its own loads."""
+    return _LOADER_LABEL.sub(lambda match: match["ref"], sql)
 
 
 def as_dto(type_: type[Any]) -> type[MappedStrawberryGraphQLDTO[Any]]:
