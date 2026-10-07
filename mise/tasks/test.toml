@@ -33,7 +33,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s unit -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -s unit -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:unit-all"]
 description = "Run unit tests on all supported python versions"
@@ -50,7 +50,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s unit-no-extras -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -s unit-no-extras -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:unit:coverage"]
 description = "Run unit tests with coverage"
@@ -60,7 +60,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s unit -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -s unit -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 ["test:integration"]
 description = "Run integration tests"
@@ -70,7 +70,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -s integration -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:integration-postgres"]
 description = "Run PostgreSQL integration tests"
@@ -80,7 +80,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -t postgres -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -t postgres -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:integration-mysql"]
 description = "Run MySQL integration tests"
@@ -90,7 +90,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -t mysql -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -t mysql -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:integration-sqlite"]
 description = "Run SQLite integration tests"
@@ -100,7 +100,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -t sqlite -- {{vars.local_pytest_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -t sqlite -- {{vars.local_pytest_options}} ${usage_test-}"
 
 ["test:integration:coverage"]
 description = "Run integration tests with coverage"
@@ -110,7 +110,7 @@ usage = '''
 flag "--python <python>" default="3.13"
 arg "[test]" var=#true
 '''
-run = "uv run nox -r -P ${usage_python-} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
+run = "uv run nox -r -p ${usage_python-} -s integration -- {{vars.local_pytest_options}} {{vars.pytest_coverage_options}} ${usage_test-}"
 
 ["test:integration-all"]
 description = "Run integration tests on all supported python versions"

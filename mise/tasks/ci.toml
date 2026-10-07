@@ -21,6 +21,7 @@ run = '''
     jq 'map(
         {
         session,
+        slug: (.session | gsub("\\("; "-") | gsub("\\)"; "")),
         tags,
         python,
         name,
