@@ -2,8 +2,8 @@ from __future__ import annotations
 
 import pytest
 
-from strawchemy.testing import MockContext
 from strawchemy.typing import SupportedDialect
+from tests.unit.utils import MockContext
 
 
 @pytest.mark.parametrize("dialect", ["postgresql", "sqlite", "mysql"])

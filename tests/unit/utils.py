@@ -18,18 +18,18 @@ SQLA_DIALECTS: dict[str, Dialect] = {
 
 
 @dataclass
-class DialectContext:
+class MockContext:
     """Strawberry context whose fake session reports the requested dialect name.
 
     Only ``get_bind().dialect.name`` is read during planning, so the session is a
     ``MagicMock`` and never executes anything.
     """
 
-    dialect_name: SupportedDialect
+    dialect: SupportedDialect
     session: MagicMock = field(init=False)
 
     def __post_init__(self) -> None:
         dialect = MagicMock(spec=Dialect, name="DialectMock")
-        dialect.name = self.dialect_name
+        dialect.name = self.dialect
         engine = MagicMock(spec=Engine, name="EngineMock", dialect=dialect)
         self.session = MagicMock(spec=Session, name="SessionMock", get_bind=MagicMock(return_value=engine))

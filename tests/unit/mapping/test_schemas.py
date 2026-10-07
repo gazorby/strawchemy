@@ -19,11 +19,11 @@ from strawberry.types.object_type import StrawberryObjectDefinition
 from strawchemy import RELATIONSHIPS, SCALARS
 from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
 from strawchemy.schema.scalars import Interval
-from strawchemy.testing import MockContext
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import Color, Fruit, User
+from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
 if TYPE_CHECKING:

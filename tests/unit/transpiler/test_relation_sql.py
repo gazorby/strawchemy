@@ -13,7 +13,7 @@ from sqlalchemy.sql.compiler import FROM_LINTING
 
 from tests.unit.schemas.optimizations import schema as optimizations_schema
 from tests.unit.schemas.secondary_table import schema as secondary_table_schema
-from tests.unit.utils import SQLA_DIALECTS, DialectContext
+from tests.unit.utils import SQLA_DIALECTS, MockContext
 from tests.utils import format_sql
 
 if TYPE_CHECKING:
@@ -90,7 +90,7 @@ def test_secondary_lateral_joins_the_secondary_table(
     query: str, expected: list[str], captured_statements: list[Select[Any]]
 ) -> None:
     """A secondary-table lateral joins the secondary table instead of correlating it in WHERE."""
-    result = secondary_table_schema.execute_sync(query, context_value=DialectContext("postgresql"))
+    result = secondary_table_schema.execute_sync(query, context_value=MockContext("postgresql"))
 
     assert not result.errors
     assert _linted_sql(captured_statements[0]).splitlines() == expected
@@ -193,7 +193,7 @@ def test_relation_order_by_exposes_nested_sort_keys(dialect_name: str, captured_
                 }
             }
         }""",
-        context_value=DialectContext(dialect_name),  # ty: ignore[invalid-argument-type]
+        context_value=MockContext(dialect_name),  # ty: ignore[invalid-argument-type]
     )
 
     assert not result.errors

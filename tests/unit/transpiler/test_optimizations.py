@@ -8,7 +8,7 @@ import pytest
 from inline_snapshot import snapshot
 
 from tests.unit.schemas.optimizations import schema
-from tests.unit.utils import SQLA_DIALECTS, DialectContext
+from tests.unit.utils import SQLA_DIALECTS, MockContext
 from tests.utils import format_sql
 
 if TYPE_CHECKING:
@@ -1294,7 +1294,7 @@ def test_aggregation_computation_is_reused(
     Filtering, ordering and selecting the same aggregation share one subquery, and ORDER BY
     carries only the functions ordered by. Verified DB-free by compiling the statement per dialect.
     """
-    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+    result = schema.execute_sync(query, context_value=MockContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
     assert not result.errors
     assert result.data
@@ -1348,7 +1348,7 @@ def test_inner_join_rewriting(
 
     A filter on the parent's own column, or on a to-many relation tested in EXISTS, keeps the outer join.
     """
-    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+    result = schema.execute_sync(query, context_value=MockContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
     assert not result.errors
     assert result.data
@@ -1440,7 +1440,7 @@ def test_pagination_subquery_outer_joins(
     join; one it does not join stays outside and is computed over the page. A join bound to the
     discarded inner alias instead of the subquery would surface as a second FROM element.
     """
-    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+    result = schema.execute_sync(query, context_value=MockContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
     assert not result.errors
     assert result.data
@@ -1523,7 +1523,7 @@ def test_projection_selects_only_requested_functions(
     under pagination, still exported by the subquery; it just is not shipped to the client. A
     function that is both filtered and selected is projected exactly once.
     """
-    result = schema.execute_sync(query, context_value=DialectContext(dialect_name))  # ty: ignore[invalid-argument-type]
+    result = schema.execute_sync(query, context_value=MockContext(dialect_name))  # ty: ignore[invalid-argument-type]
 
     assert not result.errors
     assert result.data
@@ -1538,7 +1538,7 @@ def test_allowed_duplicate_hooked_relation(captured_statements: list[Select[Any]
     """A hooked to-one filtered and selected is joined twice: once without its hook, once with it."""
     query = '{ groupsVisibleColor(filter: { color: { name: { eq: "red" } } }) { name color { name } } }'
 
-    result = schema.execute_sync(query, context_value=DialectContext("postgresql"))
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
 
     assert not result.errors
     assert len(captured_statements) == 1
@@ -1567,7 +1567,7 @@ def test_allowed_duplicate_exists_and_selection(captured_statements: list[Select
     """A to-many filtered in an EXISTS and selected is read twice: the selection keeps every related row."""
     query = "{ colors(filter: { fruits: { sweetness: { gt: 5 } } }) { name fruits { name } } }"
 
-    result = schema.execute_sync(query, context_value=DialectContext("postgresql"))
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
 
     assert not result.errors
     assert len(captured_statements) == 1
