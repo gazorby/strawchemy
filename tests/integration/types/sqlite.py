@@ -596,6 +596,7 @@ class AsyncQuery:
     )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    user_by_pk: UserType = strawchemy.field(id_field_name="pk", repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
         order_by_input=UserOrderBy,
@@ -804,6 +805,7 @@ class SyncQuery:
     )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
+    user_by_pk: UserType = strawchemy.field(id_field_name="pk", repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
         order_by_input=UserOrderBy,

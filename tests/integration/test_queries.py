@@ -37,6 +37,25 @@ async def test_single(any_async_query: AnyQueryExecutor, raw_users: RawRecordDat
     assert result.data["user"] == {"name": raw_users[0]["name"]}
 
 
+async def test_single_with_custom_id_field_name(any_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUser($pk: Int!) {
+                userByPk(pk: $pk) {
+                    name
+                }
+            }
+            """,
+            {"pk": raw_users[0]["id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["userByPk"] == {"name": raw_users[0]["name"]}
+
+
 async def test_typename_do_not_fail(any_async_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
     result = await maybe_async(
         any_async_query(

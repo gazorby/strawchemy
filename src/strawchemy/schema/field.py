@@ -57,6 +57,7 @@ if TYPE_CHECKING:
     from strawberry.types.fields.resolver import StrawberryResolver
 
     from strawchemy import StrawchemyConfig
+    from strawchemy.dto.base import DTOFieldDefinition
     from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
     from strawchemy.repository.strawberry.base import GraphQLResult
     from strawchemy.repository.typing import QueryHookCallable
@@ -250,6 +251,11 @@ class StrawchemyField(StrawberryField):
     def _strawchemy_type(self) -> builtins.type[StrawchemyObjectWithStrawberryObjectDefinition]:
         return cast("type[StrawchemyObjectWithStrawberryObjectDefinition]", self.type)
 
+    @cached_property
+    def _id_field_definitions(self) -> list[tuple[str, DTOFieldDefinition[Any, Any]]]:
+        model = dto_model_from_type(strawberry_contained_user_type(self.type))
+        return self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ))
+
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
@@ -295,6 +301,8 @@ class StrawchemyField(StrawberryField):
     def _get_by_id_resolver(
         self, info: Info, **kwargs: Any
     ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
+        if len(self._id_field_definitions) == 1:
+            kwargs[self._id_field_definitions[0][0]] = kwargs.pop(self.id_field_name)
         repository = self._get_repository(info)
         if self._is_repo_async(repository):
             return self._get_by_id_result_async(repository.get_by_id(**kwargs))
@@ -526,8 +534,7 @@ class StrawchemyField(StrawberryField):
                     )
                 )
         elif self.is_root_field and issubclass(inner_type, MappedDTO):
-            model = dto_model_from_type(inner_type)
-            id_fields = list(self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ)))
+            id_fields = self._id_field_definitions
             if len(id_fields) == 1:
                 field = id_fields[0][1]
                 arguments.append(
@@ -537,7 +544,7 @@ class StrawchemyField(StrawberryField):
                 arguments.extend(
                     [
                         StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                        for name, field in self._config.inspector.id_field_definitions(model, DTOConfig(Purpose.READ))
+                        for name, field in id_fields
                     ]
                 )
         return arguments
