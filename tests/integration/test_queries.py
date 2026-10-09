@@ -56,6 +56,29 @@ async def test_single_with_custom_id_field_name(any_query: AnyQueryExecutor, raw
     assert result.data["userByPk"] == {"name": raw_users[0]["name"]}
 
 
+async def test_single_with_composite_primary_key(
+    any_query: AnyQueryExecutor, raw_user_departments: RawRecordData
+) -> None:
+    expected = raw_user_departments[3]
+    result = await maybe_async(
+        any_query(
+            """
+            query GetUserDepartment($userId: Int!, $departmentId: Int!) {
+                userDepartment(userId: $userId, departmentId: $departmentId) {
+                    userId
+                    departmentId
+                }
+            }
+            """,
+            {"userId": expected["user_id"], "departmentId": expected["department_id"]},
+        )
+    )
+
+    assert not result.errors
+    assert result.data
+    assert result.data["userDepartment"] == {"userId": expected["user_id"], "departmentId": expected["department_id"]}
+
+
 async def test_typename_do_not_fail(any_async_query: AnyQueryExecutor, raw_users: RawRecordData) -> None:
     result = await maybe_async(
         any_async_query(
