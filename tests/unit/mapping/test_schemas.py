@@ -22,7 +22,7 @@ from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Color, Fruit, User
+from tests.unit.models import Color, Container, Fruit, User
 from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
     from strawchemy.mapper import Strawchemy
+    from strawchemy.schema.factories.base import TypeScope
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
 
@@ -839,6 +840,71 @@ def test_schema_scope_override(module_name: str) -> None:
 
     assert "GroupType" not in schemas_str
     assert "GraphQLGroup" in schemas_str
+
+
+@pytest.mark.parametrize("container_scope", [pytest.param(None, id="unscoped"), pytest.param("schema", id="scoped")])
+def test_scoped_type_shares_relation_aggregate(strawchemy: Strawchemy, container_scope: TypeScope | None) -> None:
+    """Test that a later type aggregating the same relation as a schema-scoped type reuses its aggregate type (#419)."""
+
+    @strawchemy.type(Color, include="all", scope="schema")
+    class ColorType: ...
+
+    @strawchemy.type(Container, include=["id", "fruits"], scope=container_scope)
+    class ContainerType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+        containers: list[ContainerType] = strawchemy.field()
+
+    schema_str = str(strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("fruitsAggregate: FruitAggregate!") == 2
+    assert schema_str.count("type FruitAggregate ") == 1
+
+
+def test_scoped_input_shares_upsert_enums(strawchemy: Strawchemy) -> None:
+    """Test that a later input upserting the same relation as a schema-scoped input reuses its upsert enums (#419)."""
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.create_input(Color, include="all", scope="schema")
+    class ColorCreate: ...
+
+    @strawchemy.pk_update_input(Color, include="all")
+    class ColorUpdate: ...
+
+    @strawberry.type
+    class Mutation:
+        create_color: ColorType = strawchemy.create(ColorCreate)
+        update_colors: list[ColorType] = strawchemy.update_by_ids(ColorUpdate)
+
+    schema_str = str(strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("enum ColorFruitsUpdateFields ") == 1
+    assert schema_str.count("enum ColorFruitsConflictFields ") == 1
+
+
+def test_scoped_aggregate_filter_shares_argument_enums(strawchemy: Strawchemy) -> None:
+    """Test that a filter aggregating the same model as a schema-scoped aggregate filter reuses its argument enums (#419)."""
+
+    @strawchemy.aggregate_filter(Fruit, include="all", scope="schema")
+    class FruitAggregateFilter: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter)
+
+    schema_str = str(strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("enum FruitCountFields ") == 1
 
 
 def test_json_column_class_body_resolver_executes() -> None:
