@@ -103,7 +103,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
-        aggregate_dto_config = dto_config.copy_with(annotation_overrides={})
+        aggregate_dto_config = dto_config.copy_with(annotation_overrides={}, scope=None)
         dto = self._aggregation_factory.factory(
             model=related_model, dto_config=aggregate_dto_config, parent_field_def=field_def
         )
@@ -628,7 +628,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_update_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
             name=name,
             description="Update fields enum",
         )
@@ -644,7 +644,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_conflict_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
             name=name,
             description="Conflict fields enum",
         )
