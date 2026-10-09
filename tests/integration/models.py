@@ -112,6 +112,11 @@ class DateTimeBase(BaseColumns, DeclarativeBase):
     registry = Registry(metadata=date_time_metadata)
 
 
+class TableBase(DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=metadata)
+
+
 # Models
 
 
@@ -206,6 +211,11 @@ UserDepartmentJoinTable = Table(
     Column("user_id", ForeignKey("user.id", ondelete="CASCADE"), primary_key=True),
     Column("department_id", ForeignKey("department.id", ondelete="CASCADE"), primary_key=True),
 )
+
+
+class UserDepartment(TableBase):
+    __tablename__ = UserDepartmentJoinTable.name  # Required by the transpiler, see #417.
+    __table__ = UserDepartmentJoinTable
 
 
 class Department(Base):

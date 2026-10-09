@@ -23,7 +23,17 @@ from strawchemy import (
 )
 from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
-from tests.integration.models import Color, DateTimeModel, Fruit, FruitFarm, IntervalModel, JSONModel, RankedUser, User
+from tests.integration.models import (
+    Color,
+    DateTimeModel,
+    Fruit,
+    FruitFarm,
+    IntervalModel,
+    JSONModel,
+    RankedUser,
+    User,
+    UserDepartment,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
@@ -114,6 +124,10 @@ class ColorOrderingHook(QueryHook[Color]):
 
 @strawchemy.type(User, include="all")
 class UserType: ...
+
+
+@strawchemy.type(UserDepartment, include="all")
+class UserDepartmentType: ...
 
 
 @strawchemy.order(User, include="all", override=True)
@@ -596,6 +610,8 @@ class AsyncQuery:
     )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    user_by_pk: UserType = strawchemy.field(id_field_name="pk", repository_type=StrawchemyAsyncRepository)
+    user_department: UserDepartmentType = strawchemy.field(repository_type=StrawchemyAsyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
         order_by_input=UserOrderBy,
@@ -804,6 +820,8 @@ class SyncQuery:
     )
     # User
     user: UserType = strawchemy.field(repository_type=StrawchemySyncRepository)
+    user_by_pk: UserType = strawchemy.field(id_field_name="pk", repository_type=StrawchemySyncRepository)
+    user_department: UserDepartmentType = strawchemy.field(repository_type=StrawchemySyncRepository)
     users: list[UserType] = strawchemy.field(
         filter_input=UserFilter,
         order_by_input=UserOrderBy,
