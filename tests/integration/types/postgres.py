@@ -25,15 +25,19 @@ from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
 from tests.integration.models import (
     ArrayModel,
+    Bike,
+    Car,
     Color,
     DateTimeModel,
     Fruit,
     FruitFarm,
+    Garage,
     IntervalModel,
     JSONModel,
     PostgresJSONModel,
     RankedUser,
     User,
+    Vehicle,
 )
 
 if TYPE_CHECKING:
@@ -445,6 +449,25 @@ class DateTimeFilter: ...
 
 @strawchemy.type(DateTimeModel, include="all")
 class DateTimeType: ...
+
+
+# Polymorphic
+
+
+@strawchemy.type(Vehicle, include="all", override=True)
+class VehicleType: ...
+
+
+@strawchemy.type(Car, include="all", override=True)
+class CarType: ...
+
+
+@strawchemy.type(Bike, include="all", override=True)
+class BikeType: ...
+
+
+@strawchemy.type(Garage, include="all", paginate="all", order="all", override=True)
+class GarageType: ...
 
 
 # Queries
@@ -945,6 +968,22 @@ class ArrayAsyncQuery:
 @strawberry.type
 class ArraySyncQuery:
     array: list[ArrayType] = strawchemy.field(filter_input=ArrayFilter, repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class PolymorphicAsyncQuery:
+    vehicles: list[VehicleType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class PolymorphicSyncQuery:
+    vehicles: list[VehicleType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
 
 
 # Mutations
