@@ -28,6 +28,7 @@ from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
+    from typing_extensions import Self
 
     from strawchemy.mapper import Strawchemy
 
@@ -820,6 +821,174 @@ def test_pydantic_validation_nested() -> None:
             "type": "value_error",
         }
     ]
+
+
+def _tag_validation_body() -> dict[str, Any]:
+    from pydantic import field_validator, model_validator
+
+    class Body:
+        name: str
+
+        @field_validator("name")
+        @classmethod
+        def lower_case(cls, value: str) -> str:
+            if not value.islower():
+                msg = "name must be lower cased"
+                raise ValueError(msg)
+            return value
+
+        @model_validator(mode="after")
+        def not_reserved(self) -> Body:
+            if self.name == "admin":
+                msg = "reserved name"
+                raise ValueError(msg)
+            return self
+
+        def shout(self) -> str:
+            return self.name.upper()
+
+        @property
+        def shout_property(self) -> str:
+            return self.shout()
+
+        @classmethod
+        def label(cls) -> str:
+            return cls.__name__
+
+    return {key: value for key, value in vars(Body).items() if not key.startswith("__")}
+
+
+@pytest.mark.parametrize("mode", ["create", "pk_update", "filter_update"])
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_keeps_class_body(mode: str, strawchemy: Strawchemy) -> None:
+    """Test that validators and methods declared in a pydantic validation class body are kept."""
+    from pydantic import ValidationError
+
+    from tests.unit.models import Tag
+
+    decorator = getattr(strawchemy.pydantic, mode)(Tag, include=["name"])
+    validation = decorator(type("TagValidation", (), _tag_validation_body()))
+    pk = {"id": "da636751-b276-4546-857f-3c73ea914467"} if mode == "pk_update" else {}
+
+    for name in ("UPPER", "admin"):
+        with pytest.raises(ValidationError):
+            validation(name=name, **pk)
+
+    instance = validation(name="bob", **pk)
+    assert instance.shout() == "BOB"
+    assert instance.shout_property == "BOB"
+    assert validation.label() == "TagValidation"
+
+
+@pytest.mark.filterwarnings("error")
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_class_body_validators_with_annotated_field(strawchemy: Strawchemy) -> None:
+    """Test that class-body validators run, without warnings, on a field the class body re-annotates with a default."""
+    from pydantic import ValidationError, field_validator, model_validator
+
+    from tests.unit.models import Tag
+
+    @strawchemy.pydantic.create(Tag, include=["name"])
+    class TagValidation:
+        name: str | None = None
+
+        @field_validator("name")
+        @classmethod
+        def lower_case(cls, value: str | None) -> str | None:
+            if value is not None and not value.islower():
+                msg = "name must be lower cased"
+                raise ValueError(msg)
+            return value
+
+        @model_validator(mode="after")
+        def not_reserved(self) -> Self:
+            if self.name == "admin":
+                msg = "reserved name"
+                raise ValueError(msg)
+            return self
+
+    validation: type[Any] = TagValidation
+    field = validation.model_fields["name"]
+    assert field.annotation == str | None
+    assert field.default is None
+    assert validation().name is None
+    assert validation(name="bob").name == "bob"
+    for name in ("UPPER", "admin"):
+        with pytest.raises(ValidationError):
+            validation(name=name)
+
+
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_keeps_user_bases(strawchemy: Strawchemy) -> None:
+    """Test that a pydantic validation class keeps the validators and methods of its plain bases."""
+    from pydantic import ValidationError
+
+    from tests.unit.models import Tag
+
+    mixin = type("TagValidationMixin", (), _tag_validation_body())
+    validation: type[Any] = strawchemy.pydantic.create(Tag, include=["name"])(type("TagValidation", (mixin,), {}))
+
+    with pytest.raises(ValidationError):
+        validation(name="UPPER")
+    assert validation(name="bob").shout() == "BOB"
+    assert issubclass(validation, mixin)
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_error"),
+    [
+        pytest.param(
+            "UPPER",
+            {"id": "ERROR", "loc": ["name"], "message": "Value error, name must be lower cased", "type": "value_error"},
+            id="field-validator",
+        ),
+        pytest.param(
+            "admin",
+            {"id": "ERROR", "loc": [], "message": "Value error, reserved name", "type": "value_error"},
+            id="model-validator",
+        ),
+    ],
+)
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_class_body_in_mutation(
+    name: str, expected_error: dict[str, Any], strawchemy: Strawchemy
+) -> None:
+    """Test that a mutation rejects input failing validators declared in the validation class body."""
+    from strawchemy import ValidationErrorType
+    from strawchemy.validation.pydantic import PydanticValidation
+    from tests.unit.models import Tag
+
+    @strawchemy.create_input(Tag, include=["name"])
+    class TagCreate: ...
+
+    @strawchemy.type(Tag, include=["id", "name"])
+    class TagType: ...
+
+    validation = strawchemy.pydantic.create(Tag, include=["name"])(type("TagValidation", (), _tag_validation_body()))
+
+    @strawberry.type
+    class Mutation:
+        create_tag: TagType | ValidationErrorType = strawchemy.create(
+            TagCreate, validation=PydanticValidation(validation)
+        )
+
+    query = f"""
+        mutation {{
+            createTag(data: {{ name: "{name}" }}) {{
+                __typename
+                ... on ValidationErrorType {{
+                    id
+                    errors {{ id loc message type }}
+                }}
+            }}
+        }}
+    """
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
+    assert not result.errors
+    assert result.data
+    assert result.data["createTag"]["__typename"] == "ValidationErrorType"
+    assert result.data["createTag"]["errors"] == [expected_error]
 
 
 @pytest.mark.parametrize(
