@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.transpiler._core.pipeline import PassBase
 
 if TYPE_CHECKING:
@@ -39,7 +40,7 @@ class Selection(PassBase):
 
 def _label_key(node: QueryNodeType) -> str:
     if node.is_root:
-        return node.value.model.__tablename__
+        return SQLAlchemyInspector.table_name(node.value.model)
     return node.value.model_field.key if node.value.has_model_field else ""
 
 

@@ -15,11 +15,11 @@ from sqlalchemy import (
     JSON,
     Column,
     ColumnDefault,
-    ColumnElement,
     PrimaryKeyConstraint,
     Sequence,
     SQLColumnExpression,
     Table,
+    TableClause,
     TypeDecorator,
     UniqueConstraint,
     event,
@@ -49,7 +49,7 @@ from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.inspectors import ModelInspector
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, DTOUnset, Purpose
-from strawchemy.exceptions import ModelInspectorError
+from strawchemy.exceptions import ModelInspectorError, ReadOnlyModelError
 from strawchemy.schema.filters import (
     ArrayComparison,
     DateComparison,
@@ -66,7 +66,7 @@ from strawchemy.schema.filters import (
 from strawchemy.utils.annotation import get_origin_or_self, is_type_hint_optional
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable, Generator
     from types import ModuleType
 
     from shapely import Geometry
@@ -369,28 +369,29 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             )
         }
 
-    def _field_definitions_from_columns(
-        self, model: type[DeclarativeBase], columns: Iterable[ColumnElement[Any]], dto_config: DTOConfig
-    ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
-        mapper = inspect(model)
-        type_hints = self.get_type_hints(model)
-
-        return [
-            (
-                column.key,
-                self.field_definition(
-                    mapper.attrs[column.key].class_attribute,
-                    dto_config,
-                    type_hint=type_hints.get(column.key, DTOMissing),
-                ),
-            )
-            for column in columns
-            if column.key
-        ]
-
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
-        return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key if column.key]
+        return [mapper.get_property_by_column(column).class_attribute for column in mapper.primary_key]
+
+    @classmethod
+    def table_name(cls, model: type[Any]) -> str:
+        """Returns the name of the table ``model`` maps, or of ``model`` itself when it maps a join or a selectable."""
+        table = inspect(model).local_table
+        return table.name if isinstance(table, TableClause) else model.__name__
+
+    @classmethod
+    def check_writable(cls, model: type[Any]) -> None:
+        """Check that ``model`` maps a table, which the repository's INSERT, UPDATE and DELETE statements need.
+
+        Raises:
+            ReadOnlyModelError: If ``model`` maps a join or a selectable.
+        """
+        if not isinstance(inspect(model).local_table, TableClause):
+            msg = (
+                f"{model.__name__} is mapped onto a join or a selectable, not a table: "
+                "mutations and write inputs are not supported"
+            )
+            raise ReadOnlyModelError(msg)
 
     @classmethod
     def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
@@ -480,8 +481,14 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     def id_field_definitions(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
-        mapper = inspect(model)
-        return self._field_definitions_from_columns(model, mapper.primary_key, dto_config)
+        type_hints = self.get_type_hints(model)
+        return [
+            (
+                attribute.key,
+                self.field_definition(attribute, dto_config, type_hint=type_hints.get(attribute.key, DTOMissing)),
+            )
+            for attribute in self.pk_attributes(inspect(model))
+        ]
 
     @override
     def relation_model(self, model_field: QueryableAttribute[Any]) -> type[DeclarativeBase]:

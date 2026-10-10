@@ -314,7 +314,7 @@ class Level:
     @classmethod
     def root(cls, request: QueryRequest, context: PlanContext) -> Level:
         model = request.model
-        alias = aliased(model.__mapper__, name=model.__tablename__, flat=True)
+        alias = aliased(model.__mapper__, name=SQLAlchemyInspector.table_name(model), flat=True)
         return cls(request=request, context=context, node=request.selection.root, alias=alias)
 
     @classmethod
