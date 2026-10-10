@@ -13,7 +13,7 @@ type ColorType {
 
   """Fetch objects from the FruitType collection"""
   fruits(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [FruitType!]!
-  name: Int!
+  name: String!
   id: UUID!
 }
 
