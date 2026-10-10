@@ -649,6 +649,14 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             description="Conflict fields enum",
         )
 
+    def _foreign_key_set_by_relation(
+        self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]], has_override: bool
+    ) -> bool:
+        # An overridden primary key is one the input identifies rows by, as update-by-ids inputs do.
+        return self.inspector.is_foreign_key(field.model_field) and not (
+            has_override and self.inspector.is_primary_key(field.model_field)
+        )
+
     def _description(self, mode: GraphQLPurpose) -> str:
         if mode == "create_input":
             return "Create input"
@@ -697,7 +705,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     ) -> bool:
         return (
             super().should_exclude_field(field, dto_config, node, has_override)
-            or self.inspector.is_foreign_key(field.model_field)
+            or self._foreign_key_set_by_relation(field, has_override)
             or self.inspector.relation_cycle(field, node)
         )
 
