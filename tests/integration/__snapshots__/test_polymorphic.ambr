@@ -305,7 +305,7 @@
           OFFSET %(param_4)s::INTEGER
          ) AS anon_1
       ON TRUE
-   WHERE anon_1.kind IN (__[POSTCOMPILE_kind_3])
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_3])
    ORDER BY garage.id ASC,
             anon_1.id ASC
   '''
