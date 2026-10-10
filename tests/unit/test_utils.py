@@ -94,6 +94,21 @@ def test_get_type_hints_partial_module_names_shadow_class_attributes() -> None:
     assert get_type_hints_partial(Event) == {"date": date, "missing": "NotDefinedYet"}
 
 
+def test_get_type_hints_partial_resolves_names_from_given_localns() -> None:
+    """Test that names from the given localns resolve even when a sibling annotation is unresolvable."""
+
+    class Later: ...
+
+    class Fruit:
+        later: OnlyInLocalns  # noqa: F821  # ty: ignore[unresolved-reference]
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Fruit, localns={"OnlyInLocalns": Later}) == {
+        "later": Later,
+        "missing": "NotDefinedYet",
+    }
+
+
 class _JSONBDecorator(TypeDecorator[Any]):
     impl = postgresql.JSONB
     cache_ok = True
