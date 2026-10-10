@@ -42,7 +42,7 @@ type FruitSumFields {
 """GraphQL type"""
 type FruitType {
   color: ColorType!
-  name: Int!
+  name: String!
   colorId: UUID
   sweetness: Int!
   id: UUID!
