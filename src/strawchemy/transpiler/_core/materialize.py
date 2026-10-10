@@ -7,7 +7,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import FromClause, inspect, select
-from sqlalchemy.orm import RelationshipProperty, aliased
+from sqlalchemy.orm import ColumnProperty, RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import visitors
 from sqlalchemy.sql.elements import ColumnClause
@@ -160,11 +160,16 @@ def _reads_other(element: ClauseElement, from_clauses: Collection[FromClause]) -
 
 
 def _entity_reads(alias: AliasedClass[Any], loaded: Sequence[str] | None, hooks: Sequence[QueryHook[Any]]) -> list[Any]:
-    """Returns the attributes an entity loads: ``loaded`` or every undeferred column, its keys, its hooks' columns."""
-    mapper = inspect(alias).mapper
+    """Returns what an entity loads: every column of ``loaded`` or of each undeferred property, its keys, its hooks'."""
+    alias_insp = inspect(alias)
+    mapper = alias_insp.mapper
     keys = loaded if loaded is not None else [prop.key for prop in mapper.column_attrs if not prop.deferred]
+    keys = [*keys, *(attribute.key for attribute in SQLAlchemyInspector.pk_attributes(mapper))]
     reads: list[Any] = [getattr(alias, key) for key in keys]
-    reads.extend(getattr(alias, attribute.key) for attribute in SQLAlchemyInspector.pk_attributes(mapper))
+    adapter = ClauseAdapter(alias_insp.selectable)
+    for key in keys:
+        if isinstance(prop := mapper.attrs.get(key), ColumnProperty):
+            reads.extend(adapter.traverse(column) for column in prop.columns[1:])
     for hook in hooks:
         statement, _ = hook.load_columns(select(), alias, "add")
         reads.extend(statement.selected_columns)
