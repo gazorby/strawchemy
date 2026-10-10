@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import replace
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from sqlalchemy import FromClause, inspect, select
 from sqlalchemy.orm import RelationshipProperty, aliased
@@ -16,7 +16,13 @@ from sqlalchemy.sql.util import ClauseAdapter, surface_selectables
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.transpiler._core.attach import attach_rows, attach_shared_rows
 from strawchemy.transpiler._core.plan import QueryPlan
-from strawchemy.transpiler._core.render import adapt_clauses, clause_element, render_rows, same_column
+from strawchemy.transpiler._core.render import (
+    adapt_clauses,
+    clause_element,
+    render_rows,
+    require_corresponding_column,
+    same_column,
+)
 from strawchemy.transpiler._core.rewrite import PlanRewriter
 from strawchemy.transpiler._core.rowset import OrderPriority, Projection, RowSet
 from strawchemy.transpiler._core.share import share_ctes
@@ -24,7 +30,7 @@ from strawchemy.transpiler._core.share import share_ctes
 if TYPE_CHECKING:
     from collections.abc import Collection, Mapping, Sequence
 
-    from sqlalchemy import ClauseElement
+    from sqlalchemy import ClauseElement, Label, Select
     from sqlalchemy.sql import ColumnElement
     from sqlalchemy.sql.visitors import ExternallyTraversible
 
@@ -32,6 +38,7 @@ if TYPE_CHECKING:
     from strawchemy.transpiler._core.level import Level
     from strawchemy.transpiler._core.rowset import Join
     from strawchemy.transpiler.hook import QueryHook
+    from strawchemy.typing import QueryNodeType
 
 __all__ = ("materialize", "materialize_shared")
 
@@ -76,10 +83,16 @@ class _Rebase(PlanRewriter):
         return target
 
 
-def _inlines(level: Level, rows: RowSet) -> bool:
+def _inlines(level: Level, rows: RowSet, projection: Projection) -> bool:
     """Tells whether ``rows`` can share the FROM of the projection; a relation's must fit in a plain join."""
     if level.kind == "root":
-        return rows.limit is None and rows.offset is None and not rows.distinct_on and not rows.edits_shape_rows()
+        return (
+            rows.limit is None
+            and rows.offset is None
+            and not rows.distinct_on
+            and not rows.edits_shape_rows()
+            and not _repeats_aggregated_rows(projection)
+        )
     relationship = level.node.value.model_field.property if level.kind == "relation" else None
     to_one = isinstance(relationship, RelationshipProperty) and not relationship.uselist
     if not rows.only_filters(unordered=to_one):
@@ -88,7 +101,7 @@ def _inlines(level: Level, rows: RowSet) -> bool:
 
 
 def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPlan:
-    if level.kind in {"exists", "dml"} or _inlines(level, rows):
+    if level.kind in {"exists", "dml"} or _inlines(level, rows, projection):
         return QueryPlan(rows, projection, level.context)
     row_aliases = _row_aliases(rows)
     exported = _read_columns(projection, rows, row_aliases)
@@ -112,12 +125,44 @@ def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPla
         assert join.alias is not None
         return QueryPlan(RowSet.over(join.alias), projection, level.context, join_to_parent=join)
     rendered = render_rows(rows, exported, db_features)
-    page = rendered.statement.subquery(level.request.model.__tablename__)
+    statement, aggregations = rendered.statement, {}
+    if _repeats_aggregated_rows(projection):
+        statement, projection, aggregations = _aggregated_rows(statement, projection)
+    page = statement.subquery(level.request.model.__tablename__)
     entities = _entities_over(page, row_aliases)
     page_rows = RowSet.over(entities[rows.source]).with_order_by(
         OrderPriority.CLIENT, *adapt_clauses(rendered.order_by, page)
     )
-    return QueryPlan(page_rows, _Rebase(page, rows, entities).projection(projection), level.context)
+    projection = _Rebase(page, rows, entities).projection(projection)
+    for node, column in aggregations.items():
+        projection = projection.with_root_aggregation(node, require_corresponding_column(page, column))
+    return QueryPlan(page_rows, projection, level.context)
+
+
+def _repeats_aggregated_rows(projection: Projection) -> bool:
+    """Tells whether ``projection`` has root aggregations and joins a to-many relation, which repeats the root rows."""
+    return bool(projection.root_aggregations) and any(
+        key[0] == "relation" and key[1].value.uselist for key in projection.joins
+    )
+
+
+def _aggregated_rows(
+    statement: Select[Any], projection: Projection
+) -> tuple[Select[Any], Projection, dict[QueryNodeType, Label[Any]]]:
+    """Selects the root aggregations of ``projection`` over the rows of ``statement``, before any join repeats them.
+
+    Returns:
+        The statement, ``projection`` without its root aggregations, and the column of each one in the statement.
+    """
+    rows = statement.subquery()
+    adapter = ClauseAdapter(rows)
+    columns = {id(column): cast("Label[Any]", adapter.traverse(column)) for column in projection.root_aggregations}
+    column_map = {node: column for node, column in projection.column_map.items() if id(column) not in columns}
+    aggregations = {
+        node: columns[id(column)] for node, column in projection.column_map.items() if id(column) in columns
+    }
+    statement = cast("Select[Any]", select(*rows.c, *columns.values()))
+    return statement, replace(projection, root_aggregations=(), column_map=column_map), aggregations
 
 
 def _rebased(

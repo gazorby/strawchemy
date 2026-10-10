@@ -441,6 +441,14 @@ class AsyncQuery:
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemyAsyncRepository
     )
+    fruit_aggregations_filterable: FruitAggregationType = strawchemy.field(
+        root_aggregations=True,
+        filter_input=FruitFilter,
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
     fruits_default_order: list[FruitType] = strawchemy.field(
         default_order_by=Fruit.name.asc(),
         order_by_input=FruitOrderBy,
@@ -649,6 +657,14 @@ class SyncQuery:
     )
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemySyncRepository
+    )
+    fruit_aggregations_filterable: FruitAggregationType = strawchemy.field(
+        root_aggregations=True,
+        filter_input=FruitFilter,
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
     )
     fruits_default_order: list[FruitType] = strawchemy.field(
         default_order_by=Fruit.name.asc(),

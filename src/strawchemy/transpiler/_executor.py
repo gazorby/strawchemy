@@ -20,7 +20,7 @@ from strawchemy.repository.typing import AnyAsyncSession, AnySyncSession, Declar
 if TYPE_CHECKING:
     from collections.abc import Generator, Iterable, Mapping, Sequence
 
-    from sqlalchemy import ColumnElement, Label, Result, StatementLambdaElement
+    from sqlalchemy import ColumnElement, Result, StatementLambdaElement
 
     from strawchemy.dto.strawberry import GraphQLFieldDefinition
     from strawchemy.transpiler._core.plan import QueryPlan
@@ -149,7 +149,7 @@ class QueryExecutor(Generic[DeclarativeT]):
         return self.plan.identity_columns
 
     @property
-    def root_aggregation_functions(self) -> list[Label[Any]]:
+    def root_aggregation_functions(self) -> list[ColumnElement[Any]]:
         """Window function columns of the root aggregations."""
         return list(self.plan.root_aggregation_functions)
 

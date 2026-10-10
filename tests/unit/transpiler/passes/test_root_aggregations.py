@@ -122,3 +122,95 @@ def test_root_aggregation_reads_root_alias(dialect_name: str) -> None:
             }
         )[dialect_name]
     )
+
+
+@_DIALECTS
+def test_root_aggregation_next_to_to_many_relation(dialect_name: str) -> None:
+    """Next to a to-many relation, the window functions are computed in the page, before the relation repeats its rows."""
+    lines = plan_sql(
+        "{ colorAggregationsPaginated(limit: 2) { aggregations { count max { name } } nodes { id fruits { name } } } }",
+        dialect_name,
+    )
+
+    assert (
+        lines
+        == snapshot(
+            {
+                "postgresql": [
+                    "SELECT color.id,",
+                    "       fruit_1.name,",
+                    "       fruit_1.id AS id_1,",
+                    "       color.anon_1,",
+                    "       color.anon_2",
+                    "  FROM (",
+                    "        SELECT anon_3.id AS id,",
+                    "               anon_3.name AS name,",
+                    "               count(*) OVER () AS anon_1,",
+                    "               max(anon_3.name) OVER () AS anon_2",
+                    "          FROM (",
+                    "                SELECT color.id AS id,",
+                    "                       color.name AS name",
+                    "                  FROM color AS color",
+                    "                 ORDER BY color.id ASC",
+                    "                 LIMIT %(param_1)s",
+                    "                OFFSET %(param_2)s",
+                    "               ) AS anon_3",
+                    "       ) AS color",
+                    "  LEFT OUTER JOIN fruit AS fruit_1",
+                    "    ON color.id = fruit_1.color_id",
+                    " ORDER BY color.id ASC,",
+                    "          fruit_1.id ASC",
+                ],
+                "sqlite": [
+                    "SELECT color.id,",
+                    "       fruit_1.name,",
+                    "       fruit_1.id AS id_1,",
+                    "       color.anon_1,",
+                    "       color.anon_2",
+                    "  FROM (",
+                    "        SELECT anon_3.id AS id,",
+                    "               anon_3.name AS name,",
+                    "               count(*) OVER () AS anon_1,",
+                    "               max(anon_3.name) OVER () AS anon_2",
+                    "          FROM (",
+                    "                SELECT color.id AS id,",
+                    "                       color.name AS name",
+                    "                  FROM color AS color",
+                    "                 ORDER BY color.id ASC",
+                    "                 LIMIT ?",
+                    "                OFFSET ?",
+                    "               ) AS anon_3",
+                    "       ) AS color",
+                    "  LEFT OUTER JOIN fruit AS fruit_1",
+                    "    ON color.id = fruit_1.color_id",
+                    " ORDER BY color.id ASC,",
+                    "          fruit_1.id ASC",
+                ],
+                "mysql": [
+                    "SELECT color.id,",
+                    "       fruit_1.name,",
+                    "       fruit_1.id AS id_1,",
+                    "       color.anon_1,",
+                    "       color.anon_2",
+                    "  FROM (",
+                    "        SELECT anon_3.id AS id,",
+                    "               anon_3.name AS name,",
+                    "               count(*) OVER () AS anon_1,",
+                    "               max(anon_3.name) OVER () AS anon_2",
+                    "          FROM (",
+                    "                SELECT color.id AS id,",
+                    "                       color.name AS name",
+                    "                  FROM color AS color",
+                    "                 ORDER BY color.id ASC",
+                    "                 LIMIT %s,",
+                    "                       %s",
+                    "               ) AS anon_3",
+                    "       ) AS color",
+                    "  LEFT OUTER JOIN fruit AS fruit_1",
+                    "    ON color.id = fruit_1.color_id",
+                    " ORDER BY color.id ASC,",
+                    "          fruit_1.id ASC",
+                ],
+            }
+        )[dialect_name]
+    )
