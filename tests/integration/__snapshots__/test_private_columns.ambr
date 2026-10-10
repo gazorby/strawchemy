@@ -1,0 +1,286 @@
+# serializer version: 1
+# name: test_create_returns_private_column[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_create_returns_private_column[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_create_returns_private_column[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_create_returns_private_column[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_create_returns_private_column[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   WHERE fruit.id IN (__[POSTCOMPILE_id_2])
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_private_column_is_set[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_private_column_is_set[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_private_column_is_set[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_private_column_is_set[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_private_column_is_set[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_many_relation_is_set[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_many_relation_is_set[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_many_relation_is_set[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_many_relation_is_set[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_many_relation_is_set[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT color.name,
+         color.id,
+         fruit_1.name AS name_1,
+         fruit_1.id AS id_1
+    FROM color AS color
+    LEFT OUTER JOIN fruit AS fruit_1
+      ON color.id = fruit_1.color_id
+   ORDER BY color.id ASC,
+            fruit_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_one_relation_is_set[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_one_relation_is_set[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_one_relation_is_set[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_one_relation_is_set[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_private_column_of_to_one_relation_is_set[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id,
+         color_1.name AS name_1,
+         color_1.id AS id_1
+    FROM fruit AS fruit
+    LEFT OUTER JOIN color AS color_1
+      ON color_1.id = fruit.color_id
+   ORDER BY fruit.id ASC,
+            color_1.id ASC
+  '''
+# ---
+# name: test_update_returns_private_column[session-async-tracked-aiosqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_update_returns_private_column[session-async-tracked-asyncmy_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_update_returns_private_column[session-async-tracked-psycopg_async_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_update_returns_private_column[session-sync-tracked-psycopg_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
+# name: test_update_returns_private_column[session-sync-tracked-sqlite_engine]
+  '''
+  SELECT fruit.name,
+         fruit.id
+    FROM fruit AS fruit
+   WHERE fruit.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY fruit.id ASC
+  '''
+# ---
