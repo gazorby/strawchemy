@@ -123,3 +123,30 @@ class TestIsTypeOf:
 
         assert result.errors is None
         assert result.data == {"thing": {"__typename": "FruitType"}}
+
+    def test_interface_resolves_via_generated_is_type_of(self, strawchemy: Strawchemy) -> None:
+        """Test that a model returned by an interface field resolves to the mapped type implementing it."""
+
+        @strawberry.interface
+        class Named:
+            name: str
+
+        @strawchemy.type(Fruit, include=["name"], override=True)
+        class FruitType(Named): ...
+
+        @strawchemy.type(Tomato, include=["name"], override=True)
+        class TomatoType(Named): ...
+
+        _fruit = Fruit(name="Apple")
+
+        @strawberry.type
+        class Query:
+            @strawberry.field(graphql_type=Named)
+            def thing(self) -> Named:
+                return _fruit  # ty: ignore[invalid-return-type]
+
+        schema = strawberry.Schema(query=Query, types=[FruitType, TomatoType])
+        result = schema.execute_sync("{ thing { __typename name } }")
+
+        assert result.errors is None
+        assert result.data == {"thing": {"__typename": "FruitType", "name": "Apple"}}
