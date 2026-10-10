@@ -12,7 +12,6 @@ from typing_extensions import Self
 if TYPE_CHECKING:
     from collections.abc import Callable, Mapping
 
-    from sqlalchemy import Label
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement, FromClause
     from sqlalchemy.sql.elements import UnaryExpression
@@ -159,7 +158,7 @@ class Projection:
     """Terms of every level, outer level first; only the terms of one level are sorted by priority."""
     column_map: Mapping[QueryNodeType, ColumnElement[Any]] = field(default_factory=dict)
     identity_columns: Mapping[QueryNodeType, tuple[ColumnElement[Any], ...]] = field(default_factory=dict)
-    root_aggregations: tuple[Label[Any], ...] = ()
+    root_aggregations: tuple[ColumnElement[Any], ...] = ()
     pages: Mapping[QueryNodeType, AliasPage] = field(default_factory=dict)
 
     @classmethod
@@ -185,9 +184,9 @@ class Projection:
     def with_identity(self, node: QueryNodeType, columns: tuple[ColumnElement[Any], ...]) -> Projection:
         return replace(self, identity_columns={**self.identity_columns, node: columns})
 
-    def with_root_aggregation(self, node: QueryNodeType, label: Label[Any]) -> Projection:
+    def with_root_aggregation(self, node: QueryNodeType, column: ColumnElement[Any]) -> Projection:
         return replace(
-            self, column_map={**self.column_map, node: label}, root_aggregations=(*self.root_aggregations, label)
+            self, column_map={**self.column_map, node: column}, root_aggregations=(*self.root_aggregations, column)
         )
 
     def with_order_by(self, priority: OrderPriority, *expressions: UnaryExpression[Any]) -> Projection:

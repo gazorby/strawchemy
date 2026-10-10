@@ -763,3 +763,77 @@ async def test_nested_aggregation_under_aliased_relations_with_arguments(
             for fruit in reversed(fruits)
         ]
     assert query_tracker.query_count == 1
+
+
+_ROOT_AGGREGATION_FUNCTIONS: dict[
+    Literal["sum", "avg", "min", "max", "stddevSamp", "stddevPop", "varSamp", "varPop"], str
+] = {
+    "sum": "sum",
+    "avg": "avg",
+    "min": "min",
+    "max": "max",
+    "stddevSamp": "stddev_samp",
+    "stddevPop": "stddev_pop",
+    "varSamp": "var_samp",
+    "varPop": "var_pop",
+}
+
+
+@pytest.mark.parametrize(
+    "relations",
+    [
+        pytest.param("farms { name }", id="to-many"),
+        pytest.param("color { fruits { id } }", id="to-many-under-to-one"),
+        pytest.param("color { fruits { id farms { name } } }", id="to-many-two-levels"),
+        pytest.param("farms { name } color { fruits { id } }", id="to-many-siblings"),
+        pytest.param("color { fruits(orderBy: { sweetness: ASC }) { id } }", id="to-many-with-arguments"),
+        pytest.param(
+            "color { a: fruits(orderBy: { sweetness: ASC }) { id } b: fruits(orderBy: { sweetness: DESC }) { id } }",
+            id="to-many-aliases",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("root", "expected_ids"),
+    [
+        pytest.param("fruitAggregations", set(range(1, 12)), id="all"),
+        pytest.param("fruitAggregationsPaginatedLimit2", {1, 2}, id="default-limit"),
+        pytest.param(
+            "fruitAggregationsFilterable(filter: { sweetness: { gt: 4 } })", {2, 6, 7, 8, 10, 11}, id="filter"
+        ),
+        pytest.param(
+            "fruitAggregationsFilterable(orderBy: { sweetness: DESC }, limit: 3, offset: 1)", {2, 6, 11}, id="paginated"
+        ),
+        pytest.param(
+            "fruitAggregationsFilterable(distinctOn: [colorId], orderBy: [{ colorId: ASC }, { sweetness: DESC }])",
+            {2, 5, 7, 8, 11},
+            id="distinct-on",
+        ),
+    ],
+)
+async def test_root_aggregation_next_to_to_many_relations(
+    root: str,
+    expected_ids: set[int],
+    relations: str,
+    any_async_query: AnyQueryExecutor,
+    raw_fruits: RawRecordData,
+    query_tracker: QueryTracker,
+    db_features: DatabaseFeatures,
+) -> None:
+    """Test that root aggregations selected next to to-many relations aggregate each root row once."""
+    functions = [
+        name for name, sql_name in _ROOT_AGGREGATION_FUNCTIONS.items() if sql_name in db_features.aggregation_functions
+    ]
+    selections = " ".join(f"{name} {{ sweetness }}" for name in functions)
+    data = await _data(
+        any_async_query, f"{{ {root} {{ aggregations {{ count {selections} }} nodes {{ id {relations} }} }} }}"
+    )
+    result = data[root.split("(", maxsplit=1)[0]]
+    assert {node["id"] for node in result["nodes"]} == expected_ids
+    sweetness = [fruit["sweetness"] for fruit in raw_fruits if fruit["id"] in expected_ids]
+    assert result["aggregations"]["count"] == len(expected_ids)
+    rel = 0.0001 if db_features.dialect == "mysql" else None
+    for name in functions:
+        expected = pytest.approx(compute_aggregation(name, sweetness), rel=rel)
+        assert result["aggregations"][name]["sweetness"] == expected, name
+    assert query_tracker.query_count == 1

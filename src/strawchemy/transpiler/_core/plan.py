@@ -10,7 +10,7 @@ from strawchemy.exceptions import TranspilingError
 if TYPE_CHECKING:
     from collections.abc import Mapping
 
-    from sqlalchemy import Label, Select
+    from sqlalchemy import Select
     from sqlalchemy.orm.util import AliasedClass
     from sqlalchemy.sql import ColumnElement
 
@@ -58,7 +58,7 @@ class QueryPlan:
         return self.projection.pages
 
     @property
-    def root_aggregation_functions(self) -> tuple[Label[Any], ...]:
+    def root_aggregation_functions(self) -> tuple[ColumnElement[Any], ...]:
         return self.projection.root_aggregations
 
     def emit(self) -> Select[Any]:
