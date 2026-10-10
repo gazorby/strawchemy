@@ -311,6 +311,19 @@ def test_parse_declared_fields_collects_restricted_and_custom() -> None:
     assert custom_annotation is _dt
 
 
+def test_parse_declared_fields_reads_inherited_annotation() -> None:
+    """Test that a filter field declared on a parent class takes its data type from the parent's annotation."""
+    sc = Strawchemy("sqlite")
+
+    class NameFilterMixin:
+        name: str = sc.filter_field(ops=["eq"])
+
+    class TicketFilter(NameFilterMixin): ...
+
+    _marker, annotation = sc.filter_factory.parse_declared_filter_fields(TicketFilter)["name"]
+    assert annotation is str
+
+
 def test_parse_declared_fields_requires_annotation() -> None:
     sc = Strawchemy("sqlite")
 
