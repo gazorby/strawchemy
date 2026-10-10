@@ -515,7 +515,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> Hashable:
         base_key = self._base_cache_key(dto_config)
         node_key = frozenset()
-        if node.is_root and dto_config.scope != "global":
+        if node.is_root:
             node_key = self._root_cache_key(dto_config)
         return (model, base_key, node_key)
 

@@ -937,6 +937,21 @@ def test_schema_scope_input_does_not_leak_into_related_model_inputs(strawchemy: 
     assert user_input.get_field("group") is not None
 
 
+def test_schema_scope_type_is_not_shared_with_include_all_root(strawchemy: Strawchemy) -> None:
+    """Test that an include-all root declared after a narrower schema-scoped type of the same model gets all fields."""
+
+    @strawchemy.type(Tag, include=[SCALARS], scope="schema")
+    class TagType:
+        pass
+
+    @strawchemy.type(Tag, include="all")
+    class TagAllType:
+        pass
+
+    assert "groups" not in DTOInspect(TagType).annotations()
+    assert "groups" in DTOInspect(TagAllType).annotations()
+
+
 def test_schema_scope_type_is_reused_by_relations(strawchemy: Strawchemy) -> None:
     """Test that a relation of a type declared after a schema-scoped type resolves to the scoped type."""
 
