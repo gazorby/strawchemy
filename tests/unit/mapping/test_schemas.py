@@ -895,6 +895,42 @@ def test_pydantic_validation_keeps_user_bases(strawchemy: Strawchemy) -> None:
     assert issubclass(validation, mixin)
 
 
+@pytest.mark.parametrize("mode", ["create", "pk_update", "filter_update"])
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_cached_keeps_own_class_body(mode: str, strawchemy: Strawchemy) -> None:
+    """Test that a second identical pydantic validation declaration keeps its own body and not the first one's."""
+    from pydantic import ValidationError, field_validator
+
+    from tests.unit.models import Tag
+
+    decorator = getattr(strawchemy.pydantic, mode)
+    first = decorator(Tag, include=["name"])(type("FirstValidation", (), _tag_validation_body()))
+
+    @decorator(Tag, include=["name"])
+    class SecondValidation:
+        @field_validator("name")
+        @classmethod
+        def no_digits(cls, value: str) -> str:
+            if any(char.isdigit() for char in value):
+                msg = "name must not contain digits"
+                raise ValueError(msg)
+            return value
+
+        def hello(self) -> str:
+            return "hi"
+
+    second: type[Any] = SecondValidation
+    pk = {"id": "da636751-b276-4546-857f-3c73ea914467"} if mode == "pk_update" else {}
+
+    assert first not in second.__mro__
+    with pytest.raises(ValidationError):
+        first(name="UPPER", **pk)
+    with pytest.raises(ValidationError):
+        second(name="abc1", **pk)
+    assert second(name="UPPER", **pk).hello() == "hi"
+    assert not hasattr(second, "shout")
+
+
 @pytest.mark.parametrize(
     ("name", "expected_error"),
     [
