@@ -29,6 +29,9 @@ from tests.integration.models import (
     Car,
     Color,
     DateTimeModel,
+    ExprBike,
+    ExprGarage,
+    ExprVehicle,
     Fruit,
     FruitFarm,
     Garage,
@@ -441,6 +444,37 @@ class BikeType: ...
 
 @strawchemy.type(Garage, include="all", paginate="all", override=True)
 class GarageType: ...
+
+
+# Expression polymorphic types
+
+
+@strawchemy.filter(ExprVehicle, include="all")
+class ExprVehicleFilter: ...
+
+
+@strawchemy.order(ExprVehicle, include="all")
+class ExprVehicleOrderBy: ...
+
+
+@strawchemy.type(ExprVehicle, include="all")
+class ExprVehicleType: ...
+
+
+@strawchemy.filter(ExprBike, include="all")
+class ExprBikeFilter: ...
+
+
+@strawchemy.order(ExprBike, include="all")
+class ExprBikeOrderBy: ...
+
+
+@strawchemy.type(ExprBike, include="all", override=True)
+class ExprBikeType: ...
+
+
+@strawchemy.type(ExprGarage, include="all", override=True)
+class ExprGarageType: ...
 
 
 # Queries
@@ -915,6 +949,52 @@ class PolymorphicSyncQuery:
     cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
     bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
     garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class ExprVehicleAsyncQuery:
+    vehicles: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy, repository_type=StrawchemyAsyncRepository
+    )
+    vehicles_paginated: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter,
+        order_by_input=ExprVehicleOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    bikes: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy, repository_type=StrawchemyAsyncRepository
+    )
+    bikes_paginated: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter,
+        order_by_input=ExprBikeOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    garages: list[ExprGarageType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class ExprVehicleSyncQuery:
+    vehicles: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy, repository_type=StrawchemySyncRepository
+    )
+    vehicles_paginated: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter,
+        order_by_input=ExprVehicleOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    bikes: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy, repository_type=StrawchemySyncRepository
+    )
+    bikes_paginated: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter,
+        order_by_input=ExprBikeOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    garages: list[ExprGarageType] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 # Mutations

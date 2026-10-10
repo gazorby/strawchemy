@@ -20,6 +20,7 @@ from sqlalchemy import (
     Text,
     Time,
     UniqueConstraint,
+    case,
 )
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.ext.declarative import declared_attr
@@ -38,6 +39,7 @@ array_metadata = MetaData()
 interval_metadata = MetaData()
 date_time_metadata = MetaData()
 polymorphic_metadata = MetaData()
+expression_polymorphic_metadata = MetaData()
 
 TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
 JSONType = (
@@ -116,6 +118,11 @@ class DateTimeBase(BaseColumns, DeclarativeBase):
 class PolymorphicBase(DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=polymorphic_metadata)
+
+
+class ExpressionPolymorphicBase(BaseColumns, DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=expression_polymorphic_metadata)
 
 
 # Models
@@ -308,4 +315,33 @@ class Car(Vehicle):
 
 
 class Bike(Vehicle):
+    __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
+# Expression polymorphic models
+
+
+class ExprGarage(ExpressionPolymorphicBase):
+    __tablename__ = "expr_garage"
+
+    name: Mapped[str] = mapped_column(Text)
+    vehicles: Mapped[list[ExprVehicle]] = relationship("ExprVehicle", back_populates="garage")
+    bikes: Mapped[list[ExprBike]] = relationship("ExprBike", viewonly=True)
+
+
+class ExprVehicle(ExpressionPolymorphicBase):
+    __tablename__ = "expr_vehicle"
+
+    name: Mapped[str] = mapped_column(Text)
+    wheels: Mapped[int] = mapped_column()
+    garage_id: Mapped[int] = mapped_column(ForeignKey("expr_garage.id"))
+    garage: Mapped[ExprGarage] = relationship(back_populates="vehicles")
+
+    __mapper_args__ = {  # noqa: RUF012
+        "polymorphic_on": case((wheels == 2, "bike"), else_="vehicle"),
+        "polymorphic_identity": "vehicle",
+    }
+
+
+class ExprBike(ExprVehicle):
     __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
