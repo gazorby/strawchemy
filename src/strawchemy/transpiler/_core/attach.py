@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, cast
 from sqlalchemy import and_, func, inspect, null, or_, select, true
 from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm import join as orm_join
+from sqlalchemy.orm.exc import UnmappedColumnError
 from sqlalchemy.sql.functions import count as sqla_count
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -78,15 +79,15 @@ def _key_attributes(
     """Returns the local (``"parent"``) or remote (``"target"``) foreign keys of ``relationship``, read from ``alias``."""
     alias_insp = inspect(alias)
     columns = relationship.local_columns if side == "parent" else relationship.remote_side
-    attrs = alias_insp.mapper.attrs
-    keys = [column.key for column in columns if column.key is not None]
-    if len(keys) != len(columns) or any(key not in attrs for key in keys):
+    try:
+        properties = [alias_insp.mapper.get_property_by_column(column) for column in columns]
+    except UnmappedColumnError as error:
         msg = (
             f"{relationship} goes through a secondary table and has its own ordering or pagination: "
             "this is unsupported on databases without LATERAL"
         )
-        raise TranspilingError(msg)
-    return [attrs[key].class_attribute.adapt_to_entity(alias_insp) for key in keys]
+        raise TranspilingError(msg) from error
+    return [prop.class_attribute.adapt_to_entity(alias_insp) for prop in properties]
 
 
 def _primary_keys(target: AliasedClass[Any]) -> list[ColumnElement[Any]]:
