@@ -147,3 +147,31 @@ async def test_update_by_ids_matches_every_key_column(
         any_session.execute(select(BasketItem.basket_id, BasketItem.name).order_by(BasketItem.basket_id))
     )
     assert [tuple(row) for row in rows] == [(1, "apple"), (2, "plum")]
+
+
+async def test_update_by_ids_cannot_rewrite_key_through_relation(
+    any_query: AnyQueryExecutor, any_session: AnySession
+) -> None:
+    """Test that update by ids refuses a to-one relation write targeting a column of the identifying key."""
+    result = await maybe_async(
+        any_query(
+            """
+            mutation {
+                updateBasketItem(
+                    data: { basketId: 1, label: "fruit", name: "plum", basket: { set: { id: 2 } } }
+                ) {
+                    basketId
+                    label
+                    name
+                }
+            }
+            """
+        )
+    )
+
+    assert result.errors
+
+    rows = await maybe_async(
+        any_session.execute(select(BasketItem.basket_id, BasketItem.name).order_by(BasketItem.basket_id))
+    )
+    assert [tuple(row) for row in rows] == [(1, "apple"), (2, "pear")]

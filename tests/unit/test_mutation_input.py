@@ -63,6 +63,16 @@ def test_pk_update_input_keeps_foreign_key_primary_key(include: FieldSpec) -> No
     assert fields["basket_id"].type is int
 
 
+def test_pk_update_input_excludes_relation_writing_primary_key() -> None:
+    """Test that the update-by-ids input leaves out a to-one relation whose local columns belong to the key."""
+    strawchemy = Strawchemy("postgresql")
+
+    @strawchemy.pk_update_input(_BasketItem, include="all")
+    class BasketItemUpdate: ...
+
+    assert "basket" not in {field.name for field in get_object_definition(BasketItemUpdate, strict=True).fields}
+
+
 @pytest.mark.parametrize("decorator", ["create_input", "filter_update_input"])
 def test_non_pk_update_inputs_exclude_foreign_key_primary_key(decorator: str) -> None:
     """Test that inputs not identifying rows by key leave out a primary key column that is also a foreign key."""
