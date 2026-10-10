@@ -28,6 +28,7 @@ from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
+    from typing_extensions import Self
 
     from strawchemy.mapper import Strawchemy
 
@@ -877,6 +878,44 @@ def test_pydantic_validation_keeps_class_body(mode: str, strawchemy: Strawchemy)
     assert instance.shout() == "BOB"
     assert instance.shout_property == "BOB"
     assert validation.label() == "TagValidation"
+
+
+@pytest.mark.filterwarnings("error")
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_class_body_validators_with_annotated_field(strawchemy: Strawchemy) -> None:
+    """Test that class-body validators run, without warnings, on a field the class body re-annotates with a default."""
+    from pydantic import ValidationError, field_validator, model_validator
+
+    from tests.unit.models import Tag
+
+    @strawchemy.pydantic.create(Tag, include=["name"])
+    class TagValidation:
+        name: str | None = None
+
+        @field_validator("name")
+        @classmethod
+        def lower_case(cls, value: str | None) -> str | None:
+            if value is not None and not value.islower():
+                msg = "name must be lower cased"
+                raise ValueError(msg)
+            return value
+
+        @model_validator(mode="after")
+        def not_reserved(self) -> Self:
+            if self.name == "admin":
+                msg = "reserved name"
+                raise ValueError(msg)
+            return self
+
+    validation: type[Any] = TagValidation
+    field = validation.model_fields["name"]
+    assert field.annotation == str | None
+    assert field.default is None
+    assert validation().name is None
+    assert validation(name="bob").name == "bob"
+    for name in ("UPPER", "admin"):
+        with pytest.raises(ValidationError):
+            validation(name=name)
 
 
 @pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")

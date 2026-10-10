@@ -7,6 +7,7 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 
 from __future__ import annotations
 
+import warnings
 from inspect import getmodule
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast
 
@@ -97,13 +98,18 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
-        dto = create_model(  # ty: ignore[no-matching-overload]  # pydantic create_model overloads don't cover dynamic **fields
-            name,
-            __base__=(base, self.dto_base) if base else (self.dto_base,),
-            __module__=module,
-            __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
-            **fields,
-        )
+        with warnings.catch_warnings():
+            # Fields redeclared from the user class above shadow its class attributes on purpose.
+            warnings.filterwarnings(
+                "ignore", message=r"Field name .* shadows an attribute in parent", category=UserWarning
+            )
+            dto = create_model(  # ty: ignore[no-matching-overload]  # pydantic create_model overloads don't cover dynamic **fields
+                name,
+                __base__=(base, self.dto_base) if base else (self.dto_base,),
+                __module__=module,
+                __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
+                **fields,
+            )
 
         if config_dict:
             cls_body = {"model_config": config_dict} if config_dict else {}
