@@ -344,7 +344,7 @@ class DTOConfig:
         exclude_defaults: bool | type[DTOUnset] = DTOUnset,
         alias_generator: Callable[[str], str] | type[DTOUnset] = DTOUnset,
         partial_default: Any | type[DTOUnset] = DTOUnset,
-        scope: DTOScope | type[DTOUnset] = DTOUnset,
+        scope: DTOScope | type[DTOUnset] | None = DTOUnset,
         exclude_from_scope: bool | type[DTOUnset] = DTOUnset,
         tags: set[str] | type[DTOUnset] = DTOUnset,
     ) -> DTOConfig:

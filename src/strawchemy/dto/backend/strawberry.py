@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import dataclasses
 from dataclasses import dataclass
 from inspect import getmembers, getmodule
 from types import new_class
@@ -7,6 +8,7 @@ from typing import TYPE_CHECKING, Any, TypeVar, cast, get_origin
 
 import strawberry
 from strawberry.types.field import StrawberryField
+from strawberry.types.private import is_private
 from typing_extensions import override
 
 from strawchemy.dto import Purpose
@@ -35,7 +37,7 @@ class MappedStrawberryDTO(MappedDTO[ModelT]): ...
 class FieldInfo:
     name: str
     type: Any
-    field: StrawberryField | type[DTOMissing] = DTOMissing
+    field: StrawberryField | dataclasses.Field[Any] | type[DTOMissing] = DTOMissing
 
 
 class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
@@ -57,17 +59,18 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
 
         if isinstance(field_def, GraphQLFieldDefinition) and field_def.graphql_field is not None:
             return FieldInfo(field_def.name, field_def.type_, field_def.graphql_field)
-        strawberry_field: StrawberryField | None = None
+        make_field = dataclasses.field if is_private(field_def.type_) else strawberry.field
+        strawberry_field: StrawberryField | dataclasses.Field[Any] | None = None
         if field_def.default_factory is not DTOMissing:
             if isinstance(field_def.default_factory(), (list, tuple)):
-                strawberry_field = strawberry.field(default_factory=list)
+                strawberry_field = make_field(default_factory=list)
             else:
-                strawberry_field = strawberry.field(default=strawberry.UNSET)
+                strawberry_field = make_field(default=strawberry.UNSET)
         if field_def.default is not DTOMissing:
             # DTOUnset marks a database-resolved default (sequence or SQL expression);
             # render it as UNSET so the field is optional in write inputs.
             default = strawberry.UNSET if field_def.default is DTOUnset else field_def.default
-            strawberry_field = strawberry.field(default=default)
+            strawberry_field = make_field(default=default)
         if strawberry_field:
             return FieldInfo(field_def.name, field_def.type_, strawberry_field)
         return FieldInfo(field_def.name, field_def.type_)
