@@ -20,6 +20,7 @@ from sqlalchemy import (
     Sequence,
     SQLColumnExpression,
     Table,
+    TableClause,
     TypeDecorator,
     UniqueConstraint,
     event,
@@ -391,6 +392,12 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
         return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key if column.key]
+
+    @classmethod
+    def table_name(cls, model: type[Any]) -> str:
+        """Returns the name of the table ``model`` maps, or of ``model`` itself when it maps a join or a selectable."""
+        table = inspect(model).local_table
+        return table.name if isinstance(table, TableClause) else model.__name__
 
     @classmethod
     def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
