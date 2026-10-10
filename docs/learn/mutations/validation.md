@@ -47,6 +47,21 @@ with `id: Field required` before it checks `title`. `tags` mirrors the
 shape a relationship-carrying create input would send, but `PostCreateInput` has no `tags` field,
 so this mutation never reaches that branch.
 
+The generated model inherits from the decorated class, so validators declared in its body —
+`@field_validator`, `@model_validator` — run as well, and its methods stay available:
+
+```python
+from pydantic import field_validator
+
+
+@strawchemy.pydantic.create(Tag, include=["name"])
+class TagCreateValidation:
+    @field_validator("name")
+    @classmethod
+    def check_lower_case(cls, value: str) -> str:
+        return _check_lower_case(value)
+```
+
 ::: warning
 Add `ValidationErrorType` to the mutation field's return union, as in `PostType | ValidationErrorType` above. Without it, a validation failure still returns a `ValidationErrorType`, which the field's declared type cannot resolve: the client gets an execution error, such as `'ValidationErrorType' object has no attribute 'title'`, instead of the validation errors.
 :::

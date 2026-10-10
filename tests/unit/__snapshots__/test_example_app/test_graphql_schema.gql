@@ -625,7 +625,7 @@ Boolean expression to compare fields. All fields are combined with logical 'AND'
 input ProjectFilter {
   _and: [ProjectFilter!]! = []
   _or: [ProjectFilter!]! = []
-  not_: ProjectFilter
+  _not: ProjectFilter
   ticketsAggregate: TicketAggregateBoolExp
   tickets: TicketFilter
   milestonesAggregate: MilestoneAggregateBoolExp
