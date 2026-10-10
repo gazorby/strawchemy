@@ -5,8 +5,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
 
-from sqlalchemy import Cast, func, null, select
-from sqlalchemy.orm import Load, load_only, raiseload
+from sqlalchemy import Cast, func, inspect, null, select
+from sqlalchemy.orm import Load, defer, load_only, raiseload, undefer
 from sqlalchemy.sql.elements import UnaryExpression, _anonymous_label
 from sqlalchemy.sql.util import ClauseAdapter
 
@@ -130,6 +130,29 @@ def _is_native_distinct(
     )
 
 
+def _load_only(alias: AliasedClass[Any], keys: Sequence[str]) -> list[_AbstractLoad]:
+    """Builds the options loading only the ``keys`` columns of ``alias``."""
+    alias_insp = inspect(alias)
+    mapper = alias_insp.mapper
+    # ``load_only`` also defers the attributes a subclass maps over the entity's columns, such as the key of a
+    # joined-table subclass, which the ORM would then load with one SELECT per row. Deferring the entity's own
+    # columns instead lets those attributes load from the columns the entity selects.
+    if all(
+        descendant.attrs.get(prop.key, prop) is prop
+        for descendant in mapper.self_and_descendants
+        for prop in mapper.column_attrs
+    ):
+        return [load_only(*[getattr(alias, name) for name in keys])]
+    primary_key = set(mapper.primary_key)
+    # Adapted without ``getattr``, which warns about the columns a row subquery does not export.
+    deferred = [
+        defer(prop.class_attribute.adapt_to_entity(alias_insp))
+        for prop in mapper.column_attrs
+        if prop.key not in keys and primary_key.isdisjoint(prop.columns)
+    ]
+    return [*(undefer(getattr(alias, name)) for name in keys), *deferred]
+
+
 def _loader_options(projection: Projection) -> list[_AbstractLoad]:
     """Builds ``load_only`` and hook loader options per entity, for all its nodes; the root's are top-level."""
     aliases: dict[int, AliasedClass[Any]] = {}
@@ -148,7 +171,7 @@ def _loader_options(projection: Projection) -> list[_AbstractLoad]:
     for index, (key, alias) in enumerate(aliases.items()):
         alias_options: list[_AbstractLoad] = []
         if keys := loaded[key]:
-            alias_options.append(load_only(*[getattr(alias, name) for name in keys]))
+            alias_options.extend(_load_only(alias, keys))
         for hook in hooks[key]:
             alias_options.extend(hook.column_load_options(alias))
             alias_options.extend(hook.load_relationships(alias))

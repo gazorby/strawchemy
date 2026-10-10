@@ -309,3 +309,11 @@ class Car(Vehicle):
 
 class Bike(Vehicle):
     __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
+class Driver(PolymorphicBase):
+    __tablename__ = "driver"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    vehicle_id: Mapped[int] = mapped_column(ForeignKey("vehicle.id"))
+    vehicle: Mapped[Vehicle] = relationship()

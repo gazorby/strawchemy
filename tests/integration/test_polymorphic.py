@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 from sqlalchemy import Insert, MetaData, event, insert, inspect
+from sqlalchemy.sql.util import find_tables
 
-from tests.integration.models import Bike, Car, Garage, Vehicle, polymorphic_metadata
+from tests.integration.models import Bike, Car, Driver, Garage, Vehicle, polymorphic_metadata
 from tests.integration.types import mysql as mysql_types
 from tests.integration.types import postgres as postgres_types
 from tests.integration.types import sqlite as sqlite_types
@@ -14,6 +15,7 @@ from tests.utils import maybe_async
 if TYPE_CHECKING:
     from collections.abc import Generator
 
+    from sqlalchemy.sql import ClauseElement
     from syrupy.assertion import SnapshotAssertion
 
     from strawchemy.typing import SupportedDialect
@@ -22,7 +24,6 @@ if TYPE_CHECKING:
 
 pytestmark = [pytest.mark.integration]
 
-# No page of the base class holds a car: loading one through the base class lazy-loads the car's own key.
 _VEHICLES: list[dict[str, Any]] = [
     {"id": 1, "kind": "vehicle", "name": "Cart", "gears": None, "garage_id": 1},
     {"id": 2, "kind": "bike", "name": "Racer", "gears": 21, "garage_id": 1},
@@ -49,6 +50,7 @@ def seed_insert_statements() -> list[Insert]:
         insert(Garage).values([{"id": 1}, {"id": 2}]),
         insert(polymorphic_metadata.tables["vehicle"]).values(_VEHICLES),
         insert(polymorphic_metadata.tables["car"]).values(_CARS),
+        insert(Driver).values([{"id": 1, "vehicle_id": 4}, {"id": 2, "vehicle_id": 2}]),
     ]
 
 
@@ -96,6 +98,10 @@ def _assert_classes(loaded: list[Vehicle]) -> None:
         assert identity is not None
         (key,) = identity
         assert type(instance) is _CLASSES[kinds[key]]
+
+
+def _reads_car_table(query_tracker: QueryTracker) -> bool:
+    return polymorphic_metadata.tables["car"] in find_tables(cast("ClauseElement", query_tracker[0].clause_element))
 
 
 async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
@@ -171,6 +177,43 @@ async def test_paginated_relation(
     _assert_classes(loaded_vehicles)
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "expected"),
+    [
+        pytest.param("{ allVehicles { id } }", {"allVehicles": _vehicles(*range(1, 10), keys=("id",))}, id="root"),
+        pytest.param("{ vehicles { id name } }", {"vehicles": _vehicles(*range(1, 10))}, id="root-default-page"),
+        pytest.param("{ vehicles(limit: 2, offset: 3) { id name } }", {"vehicles": _vehicles(4, 5)}, id="root-page"),
+        pytest.param(
+            "{ garages { vehicles { id name } } }",
+            {"garages": [{"vehicles": _vehicles(1, 2, 3, 4, 5)}, {"vehicles": _vehicles(6, 7, 8, 9)}]},
+            id="relation",
+        ),
+        pytest.param(
+            "{ garages { vehicles(limit: 2, offset: 3) { id name } } }",
+            {"garages": [{"vehicles": _vehicles(4, 5)}, {"vehicles": _vehicles(9)}]},
+            id="relation-page",
+        ),
+        pytest.param(
+            "{ drivers { vehicle { id name } } }",
+            {"drivers": [{"vehicle": vehicle} for vehicle in reversed(_vehicles(2, 4))]},
+            id="to-one-relation",
+        ),
+    ],
+)
+async def test_joined_table_subclass_through_base_class(
+    query: str,
+    expected: dict[str, Any],
+    any_query: AnyQueryExecutor,
+    loaded_vehicles: list[Vehicle],
+    query_tracker: QueryTracker,
+) -> None:
+    """Test that joined-table subclass rows read through the base class load their key without reading their table."""
+    assert await _data(any_query, query) == expected
+    _assert_classes(loaded_vehicles)
+    assert query_tracker.query_count == 1
+    assert not _reads_car_table(query_tracker)
 
 
 @pytest.mark.allow_duplicate_reads(
