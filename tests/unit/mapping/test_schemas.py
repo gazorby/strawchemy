@@ -321,6 +321,31 @@ def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
     assert strawberry_contained_user_type(field.type) is ColorType
 
 
+@pytest.mark.parametrize(
+    "module",
+    [
+        pytest.param("late_type.relation_annotation", id="same_module"),
+        pytest.param("late_type.relation_annotation_private", id="with_private_field"),
+        pytest.param("late_type.relation_annotation_class_alias", id="with_class_body_alias"),
+        pytest.param("late_type_module.query", id="other_module"),
+    ],
+)
+def test_postponed_relation_annotation_resolves_type_defined_after_it(module: str) -> None:
+    """Test that a relation annotated with a later-defined type keeps the other base annotations resolvable."""
+    schema_module = import_module(f"tests.unit.schemas.{module}")
+
+    schema = strawberry.Schema(query=schema_module.Query)
+    fruit_type = schema.get_type_by_name("FruitType")
+    assert isinstance(fruit_type, StrawberryObjectDefinition)
+    color = fruit_type.get_field("color")
+    assert color is not None
+    assert color.type is schema_module.ColorType
+    name = fruit_type.get_field("name")
+    assert name is not None
+    assert name.type is str
+    assert "secret: " not in str(schema)
+
+
 def test_query_hooks_wrong_relationship_load_spec() -> None:
     with pytest.raises(
         QueryHookError, match=re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
