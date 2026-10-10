@@ -650,11 +650,25 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         )
 
     def _foreign_key_set_by_relation(
-        self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]], has_override: bool
+        self,
+        field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        has_override: bool,
     ) -> bool:
         # An overridden primary key is one the input identifies rows by, as update-by-ids inputs do.
-        return self.inspector.is_foreign_key(field.model_field) and not (
+        if not self.inspector.is_foreign_key(field.model_field) or (
             has_override and self.inspector.is_primary_key(field.model_field)
+        ):
+            return False
+        return self.inspector.foreign_key_set_by_parent(field.model_field, node) or any(
+            not super(MutationInputFactory, self).should_exclude_field(
+                self.inspector.field_definition(relationship, dto_config),
+                dto_config,
+                node,
+                relationship.key in dto_config.annotation_overrides,
+            )
+            for relationship in self.inspector.foreign_key_relationships(field.model_field)
         )
 
     def _relation_sets_primary_key(self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]]) -> bool:
@@ -713,7 +727,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     ) -> bool:
         return (
             super().should_exclude_field(field, dto_config, node, has_override)
-            or self._foreign_key_set_by_relation(field, has_override)
+            or self._foreign_key_set_by_relation(field, dto_config, node, has_override)
             or self.inspector.relation_cycle(field, node)
         )
 

@@ -1,17 +1,22 @@
 from __future__ import annotations
 
+from typing import Any
 from uuid import uuid4
 
 import pytest
-from sqlalchemy import ForeignKey
+import strawberry
+from sqlalchemy import Column, ForeignKey, Table
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from strawberry.types import get_object_definition
+from strawberry.types.base import StrawberryObjectDefinition
 
 from strawchemy import Strawchemy
 from strawchemy.dto.types import FieldSpec
 from strawchemy.schema.mutation import Input
 from tests.unit.dc_models import ColorDataclass, FruitDataclass
 from tests.unit.models import Color, Fruit
+
+_MUTATION_INPUT_DECORATORS = ["create_input", "pk_update_input", "filter_update_input"]
 
 
 class _CompositeKeyBase(DeclarativeBase):
@@ -31,6 +36,118 @@ class _BasketItem(_CompositeKeyBase):
     label: Mapped[str] = mapped_column(primary_key=True)
     name: Mapped[str | None]
     basket: Mapped[_Basket] = relationship(_Basket)
+
+
+class _ForeignKeyBase(DeclarativeBase):
+    pass
+
+
+_tag_fruit = Table(
+    "tag_fruit",
+    _ForeignKeyBase.metadata,
+    Column("tag_id", ForeignKey("tag.id"), primary_key=True),
+    Column("fruit_id", ForeignKey("fruit.id"), primary_key=True),
+)
+
+
+class _Fruit(_ForeignKeyBase):
+    __tablename__ = "fruit"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    labels: Mapped[list[_FruitLabel]] = relationship("_FruitLabel")
+    stickers: Mapped[list[_Sticker]] = relationship("_Sticker", back_populates="fruit")
+
+
+class _FruitLabel(_ForeignKeyBase):
+    __tablename__ = "fruit_label"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fruit_id: Mapped[int] = mapped_column(ForeignKey("fruit.id"))
+    name: Mapped[str]
+
+
+class _Sticker(_ForeignKeyBase):
+    __tablename__ = "sticker"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fruit_id: Mapped[int] = mapped_column(ForeignKey("fruit.id"))
+    fruit: Mapped[_Fruit] = relationship(_Fruit, back_populates="stickers")
+
+
+class _Badge(_ForeignKeyBase):
+    __tablename__ = "badge"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fruit_id: Mapped[int] = mapped_column(ForeignKey("fruit.id"))
+    fruit: Mapped[_Fruit] = relationship(_Fruit, viewonly=True)
+
+
+class _Tag(_ForeignKeyBase):
+    __tablename__ = "tag"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    fruit_id: Mapped[int] = mapped_column(ForeignKey("fruit.id"))
+    fruits: Mapped[list[_Fruit]] = relationship(_Fruit, secondary=_tag_fruit)
+
+
+def _input_field_names(decorator: str, model: type[DeclarativeBase], **kwargs: Any) -> set[str]:
+    strawchemy = Strawchemy("postgresql")
+
+    @getattr(strawchemy, decorator)(model, **kwargs)
+    class ModelInput: ...
+
+    return {field.name for field in get_object_definition(ModelInput, strict=True).fields}
+
+
+@pytest.mark.parametrize("decorator", _MUTATION_INPUT_DECORATORS)
+@pytest.mark.parametrize(
+    ("model", "kwargs"),
+    [
+        pytest.param(_FruitLabel, {"include": "all"}, id="no-relationship"),
+        pytest.param(_Tag, {"include": "all"}, id="many-to-many-only"),
+        pytest.param(_Sticker, {"include": "all", "exclude": ["fruit"]}, id="relationship-excluded"),
+        pytest.param(_Sticker, {"include": ["id", "fruit_id"]}, id="relationship-not-included"),
+    ],
+)
+def test_inputs_keep_foreign_key_no_exposed_relationship_sets(
+    decorator: str, model: type[DeclarativeBase], kwargs: dict[str, Any]
+) -> None:
+    """Test that a foreign key column is part of mutation inputs when no relationship they expose sets it."""
+    assert "fruit_id" in _input_field_names(decorator, model, **kwargs)
+
+
+@pytest.mark.parametrize("decorator", _MUTATION_INPUT_DECORATORS)
+@pytest.mark.parametrize("model", [_Sticker, _Badge])
+def test_inputs_exclude_foreign_key_set_by_exposed_relationship(decorator: str, model: type[DeclarativeBase]) -> None:
+    """Test that a foreign key column is left out of mutation inputs exposing the relationship setting it."""
+    fields = _input_field_names(decorator, model, include="all")
+    assert "fruit_id" not in fields
+    assert "fruit" in fields
+
+
+def test_nested_create_input_excludes_foreign_key_set_by_parent_relationship() -> None:
+    """Test that nested create inputs leave out the foreign key set by the parent relationship."""
+    strawchemy = Strawchemy("postgresql")
+
+    @strawchemy.type(_Fruit, include="all")
+    class FruitType: ...
+
+    @strawchemy.create_input(_Fruit, include="all")
+    class FruitCreate: ...
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    @strawberry.type
+    class Mutation:
+        create_fruit: FruitType = strawchemy.create(FruitCreate)
+
+    schema = strawberry.Schema(query=Query, mutation=Mutation)
+    for nested_input in ("_Fruit_FruitLabelInput", "_Fruit_StickerInput"):
+        type_definition = schema.get_type_by_name(nested_input)
+        assert isinstance(type_definition, StrawberryObjectDefinition)
+        assert "fruit_id" not in {field.name for field in type_definition.fields}
 
 
 @pytest.mark.parametrize(("color_model", "fruit_model"), [(Color, Fruit), (ColorDataclass, FruitDataclass)])
