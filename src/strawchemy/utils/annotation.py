@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import ast
 import inspect
 import sys
 import typing
-from typing import Any, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, ClassVar, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
 
 from strawchemy.typing import UNION_TYPES
 
@@ -11,6 +12,20 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping
 
 T = TypeVar("T", bound="Any")
+
+
+def _is_classvar_expression(source: str) -> bool:
+    try:
+        node = ast.parse(source.strip(), mode="eval").body
+    except SyntaxError:
+        return False
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):  # quoted under postponed annotations
+        return _is_classvar_expression(node.value)
+    if isinstance(node, ast.Subscript):
+        node = node.value
+    return (isinstance(node, ast.Name) and node.id == "ClassVar") or (
+        isinstance(node, ast.Attribute) and node.attr == "ClassVar"
+    )
 
 
 def non_optional_type_hint(type_hint: Any) -> Any:
@@ -53,6 +68,18 @@ def is_type_hint_optional(type_hint: Any) -> bool:
 def get_annotations(obj: Any) -> dict[str, Any]:
     """Get the annotations of the given object."""
     return inspect.get_annotations(obj)
+
+
+def is_classvar(annotation: object) -> bool:
+    """Whether `annotation` is a `ClassVar`, including an unevaluated string annotation."""
+    if isinstance(annotation, str):
+        return _is_classvar_expression(annotation)
+    return annotation is ClassVar or get_origin(annotation) is ClassVar
+
+
+def without_classvars(annotations: Mapping[str, Any]) -> dict[str, Any]:
+    """Drop `ClassVar` entries from an annotations mapping."""
+    return {name: annotation for name, annotation in annotations.items() if not is_classvar(annotation)}
 
 
 def get_origin_or_self(annotation: Any) -> Any:

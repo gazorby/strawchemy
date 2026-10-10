@@ -40,7 +40,7 @@ from strawchemy.dto.types import (
 )
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import DTOError, EmptyDTOError
-from strawchemy.utils.annotation import is_type_hint_optional, non_optional_type_hint
+from strawchemy.utils.annotation import is_type_hint_optional, non_optional_type_hint, without_classvars
 from strawchemy.utils.graph import Node
 
 if TYPE_CHECKING:
@@ -593,7 +593,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if base:
             with suppress(NameError):
                 base.__annotations__ = self.inspector.get_type_hints(base)
-                annotations = base.__annotations__ | dto_config.annotation_overrides
+                annotations = without_classvars(base.__annotations__) | dto_config.annotation_overrides
 
         for model_field_name, field_def in self.inspector.field_definitions(model, dto_config):
             has_override = model_field_name in annotations

@@ -16,7 +16,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_annotations, without_classvars
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -73,7 +73,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
         fields: dict[str, tuple[Any, FieldInfo]] = {}
-        base_annotations = get_annotations(base) if base else {}
+        base_annotations = without_classvars(get_annotations(base)) if base else {}
 
         for field_def in field_definitions:
             field_type = field_def.type_
