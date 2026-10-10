@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, ForwardRef, NewType, TypeVar, cast, overl
 import strawberry
 from strawberry import LazyType
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.types import get_object_definition, has_object_definition
+from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 from strawberry.types.union import StrawberryUnion
@@ -444,9 +444,8 @@ class StrawberryRegistry:
             default_name=default_name,
         )
         self._check_conflicts(type_info)
-        if has_object_definition(dto):
-            # ``TypeGuard`` replaces the type instead of intersecting it, dropping the DTO type var.
-            return cast("type[StrawchemyDTOT]", dto)
+        if "__strawberry_definition__" in vars(dto):
+            return dto
         if existing := self._get(type_info):
             return existing
 
@@ -461,6 +460,9 @@ class StrawberryRegistry:
                 directives=directives,
             ),
         )
+        definition = get_object_definition(strawberry_type, strict=True)
+        # The user class inheriting an interface exposes its definition too, so strawberry lists the interface twice.
+        definition.interfaces = list({id(interface): interface for interface in definition.interfaces}.values())
         self._register(type_info, strawberry_type)
         return strawberry_type
 
