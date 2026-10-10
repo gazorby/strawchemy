@@ -556,6 +556,27 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             column.foreign_keys for column in model_field.property.columns
         )
 
+    def foreign_key_relationships(self, model_field: QueryableAttribute[Any]) -> list[QueryableAttribute[Any]]:
+        """Many-to-one relationships whose local columns include the ``model_field`` column."""
+        columns = set(model_field.property.columns)
+        return [
+            relationship.class_attribute
+            for relationship in model_field.parent.mapper.relationships
+            if relationship.direction is RelationshipDirection.MANYTOONE and columns & relationship.local_columns
+        ]
+
+    def foreign_key_set_by_parent(
+        self, model_field: QueryableAttribute[Any], node: Node[Relation[DeclarativeBase, Any], None]
+    ) -> bool:
+        """Whether a one-to-many relationship of the parent node model targets the ``model_field`` column."""
+        if node.parent is None:
+            return False
+        columns = set(model_field.property.columns)
+        return any(
+            relationship.direction is RelationshipDirection.ONETOMANY and columns & relationship.remote_side
+            for relationship in node.parent.value.model.__mapper__.relationships
+        )
+
     @override
     def is_primary_key(self, model_field: QueryableAttribute[Any]) -> bool:
         return self._is_column(model_field.property) and any(

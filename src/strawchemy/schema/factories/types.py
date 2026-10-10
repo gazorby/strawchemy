@@ -5,7 +5,7 @@ import warnings
 from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
-from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
+from sqlalchemy.orm import MANYTOONE, DeclarativeBase, QueryableAttribute, RelationshipProperty
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types.arguments import StrawberryArgument
 from strawberry.types.field import StrawberryField
@@ -649,6 +649,36 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             description="Conflict fields enum",
         )
 
+    def _foreign_key_set_by_relation(
+        self,
+        field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        has_override: bool,
+    ) -> bool:
+        # An overridden primary key is one the input identifies rows by, as update-by-ids inputs do.
+        if not self.inspector.is_foreign_key(field.model_field) or (
+            has_override and self.inspector.is_primary_key(field.model_field)
+        ):
+            return False
+        return self.inspector.foreign_key_set_by_parent(field.model_field, node) or any(
+            not super(MutationInputFactory, self).should_exclude_field(
+                self.inspector.field_definition(relationship, dto_config),
+                dto_config,
+                node,
+                relationship.key in dto_config.annotation_overrides,
+            )
+            for relationship in self.inspector.foreign_key_relationships(field.model_field)
+        )
+
+    def _relation_sets_primary_key(self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]]) -> bool:
+        prop = field.model_field.property
+        return (
+            isinstance(prop, RelationshipProperty)
+            and prop.direction is MANYTOONE
+            and any(column.primary_key for column in prop.local_columns)
+        )
+
     def _description(self, mode: GraphQLPurpose) -> str:
         if mode == "create_input":
             return "Create input"
@@ -697,7 +727,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     ) -> bool:
         return (
             super().should_exclude_field(field, dto_config, node, has_override)
-            or self.inspector.is_foreign_key(field.model_field)
+            or self._foreign_key_set_by_relation(field, dto_config, node, has_override)
             or self.inspector.relation_cycle(field, node)
         )
 
@@ -764,6 +794,9 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             aggregations=aggregations,
             **factory_kwargs,
         ):
+            if mode == "update_by_pk_input" and node.is_root and self._relation_sets_primary_key(field):
+                # Writing the key through a relation would make the update match another row.
+                continue
             if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
