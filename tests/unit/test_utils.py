@@ -63,6 +63,10 @@ def test_inner_types(annotation: object, expected: tuple[object, ...]) -> None:
         (list[int], False),
         ("list[ClassVar[int]]", False),
         ("ClassVariable", False),
+        ("'ClassVar[int]'", True),
+        ("\"'ClassVar[int]'\"", True),
+        ("'list[int]'", False),
+        ("ClassVar[", False),
     ],
 )
 def test_is_classvar(annotation: object, expected: bool) -> None:

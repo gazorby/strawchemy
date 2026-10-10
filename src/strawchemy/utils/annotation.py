@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import ast
 import inspect
-import re
 import sys
 import typing
 from typing import Any, ClassVar, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
@@ -13,7 +13,19 @@ if typing.TYPE_CHECKING:
 
 T = TypeVar("T", bound="Any")
 
-_CLASSVAR_STRING_RE = re.compile(r"^\s*(?:\w+\s*\.\s*)?ClassVar\b")
+
+def _is_classvar_expression(source: str) -> bool:
+    try:
+        node = ast.parse(source.strip(), mode="eval").body
+    except SyntaxError:
+        return False
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):  # quoted under postponed annotations
+        return _is_classvar_expression(node.value)
+    if isinstance(node, ast.Subscript):
+        node = node.value
+    return (isinstance(node, ast.Name) and node.id == "ClassVar") or (
+        isinstance(node, ast.Attribute) and node.attr == "ClassVar"
+    )
 
 
 def non_optional_type_hint(type_hint: Any) -> Any:
@@ -61,7 +73,7 @@ def get_annotations(obj: Any) -> dict[str, Any]:
 def is_classvar(annotation: object) -> bool:
     """Whether `annotation` is a `ClassVar`, including an unevaluated string annotation."""
     if isinstance(annotation, str):
-        return _CLASSVAR_STRING_RE.match(annotation) is not None
+        return _is_classvar_expression(annotation)
     return annotation is ClassVar or get_origin(annotation) is ClassVar
 
 

@@ -26,7 +26,7 @@ class _KindMixin:
     kind: ClassVar[str] = "color"
 
 
-def _graphql_field_names(type_: type[Any]) -> set[str]:
+def graphql_field_names(type_: type[Any]) -> set[str]:
     return {field.python_name for field in get_object_definition(type_, strict=True).fields}
 
 
@@ -39,7 +39,7 @@ def test_classvar_with_default(strawchemy: Strawchemy, decorator: Decorator) -> 
         kind: ClassVar[str] = "color"
 
     assert ColorType.kind == "color"
-    assert "kind" not in _graphql_field_names(ColorType)
+    assert "kind" not in graphql_field_names(ColorType)
 
 
 @pytest.mark.parametrize("decorator", DECORATORS, ids=DECORATOR_IDS)
@@ -50,7 +50,7 @@ def test_classvar_on_mixin(strawchemy: Strawchemy, decorator: Decorator) -> None
     class ColorType(_KindMixin): ...
 
     assert ColorType.kind == "color"
-    assert "kind" not in _graphql_field_names(ColorType)
+    assert "kind" not in graphql_field_names(ColorType)
 
 
 @pytest.mark.parametrize("decorator", DECORATORS, ids=DECORATOR_IDS)
@@ -61,7 +61,7 @@ def test_classvar_without_default(strawchemy: Strawchemy, decorator: Decorator) 
     class ColorType:
         kind: ClassVar[str]
 
-    assert "kind" not in _graphql_field_names(ColorType)
+    assert "kind" not in graphql_field_names(ColorType)
 
 
 @pytest.mark.parametrize("decorator", DECORATORS, ids=DECORATOR_IDS)
@@ -73,7 +73,7 @@ def test_string_classvar(strawchemy: Strawchemy, decorator: Decorator) -> None:
         kind: "ClassVar[str]" = "color"
 
     assert ColorType.kind == "color"
-    assert "kind" not in _graphql_field_names(ColorType)
+    assert "kind" not in graphql_field_names(ColorType)
 
 
 @pytest.mark.parametrize("decorator", DECORATORS[:4], ids=DECORATOR_IDS[:4])
@@ -85,7 +85,7 @@ def test_unresolvable_string_classvar(strawchemy: Strawchemy, decorator: Decorat
         kind: "ClassVar[Undefined]" = "color"  # noqa: F821  # ty: ignore[unresolved-reference]  # must not resolve
 
     assert ColorType.kind == "color"
-    assert "kind" not in _graphql_field_names(ColorType)
+    assert "kind" not in graphql_field_names(ColorType)
 
 
 def test_classvar_shadowing_model_field_is_not_a_type_override(strawchemy: Strawchemy) -> None:
