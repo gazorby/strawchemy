@@ -257,7 +257,9 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
     ) -> dict[str, Any]:
         assert relationship.local_remote_pairs
         return {
-            remote.key: getattr(model, local.key) if local.table is model.__table__ else getattr(parent, local.key)
+            remote.key: getattr(model, local.key)
+            if local.table is inspect(model).mapper.local_table
+            else getattr(parent, local.key)
             for local, remote in relationship.local_remote_pairs
             if local.key and remote.key
         }
@@ -300,7 +302,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                         continue
                     if prop.secondary is None:
                         params.delete[relation.related][remote.key].append(getattr(parent, local.key))
-                    elif local.table is not relation.related.__table__:
+                    elif local.table is not inspect(relation.related).local_table:
                         params.delete_m2m[cast("Table", prop.secondary)][remote.key].append(getattr(parent, local.key))
             for relation_model in relation.set or []:
                 values = self._update_values(relation_model, parent, prop)

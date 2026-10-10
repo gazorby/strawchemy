@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from functools import cached_property
 from typing import TYPE_CHECKING, Any, cast
 
+from sqlalchemy import inspect
+
 from strawchemy.constants import AGGREGATIONS_KEY, NODES_KEY
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.dto.strawberry import GraphQLFieldDefinition, QueryNode
@@ -103,8 +105,9 @@ class QueryRequest:
             tree = tree.find_child(lambda child: child.value.name == NODES_KEY)
         if tree is None:
             tree = QueryNode.root_node(self.model)
-            inspector = SQLAlchemyInspector([self.model.registry])
-            for pk in SQLAlchemyInspector.pk_attributes(self.model.__mapper__):
+            mapper = inspect(self.model)
+            inspector = SQLAlchemyInspector([mapper.registry])
+            for pk in SQLAlchemyInspector.pk_attributes(mapper):
                 tree.insert_child(
                     GraphQLFieldDefinition.from_field(inspector.field_definition(pk, DTOConfig(Purpose.READ)))
                 )
