@@ -7,6 +7,7 @@ import typing
 import warnings
 from collections import defaultdict
 from contextlib import suppress
+from copy import copy
 from dataclasses import dataclass, field
 from types import new_class
 from typing import (
@@ -40,7 +41,7 @@ from strawchemy.dto.types import (
 )
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import DTOError, EmptyDTOError
-from strawchemy.utils.annotation import is_type_hint_optional, non_optional_type_hint
+from strawchemy.utils.annotation import get_annotations, inner_types, is_type_hint_optional, non_optional_type_hint
 from strawchemy.utils.graph import Node
 
 if TYPE_CHECKING:
@@ -564,6 +565,47 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             field_def.related_dto = dto
         return dto
 
+    def _finalize_base(self, base: type[Any]) -> None:
+        """Adjust ``base`` once the fields of the DTO built on it are known."""
+
+    def _build_from_cached(
+        self,
+        cached: type[DTOBaseT],
+        name: str,
+        base: type[Any],
+        dto_config: DTOConfig,
+        *,
+        tags: set[str] | None = None,
+        backend_kwargs: dict[str, Any] | None = None,
+    ) -> type[DTOBaseT]:
+        """Build a DTO on ``base`` from the fields of ``cached``, leaving its relations untouched."""
+        # Forward refs are taken as `cached` resolved them: the names they point to may have been rebound since.
+        resolved_annotations = get_annotations(cached)
+        field_definitions: dict[str, DTOFieldDefinition[ModelT, ModelFieldT]] = {}
+        for field_name, cached_field_def in cached.__dto_field_definitions__.items():
+            field_def = cached_field_def
+            if field_name in resolved_annotations and any(
+                isinstance(inner, ForwardRef) for inner in inner_types(cached_field_def.type_)
+            ):
+                field_def = copy(cached_field_def)
+                field_def.type_ = resolved_annotations[field_name]
+            field_definitions[field_name] = field_def
+        self._finalize_base(base)
+        dto = self.backend.build(
+            name=name,
+            model=cached.__dto_model__,
+            field_definitions=field_definitions.values(),
+            base=base,
+            dto_config=dto_config,
+            **(backend_kwargs or {}),
+        )
+        dto.__dto_field_definitions__ = field_definitions
+        dto.__dto_config__ = dto_config
+        dto.__dto_model__ = cached.__dto_model__
+        dto.__dto_tags__ = tags or set()
+        self.backend.update_forward_refs(dto, self.type_hint_namespace())
+        return dto
+
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
@@ -649,7 +691,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
 
         if not no_cache and ((dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key))):
-            return self.backend.copy(dto, name) if node.is_root else dto
+            if not node.is_root:
+                return dto
+            if base is None:
+                return self.backend.copy(dto, name)
+            return self._build_from_cached(dto, name, base, dto_config, tags=tags, backend_kwargs=backend_kwargs)
 
         dto = self._factory(
             name,
