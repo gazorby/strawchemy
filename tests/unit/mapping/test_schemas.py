@@ -17,12 +17,20 @@ from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 
 from strawchemy import RELATIONSHIPS, SCALARS
-from strawchemy.exceptions import EmptyDTOError, QueryHookError, StrawchemyError, StrawchemyFieldError
+from strawchemy.exceptions import (
+    EmptyDTOError,
+    QueryHookError,
+    ReadOnlyModelError,
+    StrawchemyError,
+    StrawchemyFieldError,
+)
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
 from tests.unit.models import Color, Fruit, User
+from tests.unit.schemas.join_mapped import JoinedAB, JoinOwner
+from tests.unit.schemas.join_mapped_columns import ColumnJoinOwner
 from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
@@ -32,6 +40,10 @@ if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
+JOIN_MAPPED_ERROR_TEMPLATE = (
+    "{} is mapped onto a join or a selectable, not a table: mutations and write inputs are not supported"
+)
+JOIN_MAPPED_ERROR = re.escape(JOIN_MAPPED_ERROR_TEMPLATE.format("JoinedAB"))
 
 
 def test_type_instance(strawchemy: Strawchemy) -> None:
@@ -900,3 +912,140 @@ def test_aggregation_order_by_aliased_column_no_key_error() -> None:
     schema_sdl = str(schema)
     # The aggregate order-by input type for the aliased model must appear in the schema.
     assert "AliasedItemAggregateOrderBy" in schema_sdl
+
+
+@pytest.mark.parametrize(
+    "decorator",
+    ["create_input", "pk_update_input", "filter_update_input", "upsert_update_fields", "upsert_conflict_fields"],
+)
+def test_write_input_on_join_mapped_model_fail(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that a write input on a class mapped onto a join is rejected when decorated."""
+    with pytest.raises(ReadOnlyModelError, match=JOIN_MAPPED_ERROR):
+
+        @getattr(strawchemy, decorator)(JoinedAB, include="all")
+        class JoinedABInput: ...
+
+
+@pytest.mark.extras
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+@pytest.mark.parametrize("decorator", ["create", "pk_update", "filter_update"])
+def test_pydantic_write_model_on_join_mapped_model_fail(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that a pydantic validation model on a class mapped onto a join is rejected when decorated."""
+    with pytest.raises(ReadOnlyModelError, match=JOIN_MAPPED_ERROR):
+
+        @getattr(strawchemy.pydantic, decorator)(JoinedAB, include="all")
+        class JoinedABValidation: ...
+
+
+@pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
+@pytest.mark.parametrize(
+    ("owner", "joined_name"),
+    [
+        pytest.param(JoinOwner, "JoinedAB", id="column_property"),
+        pytest.param(ColumnJoinOwner, "ColumnJoinedAB", id="plain_columns"),
+    ],
+)
+def test_write_input_with_relation_to_join_mapped_model_fail(
+    strawchemy: Strawchemy, decorator: str, owner: type[Any], joined_name: str
+) -> None:
+    """Test that a write input including a relation to a class mapped onto a join is rejected when decorated."""
+    with pytest.raises(ReadOnlyModelError, match=re.escape(JOIN_MAPPED_ERROR_TEMPLATE.format(joined_name))):
+
+        @getattr(strawchemy, decorator)(owner, include="all")
+        class OwnerInput: ...
+
+
+@pytest.mark.extras
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_write_model_with_relation_to_join_mapped_model_fail(strawchemy: Strawchemy) -> None:
+    """Test that a pydantic validation model including a relation to a class mapped onto a join is rejected."""
+    with pytest.raises(ReadOnlyModelError, match=re.escape(JOIN_MAPPED_ERROR_TEMPLATE.format("ColumnJoinedAB"))):
+
+        @strawchemy.pydantic.create(ColumnJoinOwner, include="all")
+        class OwnerValidation: ...
+
+
+@pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
+def test_write_input_excluding_relation_to_join_mapped_model_accepted(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that a write input leaving out its relation to a class mapped onto a join still builds."""
+
+    @getattr(strawchemy, decorator)(ColumnJoinOwner, include="all", exclude=["items"])
+    class OwnerInput: ...
+
+    assert {field.name for field in get_object_definition(OwnerInput, strict=True).fields} == {"id"}
+
+
+@pytest.mark.parametrize("kind", ["create", "update_by_ids", "update", "upsert", "delete_by_filter", "delete"])
+def test_mutation_on_join_mapped_model_fail(strawchemy: Strawchemy, kind: str) -> None:
+    """Test that a mutation returning a class mapped onto a join is rejected when its type is resolved."""
+
+    @strawchemy.type(JoinedAB, include="all")
+    class JoinedABType: ...
+
+    @strawchemy.filter(JoinedAB, include="all")
+    class JoinedABFilter: ...
+
+    @strawchemy.create_input(Fruit, include="all")
+    class FruitCreate: ...
+
+    @strawchemy.pk_update_input(Fruit, include="all")
+    class FruitUpdate: ...
+
+    @strawchemy.filter_update_input(Fruit, include="all")
+    class FruitPartial: ...
+
+    @strawchemy.upsert_update_fields(Fruit, include="all")
+    class FruitUpdateFields: ...
+
+    @strawchemy.upsert_conflict_fields(Fruit, include="all")
+    class FruitConflictFields: ...
+
+    fields = {
+        "create": lambda: strawchemy.create(FruitCreate),
+        "update_by_ids": lambda: strawchemy.update_by_ids(FruitUpdate),
+        "update": lambda: strawchemy.update(FruitPartial, JoinedABFilter),
+        "upsert": lambda: strawchemy.upsert(FruitCreate, FruitUpdateFields, FruitConflictFields),
+        "delete_by_filter": lambda: strawchemy.delete(JoinedABFilter),
+        "delete": strawchemy.delete,
+    }
+
+    with pytest.raises(ReadOnlyModelError, match=JOIN_MAPPED_ERROR):
+
+        @strawberry.type
+        class Mutation:
+            mutation: list[JoinedABType] = fields[kind]()
+
+
+def test_mutation_with_resolver_on_join_mapped_model_accepted(strawchemy: Strawchemy) -> None:
+    """Test that a mutation with a resolver can return a class mapped onto a join."""
+
+    @strawchemy.type(JoinedAB, include="all")
+    class JoinedABType: ...
+
+    def resolve_delete() -> list[JoinedABType]:
+        return []
+
+    @strawberry.type
+    class Mutation:
+        delete_joined: list[JoinedABType] = strawchemy.delete(resolver=resolve_delete)
+
+    assert "deleteJoined" in str(strawberry.Schema(query=DefaultQuery, mutation=Mutation))
+
+
+def test_query_on_join_mapped_model_accepted(strawchemy: Strawchemy) -> None:
+    """Test that read types, filters and query fields still build on a class mapped onto a join."""
+
+    @strawchemy.type(JoinedAB, include="all")
+    class JoinedABType: ...
+
+    @strawchemy.filter(JoinedAB, include="all")
+    class JoinedABFilter: ...
+
+    @strawchemy.order(JoinedAB, include="all")
+    class JoinedABOrder: ...
+
+    @strawberry.type
+    class Query:
+        joined: list[JoinedABType] = strawchemy.field(filter_input=JoinedABFilter, order_by_input=JoinedABOrder)
+
+    assert "joined(" in str(strawberry.Schema(query=Query))

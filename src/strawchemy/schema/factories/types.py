@@ -55,7 +55,7 @@ if TYPE_CHECKING:
     from strawchemy.dto.base import DTOBackend, DTOBase, Relation
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
     from strawchemy.repository.typing import DeclarativeT
-    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs, MakeInputKwargs
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.utils.graph import Node
 
@@ -702,6 +702,22 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         )
 
     @override
+    def _resolve_relation_type(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        dto_config: DTOConfig,
+        node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
+        **factory_kwargs: Any,
+    ) -> Any:
+        """Resolve the nested write input of a relation.
+
+        Raises:
+            ReadOnlyModelError: If the related model maps a join or a selectable.
+        """
+        self.inspector.check_writable(self.inspector.relation_model(field.model_field))
+        return super()._resolve_relation_type(field, dto_config, node, **factory_kwargs)
+
+    @override
     def _resolve_type(
         self,
         field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
@@ -767,6 +783,24 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)
             yield field
+
+    @override
+    def make_input(
+        self,
+        model: type[DeclarativeT],
+        *,
+        mode: GraphQLPurpose,
+        dto_config: DTOConfig,
+        name: str | None = None,
+        **kwargs: Unpack[MakeInputKwargs],
+    ) -> type[MappedGraphQLDTOT]:
+        """Build the root write input of ``model``.
+
+        Raises:
+            ReadOnlyModelError: If ``model`` maps a join or a selectable.
+        """
+        self.inspector.check_writable(model)
+        return super().make_input(model, mode=mode, dto_config=dto_config, name=name, **kwargs)
 
     @override
     def factory(

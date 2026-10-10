@@ -49,7 +49,7 @@ from strawchemy.dto.base import TYPING_NS, DTOFieldDefinition, Relation
 from strawchemy.dto.constants import DTO_INFO_KEY
 from strawchemy.dto.inspectors import ModelInspector
 from strawchemy.dto.types import DTOConfig, DTOFieldConfig, DTOMissing, DTOUnset, Purpose
-from strawchemy.exceptions import ModelInspectorError
+from strawchemy.exceptions import ModelInspectorError, ReadOnlyModelError
 from strawchemy.schema.filters import (
     ArrayComparison,
     DateComparison,
@@ -378,6 +378,20 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         """Returns the name of the table ``model`` maps, or of ``model`` itself when it maps a join or a selectable."""
         table = inspect(model).local_table
         return table.name if isinstance(table, TableClause) else model.__name__
+
+    @classmethod
+    def check_writable(cls, model: type[Any]) -> None:
+        """Check that ``model`` maps a table, which the repository's INSERT, UPDATE and DELETE statements need.
+
+        Raises:
+            ReadOnlyModelError: If ``model`` maps a join or a selectable.
+        """
+        if not isinstance(inspect(model).local_table, TableClause):
+            msg = (
+                f"{model.__name__} is mapped onto a join or a selectable, not a table: "
+                "mutations and write inputs are not supported"
+            )
+            raise ReadOnlyModelError(msg)
 
     @classmethod
     def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
