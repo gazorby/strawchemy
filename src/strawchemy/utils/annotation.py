@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import inspect
+import re
 import sys
 import typing
-from typing import Any, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, ClassVar, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
 
 from strawchemy.typing import UNION_TYPES
 
@@ -11,6 +12,8 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping
 
 T = TypeVar("T", bound="Any")
+
+_CLASSVAR_STRING_RE = re.compile(r"^\s*(?:\w+\s*\.\s*)?ClassVar\b")
 
 
 def non_optional_type_hint(type_hint: Any) -> Any:
@@ -53,6 +56,18 @@ def is_type_hint_optional(type_hint: Any) -> bool:
 def get_annotations(obj: Any) -> dict[str, Any]:
     """Get the annotations of the given object."""
     return inspect.get_annotations(obj)
+
+
+def is_classvar(annotation: object) -> bool:
+    """Whether `annotation` is a `ClassVar`, including an unevaluated string annotation."""
+    if isinstance(annotation, str):
+        return _CLASSVAR_STRING_RE.match(annotation) is not None
+    return annotation is ClassVar or get_origin(annotation) is ClassVar
+
+
+def without_classvars(annotations: Mapping[str, Any]) -> dict[str, Any]:
+    """Drop `ClassVar` entries from an annotations mapping."""
+    return {name: annotation for name, annotation in annotations.items() if not is_classvar(annotation)}
 
 
 def get_origin_or_self(annotation: Any) -> Any:

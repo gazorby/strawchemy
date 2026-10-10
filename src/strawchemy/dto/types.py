@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
 
 from typing_extensions import Self, TypeIs, override
 
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_annotations, without_classvars
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -404,6 +404,7 @@ class DTOConfig:
             base_annotations = get_type_hints(base, include_extras=True)
         except NameError:
             base_annotations = get_annotations(base)
+        base_annotations = without_classvars(base_annotations)
         for name, annotation in base_annotations.items():
             if not include_all:
                 include.add(name)

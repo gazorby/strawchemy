@@ -12,7 +12,7 @@ from typing_extensions import override
 from strawchemy.dto import Purpose
 from strawchemy.dto.base import DTOBackend, DTOBase, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing, DTOUnset
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_annotations, without_classvars
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -124,7 +124,7 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         }
         doc = f"DTO generated to be decorated by strawberry for {model.__name__} model"
         if base:
-            base_annotations = get_annotations(base)
+            base_annotations = without_classvars(get_annotations(base))
             annotations |= base_annotations
             for member_name, value in getmembers(base):
                 if member_name.startswith("__"):
