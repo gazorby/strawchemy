@@ -472,9 +472,11 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         mapper = inspect(model)
         type_hints = self.get_type_hints(model)
         for prop in mapper.attrs:
-            mapper_attr = mapper.attrs[prop.key]
+            # Skips properties SQLAlchemy maps without instrumenting them, like `_sa_polymorphic_on`
+            if prop.key not in mapper.all_orm_descriptors:
+                continue
             type_hint = type_hints.get(prop.key, DTOMissing)
-            yield prop.key, self.field_definition(mapper_attr.class_attribute, dto_config, type_hint=type_hint)
+            yield prop.key, self.field_definition(prop.class_attribute, dto_config, type_hint=type_hint)
 
     @override
     def id_field_definitions(

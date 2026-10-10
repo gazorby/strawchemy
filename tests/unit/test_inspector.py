@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from sqlalchemy import ARRAY, JSON, ForeignKey, Integer, inspect
+from sqlalchemy import ARRAY, JSON, ForeignKey, Integer, case, inspect
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -15,9 +15,11 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.sql.type_api import TypeDecorator, TypeEngine
+from strawberry.types import get_object_definition
 
+from strawchemy import Strawchemy
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.dto.types import DTOMissing
+from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 
 
 class _Base(DeclarativeBase):
@@ -83,6 +85,20 @@ class Book(_Base):
     author: Mapped[Author] = relationship()
 
 
+class Vehicle(_Base):
+    __tablename__ = "rev_vehicle"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    wheels: Mapped[int] = mapped_column()
+    __mapper_args__ = {  # noqa: RUF012
+        "polymorphic_on": case((wheels == 2, "bike"), else_="vehicle"),
+        "polymorphic_identity": "vehicle",
+    }
+
+
+class Bike(Vehicle):
+    __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
 _Base.registry.configure()
 
 _ALL_RELATIONSHIPS = [
@@ -111,3 +127,20 @@ def test_reverse_relationships_matches_private(rel: RelationshipProperty[Any]) -
 def test_python_type(type_engine: TypeEngine[Any], expected: type[Any]) -> None:
     """Test that column types map to the same Python type on SQLAlchemy 2.0 and 2.1."""
     assert SQLAlchemyInspector._python_type(type_engine) is expected  # noqa: SLF001
+
+
+@pytest.mark.parametrize("model", [Vehicle, Bike])
+def test_field_definitions_skip_expression_discriminator(model: type[Vehicle]) -> None:
+    """Test that the hidden property SQLAlchemy maps for an expression `polymorphic_on` yields no field."""
+    names = [name for name, _ in SQLAlchemyInspector().field_definitions(model, DTOConfig(Purpose.READ))]
+    assert names == ["id", "wheels"]
+
+
+@pytest.mark.parametrize("decorator", ["type", "filter", "order"])
+@pytest.mark.parametrize("model", [Vehicle, Bike])
+def test_expression_discriminator_model_generates(strawchemy: Strawchemy, decorator: str, model: type[Vehicle]) -> None:
+    """Test that a model with an expression `polymorphic_on` can be turned into a type and inputs."""
+    generated = getattr(strawchemy, decorator)(model, include="all")(type(f"{model.__name__}{decorator}", (), {}))
+    names = {field.python_name for field in get_object_definition(generated, strict=True).fields}
+    assert {"id", "wheels"} <= names
+    assert "_sa_polymorphic_on" not in names
