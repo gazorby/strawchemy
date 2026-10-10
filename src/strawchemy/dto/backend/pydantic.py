@@ -94,7 +94,9 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
             fields[f_name] = (field_type, field_info)
 
         module = __name__
-        if model_module := getmodule(self.dto_base):
+        if base:
+            module = base.__module__
+        elif model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
         dto = create_model(  # ty: ignore[no-matching-overload]  # pydantic create_model overloads don't cover dynamic **fields

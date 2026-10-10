@@ -112,7 +112,9 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
             fields.append(self._construct_field_info(field))
 
         module = __name__
-        if model_module := getmodule(self.dto_base):
+        if base:
+            module = base.__module__
+        elif model_module := getmodule(self.dto_base):
             module = model_module.__name__
 
         bases = (base, self.dto_base) if base else (self.dto_base,)
