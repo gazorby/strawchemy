@@ -7,10 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 import pytest
 from inline_snapshot import snapshot
-from sqlalchemy.dialects import postgresql
 from sqlalchemy.exc import SAWarning
 from sqlalchemy.sql.compiler import FROM_LINTING
 
+from tests.unit.schemas.join_mapped import schema as join_mapped_schema
 from tests.unit.schemas.optimizations import schema as optimizations_schema
 from tests.unit.schemas.secondary_table import schema as secondary_table_schema
 from tests.unit.utils import SQLA_DIALECTS, MockContext
@@ -20,18 +20,19 @@ if TYPE_CHECKING:
     from sqlalchemy import Select
 
 
-def _linted_sql(statement: Select[Any]) -> str:
-    """Compiles for postgres with the FROM linter on, so a cartesian product raises.
+def _linted_sql(statement: Select[Any], dialect_name: str = "postgresql") -> str:
+    """Compiles for ``dialect_name`` with the FROM linter on, so a cartesian product raises.
 
     Args:
         statement: The statement to compile.
+        dialect_name: A key of ``SQLA_DIALECTS``.
 
     Raises:
         SAWarning: If the compiled statement has unrelated FROM elements.
     """
     with warnings.catch_warnings():
         warnings.simplefilter("error", category=SAWarning)
-        return format_sql(str(statement.compile(dialect=postgresql.psycopg2.dialect(), linting=FROM_LINTING)))
+        return format_sql(str(statement.compile(dialect=SQLA_DIALECTS[dialect_name], linting=FROM_LINTING)))
 
 
 @pytest.mark.parametrize(
@@ -199,3 +200,127 @@ def test_relation_order_by_exposes_nested_sort_keys(dialect_name: str, captured_
     assert not result.errors
     compiled = str(captured_statements[0].compile(dialect=SQLA_DIALECTS[dialect_name]))
     assert format_sql(compiled).splitlines() == RELATION_ORDER_BY_SQL[dialect_name]
+
+
+@pytest.mark.inline_snapshot
+def test_join_mapped_relation_reads_every_primary_key(captured_statements: list[Select[Any]]) -> None:
+    """Test that a relation to a class mapped onto a join loads and orders by each of its primary key attributes."""
+    result = join_mapped_schema.execute_sync(
+        "{ owners { id abs { name children(limit: 1) { id } } } }", context_value=MockContext("postgresql")
+    )
+
+    assert not result.errors
+    assert _linted_sql(captured_statements[0]).splitlines() == snapshot(
+        [
+            "SELECT join_owner.id,",
+            "       anon_1.id AS id_1,",
+            "       anon_1.a_id,",
+            "       anon_1.name,",
+            "       anon_1.id_2,",
+            "       anon_2.id AS id_3",
+            "  FROM join_owner AS join_owner",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT join_a_1.name AS name,",
+            "               join_a_1.id AS id,",
+            "               join_b_1.id AS id_2,",
+            "               join_b_1.a_id AS a_id",
+            "          FROM join_a AS join_a_1",
+            "          JOIN join_b AS join_b_1",
+            "            ON join_a_1.id = join_b_1.a_id",
+            "         WHERE join_owner.id = join_a_1.owner_id",
+            "         ORDER BY join_a_1.id ASC,",
+            "                  join_b_1.id ASC",
+            "         LIMIT %(param_1)s",
+            "        OFFSET %(param_2)s",
+            "       ) AS anon_1",
+            "    ON TRUE",
+            "  LEFT OUTER JOIN LATERAL (",
+            "        SELECT join_child_1.id AS id",
+            "          FROM join_child AS join_child_1",
+            "         WHERE anon_1.id_2 = join_child_1.b_id",
+            "         ORDER BY join_child_1.id ASC",
+            "         LIMIT %(param_3)s",
+            "        OFFSET %(param_4)s",
+            "       ) AS anon_2",
+            "    ON TRUE",
+            " ORDER BY join_owner.id ASC,",
+            "          anon_1.id ASC,",
+            "          anon_1.id_2 ASC,",
+            "          anon_2.id ASC",
+        ]
+    )
+
+
+@pytest.mark.inline_snapshot
+def test_join_mapped_relation_without_lateral_ranks_by_every_primary_key(
+    captured_statements: list[Select[Any]],
+) -> None:
+    """Test that without LATERAL, a paged relation to a class mapped onto a join ranks by each primary key attribute."""
+    result = join_mapped_schema.execute_sync("{ owners { abs { name } } }", context_value=MockContext("sqlite"))
+
+    assert not result.errors
+    compiled = format_sql(str(captured_statements[0].compile(dialect=SQLA_DIALECTS["sqlite"])))
+    assert [line.strip() for line in compiled.splitlines() if "dense_rank" in line] == snapshot(
+        [
+            "dense_rank() OVER (PARTITION BY join_a_1.owner_id ORDER BY join_a_1.id ASC, join_b_1.id ASC, join_a_1.id, join_b_1.id) AS rank"
+        ]
+    )
+
+
+@pytest.mark.parametrize("dialect_name", ["sqlite", "postgresql"])
+def test_join_mapped_shared_rows_export_every_column_of_a_property(
+    dialect_name: str, captured_statements: list[Select[Any]]
+) -> None:
+    """Test that a shared read of a join-mapped relation exports each column of a property, joining no bare table."""
+    result = join_mapped_schema.execute_sync(
+        "{ owners { a: abs(limit: 1) { name } b: abs(offset: 1) { name } } }",
+        context_value=MockContext(dialect_name),  # ty: ignore[invalid-argument-type]
+    )
+
+    assert not result.errors
+    _linted_sql(captured_statements[0], dialect_name)
+
+
+@pytest.mark.inline_snapshot
+def test_join_mapped_relation_without_lateral_exports_every_column_of_a_property(
+    captured_statements: list[Select[Any]],
+) -> None:
+    """Test that without LATERAL, a paged relation's CTE exports each column of a multi-column property."""
+    result = join_mapped_schema.execute_sync("{ owners { id abs { name } } }", context_value=MockContext("sqlite"))
+
+    assert not result.errors
+    assert _linted_sql(captured_statements[0], "sqlite").splitlines() == snapshot(
+        [
+            "WITH anon_1 AS (",
+            "        SELECT join_a_1.name AS name,",
+            "               join_a_1.id AS id,",
+            "               join_b_1.id AS id_2,",
+            "               join_b_1.a_id AS a_id,",
+            "               join_a_1.owner_id AS owner_id,",
+            "               dense_rank() OVER (PARTITION BY join_a_1.owner_id ORDER BY join_a_1.id ASC, join_b_1.id ASC, join_a_1.id, join_b_1.id) AS rank",
+            "          FROM join_a AS join_a_1",
+            "          JOIN join_b AS join_b_1",
+            "            ON join_a_1.id = join_b_1.a_id",
+            "         WHERE join_a_1.owner_id IS NOT NULL",
+            "         GROUP BY join_a_1.name,",
+            "                  join_a_1.id,",
+            "                  join_b_1.id,",
+            "                  join_b_1.a_id,",
+            "                  join_a_1.owner_id",
+            "         ORDER BY join_a_1.id ASC,",
+            "                  join_b_1.id ASC",
+            "       ) SELECT join_owner.id,",
+            "       anon_1.id AS id_1,",
+            "       anon_1.a_id,",
+            "       anon_1.name,",
+            "       anon_1.id_2",
+            "  FROM join_owner AS join_owner",
+            "  LEFT OUTER JOIN anon_1",
+            "    ON join_owner.id = anon_1.owner_id",
+            "   AND anon_1.rank > ?",
+            "   AND anon_1.rank <= ?",
+            " ORDER BY join_owner.id ASC,",
+            "          anon_1.id ASC,",
+            "          anon_1.id_2 ASC",
+        ]
+    )
