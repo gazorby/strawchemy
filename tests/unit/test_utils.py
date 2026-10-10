@@ -8,7 +8,7 @@ from sqlalchemy import JSON, Column, Dialect, Integer, MetaData, Table, TypeDeco
 from sqlalchemy.dialects import postgresql
 
 from strawchemy.exceptions import SessionNotFoundError
-from strawchemy.utils.annotation import inner_types
+from strawchemy.utils.annotation import get_type_hints_partial, inner_types
 from strawchemy.utils.postgres import as_jsonb, comparable
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -50,6 +50,23 @@ def test_session_not_found_error(info: Mock) -> None:
 )
 def test_inner_types(annotation: object, expected: tuple[object, ...]) -> None:
     assert inner_types(annotation) == expected
+
+
+def test_get_type_hints_partial_keeps_unresolvable_annotations() -> None:
+    """Test that an unresolvable annotation stays raw while the inherited and resolvable ones are evaluated."""
+
+    class Parent:
+        parent_id: int
+
+    class Child(Parent):
+        name: str | None
+        missing: list[NotDefinedYet]  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Child) == {
+        "parent_id": int,
+        "name": Optional[str],
+        "missing": "list[NotDefinedYet]",
+    }
 
 
 class _JSONBDecorator(TypeDecorator[Any]):

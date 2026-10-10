@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import sys
 import typing
-from typing import Any, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, ForwardRef, Optional, TypeVar, Union, get_args, get_origin, get_type_hints
 
 from strawchemy.typing import UNION_TYPES
 
@@ -53,6 +53,25 @@ def is_type_hint_optional(type_hint: Any) -> bool:
 def get_annotations(obj: Any) -> dict[str, Any]:
     """Get the annotations of the given object."""
     return inspect.get_annotations(obj)
+
+
+def get_type_hints_partial(
+    cls: type[Any], localns: Mapping[str, Any] | None = None, include_extras: bool = True
+) -> dict[str, Any]:
+    """Resolve the type hints of a class, keeping the unresolvable ones as their raw annotation."""
+    try:
+        return get_type_hints(cls, localns=localns, include_extras=include_extras)
+    except NameError:
+        pass
+    type_hints: dict[str, Any] = {}
+    for owner in reversed(cls.__mro__):
+        for name, annotation in get_annotations(owner).items():
+            single = type(owner.__name__, (), {"__module__": owner.__module__, "__annotations__": {name: annotation}})
+            try:
+                type_hints[name] = get_type_hints(single, localns=localns, include_extras=include_extras)[name]
+            except NameError:
+                type_hints[name] = annotation
+    return type_hints
 
 
 def get_origin_or_self(annotation: Any) -> Any:

@@ -7,11 +7,11 @@ import functools
 import warnings
 from dataclasses import InitVar, dataclass, field
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final, get_type_hints
+from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final
 
 from typing_extensions import Self, TypeIs, override
 
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_type_hints_partial
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -400,10 +400,7 @@ class DTOConfig:
         include = set(include_set.field_set)
         include_all = FieldGroup.ALL in include_set.field_set or bool(FieldSet(self.exclude))
         annotation_overrides: dict[str, Any] = self.annotation_overrides
-        try:
-            base_annotations = get_type_hints(base, include_extras=True)
-        except NameError:
-            base_annotations = get_annotations(base)
+        base_annotations = get_type_hints_partial(base)
         for name, annotation in base_annotations.items():
             if not include_all:
                 include.add(name)
