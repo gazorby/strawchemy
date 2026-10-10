@@ -22,7 +22,7 @@ from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Color, Fruit, User
+from tests.unit.models import Color, Department, Fruit, Group, Tag, User
 from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
@@ -32,6 +32,12 @@ if TYPE_CHECKING:
     from strawchemy.mapper import Strawchemy
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
+
+
+def _field_type(type_definition: StrawberryObjectDefinition, name: str) -> Any:
+    field = type_definition.get_field(name)
+    assert field is not None
+    return strawberry_contained_user_type(field.type)
 
 
 def test_type_instance(strawchemy: Strawchemy) -> None:
@@ -839,6 +845,141 @@ def test_schema_scope_override(module_name: str) -> None:
 
     assert "GroupType" not in schemas_str
     assert "GraphQLGroup" in schemas_str
+
+
+@pytest.mark.parametrize("override", [False, True])
+def test_schema_scope_does_not_leak_into_related_model_types(strawchemy: Strawchemy, override: bool) -> None:
+    """Test that types of models related to a schema-scoped type keep their own include (#421)."""
+
+    @strawchemy.type(Group, include="all", scope="schema")
+    class GroupType:
+        pass
+
+    @strawchemy.type(User, include=["name"], override=override)
+    class UserNameType:
+        pass
+
+    @strawchemy.type(Tag, include=["name"], override=override)
+    class TagNameType:
+        pass
+
+    @strawberry.type
+    class Query:
+        groups: list[GroupType] = strawchemy.field()
+        users: list[UserNameType] = strawchemy.field()
+        tags: list[TagNameType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+    user_type = schema.get_type_by_name("UserNameType")
+    tag_type = schema.get_type_by_name("TagNameType")
+
+    assert isinstance(user_type, StrawberryObjectDefinition)
+    assert isinstance(tag_type, StrawberryObjectDefinition)
+    assert [field.name for field in user_type.fields] == ["name"]
+    assert [field.name for field in tag_type.fields] == ["name"]
+
+
+def test_schema_scope_does_not_replace_references_to_related_model_types(strawchemy: Strawchemy) -> None:
+    """Test that a field typed with a declared type of a model related to a schema-scoped type keeps that type."""
+
+    @strawchemy.type(Group, include="all", scope="schema")
+    class GroupType:
+        pass
+
+    @strawchemy.type(User, include=["name"])
+    class UserNameType:
+        pass
+
+    @strawchemy.type(Color, include=["name"])
+    class ColorNode:
+        @strawberry.field
+        def owner(self) -> UserNameType:
+            raise NotImplementedError
+
+    @strawberry.type
+    class Query:
+        groups: list[GroupType] = strawchemy.field()
+        colors: list[ColorNode] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+    color_type = schema.get_type_by_name("ColorNode")
+
+    assert isinstance(color_type, StrawberryObjectDefinition)
+    assert _field_type(color_type, "owner") is UserNameType
+
+
+def test_schema_scope_input_does_not_leak_into_related_model_inputs(strawchemy: Strawchemy) -> None:
+    """Test that a nested input built under a schema-scoped input is not reused by other root inputs."""
+
+    @strawchemy.create_input(Group, include="all", scope="schema")
+    class GroupCreate:
+        pass
+
+    @strawchemy.create_input(Department, include="all")
+    class DepartmentCreate:
+        pass
+
+    @strawchemy.type(Group, include="all")
+    class GroupNode:
+        pass
+
+    @strawberry.type
+    class Mutation:
+        create_department: GroupNode = strawchemy.create(DepartmentCreate)
+
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    department_input = schema.get_type_by_name("DepartmentCreate")
+    assert isinstance(department_input, StrawberryObjectDefinition)
+    users_input = get_object_definition(_field_type(department_input, "users"), strict=True)
+    user_input = get_object_definition(_field_type(users_input, "create"), strict=True)
+
+    assert user_input.name == "DepartmentUserInput"
+    assert user_input.get_field("group") is not None
+
+
+def test_schema_scope_type_is_not_shared_with_include_all_root(strawchemy: Strawchemy) -> None:
+    """Test that an include-all root declared after a narrower schema-scoped type of the same model gets all fields."""
+
+    @strawchemy.type(Tag, include=[SCALARS], scope="schema")
+    class TagType:
+        pass
+
+    @strawchemy.type(Tag, include="all")
+    class TagAllType:
+        pass
+
+    assert "groups" not in DTOInspect(TagType).annotations()
+    assert "groups" in DTOInspect(TagAllType).annotations()
+
+
+def test_schema_scope_type_is_reused_by_relations(strawchemy: Strawchemy) -> None:
+    """Test that a relation of a type declared after a schema-scoped type resolves to the scoped type."""
+
+    @strawchemy.type(Tag, include=[SCALARS], scope="schema")
+    class TagType:
+        pass
+
+    @strawchemy.type(User, include=["name", "tag"])
+    class UserNameType:
+        pass
+
+    @strawchemy.type(Tag, include=["name"])
+    class TagNameType:
+        pass
+
+    @strawberry.type
+    class Query:
+        users: list[UserNameType] = strawchemy.field()
+        tags: list[TagNameType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+    user_type = schema.get_type_by_name("UserNameType")
+    tag_type = schema.get_type_by_name("TagNameType")
+
+    assert isinstance(user_type, StrawberryObjectDefinition)
+    assert isinstance(tag_type, StrawberryObjectDefinition)
+    assert _field_type(user_type, "tag") is TagType
+    assert [field.name for field in tag_type.fields] == ["name"]
 
 
 def test_json_column_class_body_resolver_executes() -> None:

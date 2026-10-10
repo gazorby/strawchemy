@@ -369,7 +369,7 @@ class StrawberryRegistry:
             order=order if isinstance(order, type) else FieldSet(order),
             distinct_on=distinct_on if isinstance(distinct_on, type) else FieldSet(distinct_on),
             paginate=FieldSet(paginate),
-            scope=dto_config.scope,
+            scope=dto_config.scope if current_node is None else None,
             model=model,
             exclude_from_scope=dto_config.exclude_from_scope,
         )
