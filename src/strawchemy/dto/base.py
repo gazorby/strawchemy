@@ -565,6 +565,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             field_def.related_dto = dto
         return dto
 
+    def _finalize_base(self, base: type[Any]) -> None:
+        """Adjust ``base`` once the fields of the DTO built on it are known."""
+
     def _build_from_cached(
         self,
         cached: type[DTOBaseT],
@@ -587,6 +590,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
                 field_def = copy(cached_field_def)
                 field_def.type_ = resolved_annotations[field_name]
             field_definitions[field_name] = field_def
+        self._finalize_base(base)
         dto = self.backend.build(
             name=name,
             model=cached.__dto_model__,

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 from uuid import UUID  # noqa: TC003  # resolved at runtime from the relay node annotations
 
 import pytest
@@ -9,11 +9,9 @@ from strawberry import relay
 from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryList, has_object_definition
 
+from strawchemy import Strawchemy
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.unit.models import Color, Fruit, User
-
-if TYPE_CHECKING:
-    from strawchemy.mapper import Strawchemy
 
 TYPE_DECORATOR_NAMES: list[str] = ["type", "aggregate", "filter", "aggregate_filter", "order"]
 
@@ -177,3 +175,67 @@ def test_identical_order_keeps_resolved_relations(strawchemy: Strawchemy) -> Non
 
     assert fruits_field is not None
     assert has_object_definition(strawberry_contained_user_type(fruits_field.type))
+
+
+class _ExtraMixin:
+    extra: int = 0
+
+
+def test_identical_type_keeps_inherited_annotations(strawchemy: Strawchemy) -> None:
+    """Test that a type sharing the config of an earlier one exposes the annotations its bases declare."""
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitType: ...
+
+    @strawchemy.type(Fruit, include="all")
+    class ExtraFruitType(_ExtraMixin): ...
+
+    assert get_object_definition(FruitType, strict=True).get_field("extra") is None
+    assert get_object_definition(ExtraFruitType, strict=True).get_field("extra") is not None
+
+
+def test_identical_filters_keep_declared_filter_fields(strawchemy: Strawchemy) -> None:
+    """Test that a filter sharing the config of an earlier one keeps the comparison type of its declared fields."""
+
+    @strawchemy.filter(Fruit, include="all")
+    class FruitFilter:
+        name: str = strawchemy.filter_field(ops=["eq"])
+
+    @strawchemy.filter(Fruit, include="all")
+    class OtherFruitFilter:
+        name: str = strawchemy.filter_field(ops=["eq"])
+
+    first = get_object_definition(FruitFilter, strict=True).get_field("name")
+    second = get_object_definition(OtherFruitFilter, strict=True).get_field("name")
+
+    assert first is not None
+    assert second is not None
+    assert has_object_definition(strawberry_contained_user_type(second.type))
+    assert strawberry_contained_user_type(second.type) is strawberry_contained_user_type(first.type)
+
+
+_aggregate_strawchemy = Strawchemy("postgresql")
+
+
+@_aggregate_strawchemy.aggregate_filter(Fruit, functions=["count"], name="FruitCountAggregate")
+class _FruitCountAggregate:
+    count: int = _aggregate_strawchemy.filter_field(ops=["gt"])
+
+
+def test_identical_filters_keep_declared_aggregate_filters() -> None:
+    """Test that a filter sharing the config of an earlier one keeps its declared aggregate filter."""
+
+    @_aggregate_strawchemy.filter(Color, include="all")
+    class ColorFilter:
+        fruits_aggregate: _FruitCountAggregate  # ty: ignore[invalid-type-form]
+
+    @_aggregate_strawchemy.filter(Color, include="all")
+    class OtherColorFilter:
+        fruits_aggregate: _FruitCountAggregate  # ty: ignore[invalid-type-form]
+
+    first = get_object_definition(ColorFilter, strict=True).get_field("fruits_aggregate")
+    second = get_object_definition(OtherColorFilter, strict=True).get_field("fruits_aggregate")
+
+    assert first is not None
+    assert second is not None
+    assert second.type == first.type
