@@ -321,6 +321,27 @@ def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
     assert strawberry_contained_user_type(field.type) is ColorType
 
 
+@pytest.mark.parametrize("field_name", ["extra", "extras"])
+def test_postponed_type_field_resolves_plain_type_defined_after_it(field_name: str) -> None:
+    """Test that a postponed annotation on a strawchemy type resolves a plain strawberry type defined later."""
+    from tests.unit.schemas.late_type.plain_field import ColorType, Later, Query
+
+    strawberry.Schema(query=Query)
+    field = get_object_definition(ColorType, strict=True).get_field(field_name)
+    assert field is not None
+    assert strawberry_contained_user_type(field.type) is Later
+
+
+def test_postponed_type_keeps_generated_relation_types() -> None:
+    """Test that a strawchemy type annotating a later plain type still resolves its generated relation types."""
+    from tests.unit.schemas.late_type.plain_field import ColorType, Query
+
+    strawberry.Schema(query=Query)
+    field = get_object_definition(ColorType, strict=True).get_field("fruits")
+    assert field is not None
+    assert strawberry_contained_user_type(field.type).__dto_model__ is Fruit
+
+
 def test_query_hooks_wrong_relationship_load_spec() -> None:
     with pytest.raises(
         QueryHookError, match=re.escape("Keys of mappings passed in `load` param must be relationship attributes: ")
@@ -768,6 +789,15 @@ def test_pydantic_validation(query: str, name: str, is_list: bool) -> None:
             "type": "value_error",
         }
     ]
+
+
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_postponed_field_resolves_model_defined_after_it() -> None:
+    """Test that a postponed annotation on a strawchemy pydantic model resolves a model defined later."""
+    # Not importing the names: pydantic would otherwise resolve them from this frame.
+    module = import_module("tests.unit.schemas.pydantic.late_type")
+
+    assert module.ColorCreate.model_validate({"name": "red", "extra": {"x": 1}}).model_dump()["extra"] == {"x": 1}
 
 
 @pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")

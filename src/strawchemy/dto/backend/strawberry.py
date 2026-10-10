@@ -114,6 +114,8 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         module = __name__
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
+        if base:
+            module = base.__module__
 
         bases = (base, self.dto_base) if base else (self.dto_base,)
 

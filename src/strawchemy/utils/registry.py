@@ -4,6 +4,7 @@ import dataclasses
 from collections import defaultdict
 from copy import copy
 from enum import Enum
+from functools import partial
 from typing import TYPE_CHECKING, Any, ForwardRef, NewType, TypeVar, cast, overload
 
 import strawberry
@@ -17,6 +18,7 @@ from strawberry.types.union import StrawberryUnion
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import FieldSet
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.schema.field import RegistryAnnotation
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
 
@@ -199,7 +201,11 @@ class StrawberryRegistry:
         if field.type_annotation:
             for type_ in inner_types(field.type_annotation.raw_annotation):
                 if isinstance(type_, (str, ForwardRef)):
-                    field.type_annotation.namespace = self.namespace(graphql_type)
+                    field.type_annotation = RegistryAnnotation(
+                        field.type_annotation.raw_annotation,
+                        registry_namespace_getter=partial(self.namespace, graphql_type),
+                        namespace=field.type_annotation.namespace,
+                    )
                     return type_.__forward_arg__ if isinstance(type_, ForwardRef) else type_
 
         if field_type_def := get_object_definition(inner_type):
