@@ -326,6 +326,7 @@ def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
     [
         pytest.param("late_type.relation_annotation", id="same_module"),
         pytest.param("late_type.relation_annotation_private", id="with_private_field"),
+        pytest.param("late_type.relation_annotation_class_alias", id="with_class_body_alias"),
         pytest.param("late_type_module.query", id="other_module"),
     ],
 )

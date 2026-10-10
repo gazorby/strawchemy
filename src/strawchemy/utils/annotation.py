@@ -55,6 +55,14 @@ def get_annotations(obj: Any) -> dict[str, Any]:
     return inspect.get_annotations(obj)
 
 
+def _class_namespaces(owner: type[Any], localns: Mapping[str, Any] | None) -> tuple[dict[str, Any], Mapping[str, Any]]:
+    module_ns = getattr(sys.modules.get(owner.__module__), "__dict__", {})
+    if localns is None:
+        # Same swap as `typing.get_type_hints`: module names take precedence over the class namespace.
+        return dict(vars(owner)), module_ns
+    return module_ns, localns
+
+
 def get_type_hints_partial(
     cls: type[Any], localns: Mapping[str, Any] | None = None, include_extras: bool = True
 ) -> dict[str, Any]:
@@ -65,10 +73,13 @@ def get_type_hints_partial(
         pass
     type_hints: dict[str, Any] = {}
     for owner in reversed(cls.__mro__):
+        globalns, owner_localns = _class_namespaces(owner, localns)
         for name, annotation in get_annotations(owner).items():
             single = type(owner.__name__, (), {"__module__": owner.__module__, "__annotations__": {name: annotation}})
             try:
-                type_hints[name] = get_type_hints(single, localns=localns, include_extras=include_extras)[name]
+                type_hints[name] = get_type_hints(
+                    single, globalns=globalns, localns=owner_localns, include_extras=include_extras
+                )[name]
             except NameError:
                 type_hints[name] = annotation
     return type_hints

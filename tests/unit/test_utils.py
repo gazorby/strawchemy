@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Union
 from unittest.mock import Mock
 
@@ -67,6 +69,29 @@ def test_get_type_hints_partial_keeps_unresolvable_annotations() -> None:
         "name": Optional[str],
         "missing": "list[NotDefinedYet]",
     }
+
+
+def test_get_type_hints_partial_resolves_class_body_names() -> None:
+    """Test that a name defined in the class body resolves even when a sibling annotation is unresolvable."""
+
+    class Fruit:
+        class Kind(Enum):
+            APPLE = "apple"
+
+        kind: Kind
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Fruit) == {"kind": Fruit.Kind, "missing": "NotDefinedYet"}
+
+
+def test_get_type_hints_partial_module_names_shadow_class_attributes() -> None:
+    """Test that a module name wins over a same-named class attribute when a sibling annotation is unresolvable."""
+
+    class Event:
+        date: date = date(2020, 1, 1)  # ty: ignore[invalid-type-form]  # deliberate shadowing
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Event) == {"date": date, "missing": "NotDefinedYet"}
 
 
 class _JSONBDecorator(TypeDecorator[Any]):
