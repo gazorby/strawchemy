@@ -92,7 +92,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         values: dict[str, Any],
         where: builtins.list[ColumnElement[bool]] | None = None,
         execution_options: dict[str, Any] | None = None,
-    ) -> Sequence[Row[Any]]:
+    ) -> Sequence[RowLike]:
         model_pks = [getattr(self.model, pk.key) for pk in self.model.__mapper__.primary_key if pk.key]
         if self._dialect.update_returning:
             statement = update(self.model).values(**values).returning(*model_pks)
@@ -107,7 +107,10 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         affected_rows = (await self.session.execute(affected_statement)).all()
         conn = await self.session.connection()
         await conn.execute(update_statement, execution_options=execution_options or {})
-        return affected_rows
+        # Every matched row gets the same values: its new key is the selected one with the updated key columns.
+        new_keys = {pk.key: values[pk.key] for pk in model_pks if pk.key in values}
+        AsRow = namedtuple("AsRow", [pk.key for pk in model_pks])  # noqa: PYI024
+        return [AsRow(**{**row._asdict(), **new_keys}) for row in affected_rows]
 
     async def _create_nested_to_one_relations(self, data: Input[DeclarativeT]) -> None:
         """Creates nested related objects for to-one relationships.
