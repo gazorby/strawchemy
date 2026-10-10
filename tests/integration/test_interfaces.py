@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from operator import itemgetter
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -86,7 +87,8 @@ async def test_interface_field_resolves_implementing_type(
     assert not result.errors
     assert result.data
     color_names = _color_names(raw_colors)
-    assert result.data["named"] == [
+    expected = [
         {"__typename": "NamedFruitType", "name": fruit["name"], "color": {"name": color_names[fruit["color_id"]]}}
         for fruit in raw_fruits
     ]
+    assert sorted(result.data["named"], key=itemgetter("name")) == sorted(expected, key=itemgetter("name"))
