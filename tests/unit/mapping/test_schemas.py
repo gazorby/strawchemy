@@ -181,6 +181,22 @@ def test_multiple_types_error(path: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("override_relation_filter", id="override_declared_after_auto_type"),
+        pytest.param("override_relation_filter_paginated", id="override_declared_after_auto_type_paginated"),
+        pytest.param("override_relation_filter_declared_first", id="override_declared_after_parent"),
+    ],
+)
+def test_relation_to_overridden_type_has_its_filter(path: str) -> None:
+    """Test that a relation retargeted to an override takes the filter argument the override declares."""
+    query = import_module(f"tests.unit.schemas.override.{path}").Query
+    schema = strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert re.search(r"colors\([^)]*filter: ColorFilter = null[^)]*\): \[ColorType!\]!", str(schema))
+
+
+@pytest.mark.parametrize(
     "module",
     [
         pytest.param("tests.unit.schemas.aggregations.type_mismatch", id="strawchemy_type"),

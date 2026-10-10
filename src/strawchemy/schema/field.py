@@ -211,6 +211,7 @@ class StrawchemyField(StrawberryField):
         self._order_by_factory = order_by_factory
         self._filter_factory = filter_factory
         self._distinct_on_factory = distinct_on_factory
+        self._auto_arguments: list[StrawberryArgument] | None = None
 
         if default_order_by is None:
             self._default_order_by: list[OrderByExpr] = []
@@ -666,6 +667,10 @@ class StrawchemyField(StrawberryField):
         if type_ is UNRESOLVED and current_annotation is not UNRESOLVED:
             return
         self.type_annotation = RegistryAnnotation.from_registry(type_, self.registry_namespace_getter)
+        # The registry retargets relations to overrides after their arguments may have been built
+        if self._auto_arguments is not None and self._arguments is self._auto_arguments:
+            self._arguments = None
+        self.__dict__.pop("filter", None)
 
     @property
     def description(self) -> str | None:
@@ -700,7 +705,7 @@ class StrawchemyField(StrawberryField):
         if self.base_resolver:
             return super().arguments
         if not self._arguments:
-            self._arguments = self.auto_arguments()
+            self._arguments = self._auto_arguments = self.auto_arguments()
         return self._arguments
 
     @arguments.setter
