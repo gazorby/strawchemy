@@ -7,7 +7,7 @@ from dataclasses import replace
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy import FromClause, inspect, select
-from sqlalchemy.orm import ColumnProperty, RelationshipProperty, aliased
+from sqlalchemy.orm import RelationshipProperty, aliased
 from sqlalchemy.orm.util import AliasedClass
 from sqlalchemy.sql import visitors
 from sqlalchemy.sql.elements import ColumnClause
@@ -167,9 +167,9 @@ def _entity_reads(alias: AliasedClass[Any], loaded: Sequence[str] | None, hooks:
     keys = [*keys, *(attribute.key for attribute in SQLAlchemyInspector.pk_attributes(mapper))]
     reads: list[Any] = [getattr(alias, key) for key in keys]
     adapter = ClauseAdapter(alias_insp.selectable)
-    for key in keys:
-        if isinstance(prop := mapper.attrs.get(key), ColumnProperty):
-            reads.extend(adapter.traverse(column) for column in prop.columns[1:])
+    reads.extend(
+        adapter.traverse(column) for prop in mapper.column_attrs if prop.key in keys for column in prop.columns[1:]
+    )
     for hook in hooks:
         statement, _ = hook.load_columns(select(), alias, "add")
         reads.extend(statement.selected_columns)
