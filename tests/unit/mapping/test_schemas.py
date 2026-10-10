@@ -7,10 +7,11 @@ from datetime import timedelta
 from importlib import import_module
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import pytest
 import strawberry
-from strawberry import auto
+from strawberry import auto, relay
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
@@ -867,6 +868,47 @@ def test_exclude_relationships_avoids_stub_collision(strawchemy: Strawchemy) -> 
     fruit_fields = set(DTOInspect(FruitNode).annotations())
     assert "color" not in fruit_fields
     assert {"id", "name", "sweetness", "color_id"} <= fruit_fields
+
+
+def _schema_field_type(schema: strawberry.Schema, type_name: str, field_name: str) -> object:
+    type_definition = schema.get_type_by_name(type_name)
+    assert isinstance(type_definition, StrawberryObjectDefinition)
+    field = type_definition.get_field(field_name)
+    return None if field is None else field.type
+
+
+def test_class_annotation_does_not_leak_into_related_types(strawchemy: Strawchemy) -> None:
+    """Test that a class annotation overrides its own field but not the same-named field of related types (#422)."""
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitType:
+        id: strawberry.ID
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert _schema_field_type(schema, "FruitType", "id") is strawberry.ID
+    assert _schema_field_type(schema, "ColorType", "id") is UUID
+
+
+def test_relay_node_id_annotation_does_not_leak_into_related_types(strawchemy: Strawchemy) -> None:
+    """Test that a private relay NodeID annotation leaves the same-named field of related types public (#422)."""
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitType:
+        name: relay.NodeID[str]
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert _schema_field_type(schema, "FruitType", "name") is None
+    assert _schema_field_type(schema, "ColorType", "name") is str
 
 
 def test_default_order_by_on_non_list_field_raises() -> None:

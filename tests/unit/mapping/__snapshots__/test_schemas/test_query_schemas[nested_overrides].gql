@@ -5,7 +5,7 @@ type ColorType {
 
   """Fetch objects from the FruitType collection"""
   fruits: [FruitType!]!
-  name: Int!
+  name: String!
   id: UUID!
 }
 
@@ -33,7 +33,7 @@ type DepartmentType {
 
   """Fetch objects from the UserType collection"""
   users: [UserType!]!
-  name: Int!
+  name: String
   id: UUID!
 }
 
@@ -70,7 +70,7 @@ type FruitSumFields {
 """GraphQL type"""
 type FruitType {
   color: ColorType!
-  name: Int!
+  name: String!
   colorId: UUID
   sweetness: Int!
   id: UUID!
