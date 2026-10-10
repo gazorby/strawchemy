@@ -279,6 +279,35 @@ class ColorTypeHooks:
     fruits: list[FruitTypeHooks]
 
 
+@strawchemy.type(Color, include=["id", "name"])
+class PrivateNameColorType:
+    name: strawberry.Private[str]
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
+@strawchemy.type(Fruit, include=["id", "name", "color"])
+class PrivateNameFruitType:
+    name: strawberry.Private[str]
+    color: PrivateNameColorType | None
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
+@strawchemy.type(Color, include=["id", "name", "fruits"])
+class PrivateNameColorWithFruitsType:
+    name: strawberry.Private[str]
+    fruits: list[PrivateNameFruitType]
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
 @strawchemy.type(Color, include="all")
 class ColorWithSweetFruits:
     fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook())
@@ -473,6 +502,10 @@ class AsyncQuery:
         default_order_by=Color.name.desc(), repository_type=StrawchemyAsyncRepository
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    fruits_private_name: list[PrivateNameFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_private_name: list[PrivateNameColorWithFruitsType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
@@ -682,6 +715,10 @@ class SyncQuery:
         default_order_by=Color.name.desc(), repository_type=StrawchemySyncRepository
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    fruits_private_name: list[PrivateNameFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_private_name: list[PrivateNameColorWithFruitsType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
@@ -902,6 +939,12 @@ class AsyncMutation:
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
     # Fruit - Update
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
+    create_private_name_fruit: PrivateNameFruitType = strawchemy.create(
+        FruitCreateInput, repository_type=StrawchemyAsyncRepository
+    )
+    update_private_name_fruit: PrivateNameFruitType = strawchemy.update_by_ids(
+        FruitUpdateInput, repository_type=StrawchemyAsyncRepository
+    )
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
@@ -1044,6 +1087,12 @@ class SyncMutation:
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
     # Fruit - Update
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
+    create_private_name_fruit: PrivateNameFruitType = strawchemy.create(
+        FruitCreateInput, repository_type=StrawchemySyncRepository
+    )
+    update_private_name_fruit: PrivateNameFruitType = strawchemy.update_by_ids(
+        FruitUpdateInput, repository_type=StrawchemySyncRepository
+    )
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )
