@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from datetime import date
+from enum import Enum
 from typing import TYPE_CHECKING, Any, Optional, Union
 from unittest.mock import Mock
 
@@ -8,7 +10,7 @@ from sqlalchemy import JSON, Column, Dialect, Integer, MetaData, Table, TypeDeco
 from sqlalchemy.dialects import postgresql
 
 from strawchemy.exceptions import SessionNotFoundError
-from strawchemy.utils.annotation import inner_types
+from strawchemy.utils.annotation import get_type_hints_partial, inner_types
 from strawchemy.utils.postgres import as_jsonb, comparable
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -50,6 +52,61 @@ def test_session_not_found_error(info: Mock) -> None:
 )
 def test_inner_types(annotation: object, expected: tuple[object, ...]) -> None:
     assert inner_types(annotation) == expected
+
+
+def test_get_type_hints_partial_keeps_unresolvable_annotations() -> None:
+    """Test that an unresolvable annotation stays raw while the inherited and resolvable ones are evaluated."""
+
+    class Parent:
+        parent_id: int
+
+    class Child(Parent):
+        name: str | None
+        missing: list[NotDefinedYet]  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Child) == {
+        "parent_id": int,
+        "name": Optional[str],
+        "missing": "list[NotDefinedYet]",
+    }
+
+
+def test_get_type_hints_partial_resolves_class_body_names() -> None:
+    """Test that a name defined in the class body resolves even when a sibling annotation is unresolvable."""
+
+    class Fruit:
+        class Kind(Enum):
+            APPLE = "apple"
+
+        kind: Kind
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Fruit) == {"kind": Fruit.Kind, "missing": "NotDefinedYet"}
+
+
+def test_get_type_hints_partial_module_names_shadow_class_attributes() -> None:
+    """Test that a module name wins over a same-named class attribute when a sibling annotation is unresolvable."""
+
+    class Event:
+        date: date = date(2020, 1, 1)  # ty: ignore[invalid-type-form]  # deliberate shadowing
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Event) == {"date": date, "missing": "NotDefinedYet"}
+
+
+def test_get_type_hints_partial_resolves_names_from_given_localns() -> None:
+    """Test that names from the given localns resolve even when a sibling annotation is unresolvable."""
+
+    class Later: ...
+
+    class Fruit:
+        later: OnlyInLocalns  # noqa: F821  # ty: ignore[unresolved-reference]
+        missing: NotDefinedYet  # noqa: F821  # ty: ignore[unresolved-reference]
+
+    assert get_type_hints_partial(Fruit, localns={"OnlyInLocalns": Later}) == {
+        "later": Later,
+        "missing": "NotDefinedYet",
+    }
 
 
 class _JSONBDecorator(TypeDecorator[Any]):

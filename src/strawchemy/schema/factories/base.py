@@ -19,7 +19,7 @@ import warnings
 from enum import Enum
 from functools import cached_property
 from inspect import getmembers
-from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, cast, get_type_hints
+from typing import TYPE_CHECKING, Any, ForwardRef, Literal, Optional, TypeAlias, TypeVar, cast
 
 from sqlalchemy.orm import DeclarativeBase, QueryableAttribute
 from strawberry import UNSET
@@ -48,7 +48,7 @@ from strawchemy.instance import MapperModelInstance
 from strawchemy.schema.field import StrawchemyField
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
-from strawchemy.utils.annotation import get_annotations, inner_types, try_resolve_forwardref
+from strawchemy.utils.annotation import get_annotations, get_type_hints_partial, inner_types, try_resolve_forwardref
 
 if TYPE_CHECKING:
     import builtins
@@ -164,10 +164,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
 
     def _resolve_config(self, dto_config: DTOConfig, base: type[Any]) -> DTOConfig:
         config = dto_config.with_base_annotations(base)
-        try:
-            base_annotations = get_type_hints(base, include_extras=True)
-        except NameError:
-            base_annotations = get_annotations(base)
+        base_annotations = get_type_hints_partial(base)
         base_annotations_copy = base_annotations.copy()
         for name, annotation in base_annotations.items():
             if type_has_annotation(annotation, StrawberryAuto):

@@ -112,7 +112,7 @@ def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPla
         assert join.alias is not None
         return QueryPlan(RowSet.over(join.alias), projection, level.context, join_to_parent=join)
     rendered = render_rows(rows, exported, db_features)
-    page = rendered.statement.subquery(level.request.model.__tablename__)
+    page = rendered.statement.subquery(SQLAlchemyInspector.table_name(level.request.model))
     entities = _entities_over(page, row_aliases)
     page_rows = RowSet.over(entities[rows.source]).with_order_by(
         OrderPriority.CLIENT, *adapt_clauses(rendered.order_by, page)
