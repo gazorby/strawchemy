@@ -425,16 +425,24 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         with contextlib.suppress(ModelInspectorError):
             relation_model = self.relation_model(prop.class_attribute)
 
+        nullable_without_hint = False
         if type_hint is DTOMissing:
             if isinstance(prop, RelationshipProperty):
                 type_hint = prop.argument
+                nullable_without_hint = not uselist and (
+                    prop.direction is not RelationshipDirection.MANYTOONE
+                    or any(column.nullable for column in prop.local_columns)
+                )
             else:
                 if isinstance(prop, Column):
                     type_hint = self._python_type(prop.type)
                 elif isinstance(prop, ColumnProperty) and len(prop.columns) == 1:
                     type_hint = self._python_type(prop.columns[0].type)
+                    nullable_without_hint = isinstance(prop.columns[0], Column) and bool(prop.columns[0].nullable)
                 if type_hint is DTOMissing:
                     type_hint = self.get_type_hints(mapper.class_).get(model_field.key, DTOMissing)
+            if nullable_without_hint and type_hint is not DTOMissing:
+                type_hint = Optional[type_hint]  # ty: ignore[invalid-type-form]
 
         type_hint = self._resolve_model_type_hint(type_hint)
 
@@ -448,7 +456,8 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
                 and column_prop.type.geometry_type in _shapely_geometry_map
             ):
                 geo_type_hint = _shapely_geometry_map[column_prop.type.geometry_type]
-                type_hint = Optional[geo_type_hint] if is_type_hint_optional(type_hint) else geo_type_hint  # ty: ignore[invalid-type-form]
+                optional = nullable_without_hint or is_type_hint_optional(type_hint)
+                type_hint = Optional[geo_type_hint] if optional else geo_type_hint  # ty: ignore[invalid-type-form]
 
         return DTOFieldDefinition(
             type_hint=type_hint,

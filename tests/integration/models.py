@@ -37,6 +37,7 @@ postgres_json_metadata = MetaData()
 array_metadata = MetaData()
 interval_metadata = MetaData()
 date_time_metadata = MetaData()
+table_mapped_metadata = MetaData()
 
 TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
 JSONType = (
@@ -110,6 +111,11 @@ class IntervalBase(BaseColumns, DeclarativeBase):
 class DateTimeBase(BaseColumns, DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=date_time_metadata)
+
+
+class TableMappedBase(DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=table_mapped_metadata)
 
 
 # Models
@@ -267,3 +273,31 @@ class DateTimeModel(DateTimeBase):
     date_col: Mapped[date] = mapped_column(DateType)
     time_col: Mapped[time] = mapped_column(TimeType)
     datetime_col: Mapped[datetime] = mapped_column(DateTimeType)
+
+
+table_mapped_color = Table(
+    "table_mapped_color",
+    table_mapped_metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR(255), nullable=True),
+)
+
+table_mapped_fruit = Table(
+    "table_mapped_fruit",
+    table_mapped_metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR(255), nullable=True),
+    Column("color_id", ForeignKey("table_mapped_color.id"), nullable=True),
+)
+
+
+class TableMappedColor(TableMappedBase):
+    __table__ = table_mapped_color
+    __tablename__ = "table_mapped_color"  # Root queries read it until #417 is fixed.
+
+
+class TableMappedFruit(TableMappedBase):
+    __table__ = table_mapped_fruit
+    __tablename__ = "table_mapped_fruit"  # Root queries read it until #417 is fixed.
+
+    color = relationship(TableMappedColor)
