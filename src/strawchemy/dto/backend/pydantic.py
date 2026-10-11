@@ -7,6 +7,7 @@ for generating DTOs from models, and support for mapping DTOs to SQLAlchemy mode
 
 from __future__ import annotations
 
+import warnings
 from inspect import getmodule
 from typing import TYPE_CHECKING, Annotated, Any, TypeVar, cast
 
@@ -16,7 +17,7 @@ from typing_extensions import override
 
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, MappedDTO, ModelFieldT, ModelT
 from strawchemy.dto.types import DTOMissing
-from strawchemy.utils.annotation import get_annotations
+from strawchemy.utils.annotation import get_annotations, without_classvars
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -73,7 +74,7 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         **kwargs: Any,
     ) -> type[PydanticDTOT]:
         fields: dict[str, tuple[Any, FieldInfo]] = {}
-        base_annotations = get_annotations(base) if base else {}
+        base_annotations = without_classvars(get_annotations(base)) if base else {}
 
         for field_def in field_definitions:
             field_type = field_def.type_
@@ -99,13 +100,18 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         if base:
             module = base.__module__
 
-        dto = create_model(  # ty: ignore[no-matching-overload]  # pydantic create_model overloads don't cover dynamic **fields
-            name,
-            __base__=(self.dto_base,),
-            __module__=module,
-            __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
-            **fields,
-        )
+        with warnings.catch_warnings():
+            # Fields redeclared from the user class above shadow its class attributes on purpose.
+            warnings.filterwarnings(
+                "ignore", message=r"Field name .* shadows an attribute in parent", category=UserWarning
+            )
+            dto = create_model(  # ty: ignore[no-matching-overload]  # pydantic create_model overloads don't cover dynamic **fields
+                name,
+                __base__=(base, self.dto_base) if base else (self.dto_base,),
+                __module__=module,
+                __doc__=f"Pydantic generated DTO for {model.__name__} model" if docstring else None,
+                **fields,
+            )
 
         if config_dict:
             cls_body = {"model_config": config_dict} if config_dict else {}

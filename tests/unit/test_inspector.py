@@ -3,21 +3,25 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from sqlalchemy import ARRAY, JSON, ForeignKey, Integer, inspect
+from sqlalchemy import ARRAY, JSON, Column, ForeignKey, Integer, String, Table, case, inspect, join
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     DeclarativeBase,
     Mapped,
     RelationshipProperty,
+    column_property,
     mapped_column,
     registry,
     relationship,
 )
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.sql.type_api import TypeDecorator, TypeEngine
+from strawberry.types import get_object_definition
 
+from strawchemy import Strawchemy
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.dto.types import DTOMissing
+from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from tests.unit.schemas.join_mapped import JoinedAB
 
 
 class _Base(DeclarativeBase):
@@ -83,6 +87,63 @@ class Book(_Base):
     author: Mapped[Author] = relationship()
 
 
+class Vehicle(_Base):
+    __tablename__ = "rev_vehicle"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    kind: Mapped[str]
+    __mapper_args__ = {"polymorphic_on": "kind", "polymorphic_identity": "vehicle"}  # noqa: RUF012
+
+
+class Car(Vehicle):
+    __tablename__ = "rev_car"
+    id: Mapped[int] = mapped_column(ForeignKey("rev_vehicle.id"), primary_key=True)
+    __mapper_args__ = {"polymorphic_identity": "car"}  # noqa: RUF012
+
+
+class Bike(Vehicle):
+    __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
+_garage_table = Table("rev_garage", _Base.metadata, Column("id", Integer, primary_key=True), Column("name", String))
+_spot_table = Table(
+    "rev_spot",
+    _Base.metadata,
+    Column("id", Integer, primary_key=True),
+    Column("garage_id", ForeignKey("rev_garage.id")),
+)
+
+
+class Garage(_Base):
+    __table__ = _garage_table
+
+
+class GarageSpot(_Base):
+    __table__ = join(_garage_table, _spot_table)
+    id = column_property(_garage_table.c.id, _spot_table.c.garage_id)
+    spot_id = _spot_table.c.id
+
+
+class Spot:
+    pass
+
+
+_Base.registry.map_imperatively(Spot, _spot_table)
+
+
+class WheeledVehicle(_Base):
+    __tablename__ = "rev_wheeled_vehicle"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    wheels: Mapped[int] = mapped_column()
+    __mapper_args__ = {  # noqa: RUF012
+        "polymorphic_on": case((wheels == 2, "bike"), else_="vehicle"),
+        "polymorphic_identity": "vehicle",
+    }
+
+
+class WheeledBike(WheeledVehicle):
+    __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
 _Base.registry.configure()
 
 _ALL_RELATIONSHIPS = [
@@ -111,3 +172,54 @@ def test_reverse_relationships_matches_private(rel: RelationshipProperty[Any]) -
 def test_python_type(type_engine: TypeEngine[Any], expected: type[Any]) -> None:
     """Test that column types map to the same Python type on SQLAlchemy 2.0 and 2.1."""
     assert SQLAlchemyInspector._python_type(type_engine) is expected  # noqa: SLF001
+
+
+@pytest.mark.parametrize(
+    ("model", "expected"),
+    [
+        pytest.param(Department, "rev_department", id="tablename"),
+        pytest.param(Car, "rev_car", id="joined-inheritance"),
+        pytest.param(Bike, "rev_vehicle", id="single-inheritance"),
+        pytest.param(Garage, "rev_garage", id="table"),
+        pytest.param(Spot, "rev_spot", id="imperative"),
+        pytest.param(GarageSpot, "GarageSpot", id="join"),
+    ],
+)
+def test_table_name(model: type[Any], expected: str) -> None:
+    """Test that a mapped class is named after its own table, or after itself when mapped onto a join."""
+    assert SQLAlchemyInspector.table_name(model) == expected
+
+
+@pytest.mark.parametrize("model", [WheeledVehicle, WheeledBike])
+def test_field_definitions_skip_expression_discriminator(model: type[WheeledVehicle]) -> None:
+    """Test that the hidden property SQLAlchemy maps for an expression `polymorphic_on` yields no field."""
+    names = [name for name, _ in SQLAlchemyInspector().field_definitions(model, DTOConfig(Purpose.READ))]
+    assert names == ["id", "wheels"]
+
+
+@pytest.mark.parametrize("decorator", ["type", "filter", "order"])
+@pytest.mark.parametrize("model", [WheeledVehicle, WheeledBike])
+def test_expression_discriminator_model_generates(
+    strawchemy: Strawchemy, decorator: str, model: type[WheeledVehicle]
+) -> None:
+    """Test that a model with an expression `polymorphic_on` can be turned into a type and inputs."""
+    generated = getattr(strawchemy, decorator)(model, include="all")(type(f"{model.__name__}{decorator}", (), {}))
+    names = {field.python_name for field in get_object_definition(generated, strict=True).fields}
+    assert {"id", "wheels"} <= names
+    assert "_sa_polymorphic_on" not in names
+
+
+def test_pk_attributes_of_join_mapped_class() -> None:
+    """Test that a class mapped onto a join gets the attribute of each primary key column, not one per column key."""
+    assert SQLAlchemyInspector.pk_attributes(inspect(JoinedAB)) == [JoinedAB.id, JoinedAB.b_id]
+
+
+def test_id_field_definitions_of_join_mapped_class() -> None:
+    """Test that a class mapped onto a join gets one id field per primary key attribute."""
+    inspector = SQLAlchemyInspector([JoinedAB.registry])
+    definitions = inspector.id_field_definitions(JoinedAB, DTOConfig(Purpose.READ))
+
+    assert [(name, definition.model_field) for name, definition in definitions] == [
+        ("id", JoinedAB.id),
+        ("b_id", JoinedAB.b_id),
+    ]
