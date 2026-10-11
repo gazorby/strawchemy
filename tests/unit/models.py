@@ -8,7 +8,7 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Table, Text, UniqueConstraint, func
+from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Integer, Table, Text, UniqueConstraint, func
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
@@ -223,6 +223,48 @@ class TimestampedRecord(SQLDefaultBase):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     created_at: Mapped[datetime] = mapped_column(default=func.now())
+
+
+class TableMappedBase(DeclarativeBase):
+    __abstract__ = True
+
+
+table_mapped_color = Table(
+    "table_mapped_color",
+    TableMappedBase.metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR, nullable=True),
+)
+
+table_mapped_fruit = Table(
+    "table_mapped_fruit",
+    TableMappedBase.metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR, nullable=True),
+    Column("sweetness", Integer, nullable=False),
+    Column("color_id", ForeignKey("table_mapped_color.id"), nullable=True),
+    Column("required_color_id", ForeignKey("table_mapped_color.id"), nullable=False),
+)
+
+
+class TableMappedColor(TableMappedBase):
+    """Model mapped from a `Table`, without `Mapped[...]` annotations."""
+
+    __table__ = table_mapped_color
+
+    fruits = relationship("TableMappedFruit", foreign_keys=[table_mapped_fruit.c.color_id], back_populates="color")
+    required_fruit = relationship(
+        "TableMappedFruit", foreign_keys=[table_mapped_fruit.c.required_color_id], uselist=False, viewonly=True
+    )
+
+
+class TableMappedFruit(TableMappedBase):
+    """Model mapped from a `Table`, without `Mapped[...]` annotations."""
+
+    __table__ = table_mapped_fruit
+
+    color = relationship(TableMappedColor, foreign_keys=[table_mapped_fruit.c.color_id], back_populates="fruits")
+    required_color = relationship(TableMappedColor, foreign_keys=[table_mapped_fruit.c.required_color_id])
 
 
 # Geo

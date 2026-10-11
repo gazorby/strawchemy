@@ -25,16 +25,25 @@ from strawchemy.schema.pagination import DefaultOffsetPagination
 from strawchemy.validation.pydantic import PydanticValidation
 from tests.integration.models import (
     ArrayModel,
+    Bike,
+    Car,
     Color,
     DateTimeModel,
+    Driver,
+    ExprBike,
+    ExprGarage,
+    ExprVehicle,
     Fruit,
     FruitFarm,
+    Garage,
     IntervalModel,
     JSONModel,
     PostgresJSONModel,
     RankedUser,
+    TableMappedFruit,
     User,
     UserDepartment,
+    Vehicle,
 )
 
 if TYPE_CHECKING:
@@ -294,6 +303,35 @@ class ColorTypeHooks:
     fruits: list[FruitTypeHooks]
 
 
+@strawchemy.type(Color, include=["id", "name"])
+class PrivateNameColorType:
+    name: strawberry.Private[str]
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
+@strawchemy.type(Fruit, include=["id", "name", "color"])
+class PrivateNameFruitType:
+    name: strawberry.Private[str]
+    color: PrivateNameColorType | None
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
+@strawchemy.type(Color, include=["id", "name", "fruits"])
+class PrivateNameColorWithFruitsType:
+    name: strawberry.Private[str]
+    fruits: list[PrivateNameFruitType]
+
+    @strawberry.field
+    def upper_name(self) -> str:
+        return self.name.upper()
+
+
 @strawchemy.type(Color, include="all")
 class ColorWithSweetFruits:
     fruits: list[FruitType] = strawchemy.field(query_hook=SweetFruitHook())
@@ -403,6 +441,13 @@ class ArrayFilter: ...
 class ArrayType: ...
 
 
+# Table-mapped models
+
+
+@strawchemy.type(TableMappedFruit, include="all")
+class TableMappedFruitType: ...
+
+
 # Interval type
 
 
@@ -452,6 +497,77 @@ class DateTimeFilter: ...
 class DateTimeType: ...
 
 
+# Polymorphic
+
+
+@strawchemy.type(Vehicle, include="all", override=True)
+class VehicleType: ...
+
+
+@strawchemy.type(Car, include="all", override=True)
+class CarType: ...
+
+
+@strawchemy.type(Bike, include="all", override=True)
+class BikeType: ...
+
+
+@strawchemy.type(Garage, include="all", paginate="all", order="all", override=True)
+class GarageType: ...
+
+
+@strawchemy.type(Driver, include="all", override=True)
+class DriverType: ...
+
+
+# Expression polymorphic types
+
+
+@strawchemy.filter(ExprVehicle, include="all")
+class ExprVehicleFilter: ...
+
+
+@strawchemy.order(ExprVehicle, include="all")
+class ExprVehicleOrderBy: ...
+
+
+@strawchemy.type(ExprVehicle, include="all")
+class ExprVehicleType: ...
+
+
+@strawchemy.filter(ExprBike, include="all")
+class ExprBikeFilter: ...
+
+
+@strawchemy.order(ExprBike, include="all")
+class ExprBikeOrderBy: ...
+
+
+@strawchemy.type(ExprBike, include="all", override=True)
+class ExprBikeType: ...
+
+
+@strawchemy.type(ExprGarage, include="all", override=True)
+class ExprGarageType: ...
+
+
+# Interface
+
+
+@strawberry.interface
+class Named:
+    name: str
+
+
+@strawchemy.type(Color, include={"id", "name"})
+class NamedColorType(Named): ...
+
+
+@strawchemy.type(Fruit, include={"id", "name"})
+class NamedFruitType(Named):
+    color: NamedColorType | None
+
+
 # Queries
 
 
@@ -482,6 +598,14 @@ class AsyncQuery:
     )
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemyAsyncRepository
+    )
+    fruit_aggregations_filterable: FruitAggregationType = strawchemy.field(
+        root_aggregations=True,
+        filter_input=FruitFilter,
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
     )
     fruits_default_order: list[FruitType] = strawchemy.field(
         default_order_by=Fruit.name.asc(),
@@ -515,6 +639,10 @@ class AsyncQuery:
         default_order_by=Color.name.desc(), repository_type=StrawchemyAsyncRepository
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    fruits_private_name: list[PrivateNameFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    colors_private_name: list[PrivateNameColorWithFruitsType] = strawchemy.field(
+        repository_type=StrawchemyAsyncRepository
+    )
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemyAsyncRepository, pagination=True
     )
@@ -694,6 +822,14 @@ class SyncQuery:
     fruit_aggregations_paginated_limit_2: FruitAggregationType = strawchemy.field(
         root_aggregations=True, pagination=DefaultOffsetPagination(limit=2), repository_type=StrawchemySyncRepository
     )
+    fruit_aggregations_filterable: FruitAggregationType = strawchemy.field(
+        root_aggregations=True,
+        filter_input=FruitFilter,
+        order_by_input=FruitOrderBy,
+        distinct_on=FruitDistinctOn,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
     fruits_default_order: list[FruitType] = strawchemy.field(
         default_order_by=Fruit.name.asc(),
         order_by_input=FruitOrderBy,
@@ -726,6 +862,10 @@ class SyncQuery:
         default_order_by=Color.name.desc(), repository_type=StrawchemySyncRepository
     )
     fruits_hooks: list[FruitTypeHooks] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    fruits_private_name: list[PrivateNameFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    colors_private_name: list[PrivateNameColorWithFruitsType] = strawchemy.field(
+        repository_type=StrawchemySyncRepository
+    )
     fruits_paginated_hooks: list[FruitTypeHooks] = strawchemy.field(
         repository_type=StrawchemySyncRepository, pagination=True
     )
@@ -877,6 +1017,16 @@ class SyncQuery:
 
 
 @strawberry.type
+class TableMappedAsyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class TableMappedSyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
 class IntervalAsyncQuery:
     intervals: list[IntervalType] = strawchemy.field(
         filter_input=IntervalFilter, repository_type=StrawchemyAsyncRepository
@@ -956,6 +1106,90 @@ class ArraySyncQuery:
     array: list[ArrayType] = strawchemy.field(filter_input=ArrayFilter, repository_type=StrawchemySyncRepository)
 
 
+@strawberry.type
+class PolymorphicAsyncQuery:
+    vehicles: list[VehicleType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    all_vehicles: list[VehicleType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    drivers: list[DriverType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class PolymorphicSyncQuery:
+    vehicles: list[VehicleType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    all_vehicles: list[VehicleType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    drivers: list[DriverType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class ExprVehicleAsyncQuery:
+    vehicles: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy, repository_type=StrawchemyAsyncRepository
+    )
+    vehicles_paginated: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter,
+        order_by_input=ExprVehicleOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    bikes: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy, repository_type=StrawchemyAsyncRepository
+    )
+    bikes_paginated: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter,
+        order_by_input=ExprBikeOrderBy,
+        pagination=True,
+        repository_type=StrawchemyAsyncRepository,
+    )
+    garages: list[ExprGarageType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class ExprVehicleSyncQuery:
+    vehicles: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy, repository_type=StrawchemySyncRepository
+    )
+    vehicles_paginated: list[ExprVehicleType] = strawchemy.field(
+        filter_input=ExprVehicleFilter,
+        order_by_input=ExprVehicleOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    bikes: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy, repository_type=StrawchemySyncRepository
+    )
+    bikes_paginated: list[ExprBikeType] = strawchemy.field(
+        filter_input=ExprBikeFilter,
+        order_by_input=ExprBikeOrderBy,
+        pagination=True,
+        repository_type=StrawchemySyncRepository,
+    )
+    garages: list[ExprGarageType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class InterfaceAsyncQuery:
+    fruits: list[NamedFruitType] = strawchemy.field(filter_input=True, repository_type=StrawchemyAsyncRepository)
+
+    @strawberry.field
+    async def named(self, info: strawberry.Info) -> list[Named]:
+        return [*(await StrawchemyAsyncRepository(NamedFruitType, info).list()).graphql_list()]
+
+
+@strawberry.type
+class InterfaceSyncQuery:
+    fruits: list[NamedFruitType] = strawchemy.field(filter_input=True, repository_type=StrawchemySyncRepository)
+
+    @strawberry.field
+    def named(self, info: strawberry.Info) -> list[Named]:
+        return [*StrawchemySyncRepository(NamedFruitType, info).list().graphql_list()]
+
+
 # Mutations
 
 
@@ -990,6 +1224,12 @@ class AsyncMutation:
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemyAsyncRepository)
     # Fruit - Update
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemyAsyncRepository)
+    create_private_name_fruit: PrivateNameFruitType = strawchemy.create(
+        FruitCreateInput, repository_type=StrawchemyAsyncRepository
+    )
+    update_private_name_fruit: PrivateNameFruitType = strawchemy.update_by_ids(
+        FruitUpdateInput, repository_type=StrawchemyAsyncRepository
+    )
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemyAsyncRepository
     )
@@ -1132,6 +1372,12 @@ class SyncMutation:
     create_fruits: list[FruitType] = strawchemy.create(FruitCreateInput, repository_type=StrawchemySyncRepository)
     # Fruit - Update
     update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput, repository_type=StrawchemySyncRepository)
+    create_private_name_fruit: PrivateNameFruitType = strawchemy.create(
+        FruitCreateInput, repository_type=StrawchemySyncRepository
+    )
+    update_private_name_fruit: PrivateNameFruitType = strawchemy.update_by_ids(
+        FruitUpdateInput, repository_type=StrawchemySyncRepository
+    )
     update_fruits: list[FruitType] = strawchemy.update_by_ids(
         FruitUpdateInput, repository_type=StrawchemySyncRepository
     )

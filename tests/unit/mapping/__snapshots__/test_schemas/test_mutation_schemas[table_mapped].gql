@@ -1,0 +1,421 @@
+'''
+"""
+Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
+"""
+input FloatOrderComparison {
+  eq: Float
+  neq: Float
+  isNull: Boolean
+  in: [Float!]
+  nin: [Float!]
+  gt: Float
+  gte: Float
+  lt: Float
+  lte: Float
+}
+
+"""
+Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
+"""
+input IntOrderComparison {
+  eq: Int
+  neq: Int
+  isNull: Boolean
+  in: [Int!]
+  nin: [Int!]
+  gt: Int
+  gte: Int
+  lt: Int
+  lte: Int
+}
+
+type Mutation {
+  """Create object in the TableMappedFruitType collection"""
+  createFruit(data: TableMappedFruitCreate!): TableMappedFruitType!
+
+  """Update objects in the TableMappedFruitType collection"""
+  updateFruitsByIds(data: [TableMappedFruitPkUpdate!]!): [TableMappedFruitType!]!
+
+  """Update objects in the TableMappedFruitType collection"""
+  updateFruits(data: TableMappedFruitFilterUpdate!, filter: TableMappedFruitFilter = null): [TableMappedFruitType!]!
+}
+
+type Query {
+  hello: String!
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input TableMappedColorBoolExp {
+  _and: [TableMappedColorBoolExp!]! = []
+  _or: [TableMappedColorBoolExp!]! = []
+  _not: TableMappedColorBoolExp
+  fruitsAggregate: TableMappedFruitAggregateBoolExp
+  fruits: TableMappedFruitFilter
+  requiredFruit: TableMappedFruitFilter
+  id: IntOrderComparison
+  name: TextComparison
+}
+
+"""GraphQL type"""
+type TableMappedColorType {
+  fruitsAggregate: TableMappedFruitAggregate!
+
+  """Fetch objects from the TableMappedFruitType collection"""
+  fruits: [TableMappedFruitType!]!
+  requiredFruit: TableMappedFruitType
+  id: Int!
+  name: String
+}
+
+"""Aggregation fields"""
+type TableMappedFruitAggregate {
+  avg: TableMappedFruitNumericFields!
+  count: Int
+  max: TableMappedFruitMinMaxFields!
+  min: TableMappedFruitMinMaxFields!
+  stddevPop: TableMappedFruitNumericFields!
+  stddevSamp: TableMappedFruitNumericFields!
+  sum: TableMappedFruitSumFields!
+  varPop: TableMappedFruitNumericFields!
+  varSamp: TableMappedFruitNumericFields!
+}
+
+"""
+Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
+"""
+input TableMappedFruitAggregateBoolExp {
+  avg: TableMappedFruitAggregateBoolExpAvg
+  count: TableMappedFruitAggregateBoolExpCount
+  max: TableMappedFruitAggregateBoolExpMax
+  maxString: TableMappedFruitAggregateBoolExpMaxstring
+  min: TableMappedFruitAggregateBoolExpMin
+  minString: TableMappedFruitAggregateBoolExpMinstring
+  stddevPop: TableMappedFruitAggregateBoolExpStddevpop
+  stddevSamp: TableMappedFruitAggregateBoolExpStddevsamp
+  sum: TableMappedFruitAggregateBoolExpSum
+  varPop: TableMappedFruitAggregateBoolExpVarpop
+  varSamp: TableMappedFruitAggregateBoolExpVarsamp
+}
+
+"""Boolean expression to compare avg aggregation."""
+input TableMappedFruitAggregateBoolExpAvg {
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare count aggregation."""
+input TableMappedFruitAggregateBoolExpCount {
+  arguments: [TableMappedFruitCountFields!] = []
+  predicate: IntOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare max aggregation."""
+input TableMappedFruitAggregateBoolExpMax {
+  arguments: [TableMappedFruitMinMaxNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare max aggregation."""
+input TableMappedFruitAggregateBoolExpMaxstring {
+  arguments: [TableMappedFruitMinMaxStringFieldsEnum!]!
+  predicate: TextComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare min aggregation."""
+input TableMappedFruitAggregateBoolExpMin {
+  arguments: [TableMappedFruitMinMaxNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare min aggregation."""
+input TableMappedFruitAggregateBoolExpMinstring {
+  arguments: [TableMappedFruitMinMaxStringFieldsEnum!]!
+  predicate: TextComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare stddev_pop aggregation."""
+input TableMappedFruitAggregateBoolExpStddevpop {
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare stddev_samp aggregation."""
+input TableMappedFruitAggregateBoolExpStddevsamp {
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare sum aggregation."""
+input TableMappedFruitAggregateBoolExpSum {
+  arguments: [TableMappedFruitSumFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare var_pop aggregation."""
+input TableMappedFruitAggregateBoolExpVarpop {
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare var_samp aggregation."""
+input TableMappedFruitAggregateBoolExpVarsamp {
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Conflict fields enum"""
+enum TableMappedFruitColorConflictFields {
+  id
+}
+
+"""Identifier input"""
+input TableMappedFruitColorIdFieldsInput {
+  id: Int!
+}
+
+"""Add a new or existing object"""
+input TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput {
+  set: TableMappedFruitColorIdFieldsInput
+  create: TableMappedFruitTableMappedColorInput
+  upsert: TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneUpsertInput
+}
+
+"""Add new object or update if existing"""
+input TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneUpsertInput {
+  create: TableMappedFruitTableMappedColorInput!
+  conflictFields: TableMappedFruitColorConflictFields
+  updateFields: [TableMappedFruitColorUpdateFields!]
+}
+
+"""Update fields enum"""
+enum TableMappedFruitColorUpdateFields {
+  id
+  name
+}
+
+enum TableMappedFruitCountFields {
+  id
+  name
+  sweetness
+  colorId
+  requiredColorId
+}
+
+"""Create input"""
+input TableMappedFruitCreate {
+  color: TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput = null
+  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput!
+  id: Int!
+  name: String = null
+  sweetness: Int!
+}
+
+"""
+Boolean expression to compare fields. All fields are combined with logical 'AND'.
+"""
+input TableMappedFruitFilter {
+  _and: [TableMappedFruitFilter!]! = []
+  _or: [TableMappedFruitFilter!]! = []
+  _not: TableMappedFruitFilter
+  color: TableMappedColorBoolExp
+  requiredColor: TableMappedColorBoolExp
+  id: IntOrderComparison
+  name: TextComparison
+  sweetness: IntOrderComparison
+  colorId: IntOrderComparison
+  requiredColorId: IntOrderComparison
+}
+
+"""Filter update input"""
+input TableMappedFruitFilterUpdate {
+  color: TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput
+  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput
+  id: Int
+  name: String
+  sweetness: Int
+}
+
+"""GraphQL type"""
+type TableMappedFruitMinMaxFields {
+  id: Int
+  name: String
+  sweetness: Int
+  colorId: Int
+  requiredColorId: Int
+}
+
+enum TableMappedFruitMinMaxNumericFieldsEnum {
+  id
+  sweetness
+  colorId
+  requiredColorId
+}
+
+enum TableMappedFruitMinMaxStringFieldsEnum {
+  name
+}
+
+"""GraphQL type"""
+type TableMappedFruitNumericFields {
+  id: Float
+  sweetness: Float
+  colorId: Float
+  requiredColorId: Float
+}
+
+enum TableMappedFruitNumericFieldsEnum {
+  id
+  sweetness
+  colorId
+  requiredColorId
+}
+
+"""Identifier update input"""
+input TableMappedFruitPkUpdate {
+  color: TableMappedFruitColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput
+  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput
+  id: Int!
+  name: String
+  sweetness: Int
+}
+
+"""Conflict fields enum"""
+enum TableMappedFruitRequiredColorConflictFields {
+  id
+}
+
+"""Identifier input"""
+input TableMappedFruitRequiredColorIdFieldsInput {
+  id: Int!
+}
+
+"""Add a new or existing object"""
+input TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput {
+  set: TableMappedFruitRequiredColorIdFieldsInput
+  create: TableMappedFruitTableMappedColorInput
+  upsert: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsToOneUpsertInput
+}
+
+"""Add new object or update if existing"""
+input TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsToOneUpsertInput {
+  create: TableMappedFruitTableMappedColorInput!
+  conflictFields: TableMappedFruitRequiredColorConflictFields
+  updateFields: [TableMappedFruitRequiredColorUpdateFields!]
+}
+
+"""Update fields enum"""
+enum TableMappedFruitRequiredColorUpdateFields {
+  id
+  name
+}
+
+"""Conflict fields enum"""
+enum TableMappedFruitRequiredFruitConflictFields {
+  id
+}
+
+"""Identifier input"""
+input TableMappedFruitRequiredFruitIdFieldsInput {
+  id: Int!
+}
+
+"""Add a new or existing object"""
+input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput {
+  set: TableMappedFruitRequiredFruitIdFieldsInput
+  create: TableMappedFruitCreate
+  upsert: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput
+}
+
+"""Add new object or update if existing"""
+input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput {
+  create: TableMappedFruitCreate!
+  conflictFields: TableMappedFruitRequiredFruitConflictFields
+  updateFields: [TableMappedFruitRequiredFruitUpdateFields!]
+}
+
+"""Update fields enum"""
+enum TableMappedFruitRequiredFruitUpdateFields {
+  id
+  name
+  sweetness
+  colorId
+  requiredColorId
+}
+
+"""GraphQL type"""
+type TableMappedFruitSumFields {
+  id: Int
+  name: String
+  sweetness: Int
+  colorId: Int
+  requiredColorId: Int
+}
+
+enum TableMappedFruitSumFieldsEnum {
+  id
+  name
+  sweetness
+  colorId
+  requiredColorId
+}
+
+"""Create input"""
+input TableMappedFruitTableMappedColorInput {
+  requiredFruit: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput = null
+  id: Int!
+  name: String = null
+}
+
+"""GraphQL type"""
+type TableMappedFruitType {
+  color: TableMappedColorType
+  requiredColor: TableMappedColorType!
+  id: Int!
+  name: String
+  sweetness: Int!
+  colorId: Int
+  requiredColorId: Int!
+}
+
+"""
+Boolean expression to compare String fields. All fields are combined with logical 'AND'
+"""
+input TextComparison {
+  eq: String
+  neq: String
+  isNull: Boolean
+  in: [String!]
+  nin: [String!]
+  gt: String
+  gte: String
+  lt: String
+  lte: String
+  like: String
+  nlike: String
+  ilike: String
+  nilike: String
+  regexp: String
+  iregexp: String
+  nregexp: String
+  inregexp: String
+  startswith: String
+  endswith: String
+  contains: String
+  istartswith: String
+  iendswith: String
+  icontains: String
+}
+'''

@@ -33,7 +33,12 @@ from strawchemy.typing import (
     GraphQLPurpose,
     GraphQLType,
 )
-from strawchemy.utils.annotation import annotation_name, get_origin_or_self, non_optional_type_hint
+from strawchemy.utils.annotation import (
+    annotation_name,
+    get_origin_or_self,
+    get_type_hints_partial,
+    non_optional_type_hint,
+)
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
@@ -89,14 +94,20 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
 
         Returns:
             Mapping of attribute name to the declared aggregate filter type.
+
+        Raises:
+            StrawchemyFieldError: If a ``<relation>_aggregate`` annotation cannot be resolved.
         """
         if base is None:
             return {}
-        return {
-            name: annotation
-            for name, annotation in inspect.get_annotations(base, eval_str=True).items()
-            if isinstance(annotation, type) and issubclass(annotation, AggregateFilterDTO)
-        }
+        declared: dict[str, type[AggregateFilterDTO]] = {}
+        for name, annotation in get_type_hints_partial(base).items():
+            if isinstance(annotation, str) and name.endswith("_aggregate"):
+                msg = f"Filter field {name!r}: cannot resolve annotation {annotation!r}"
+                raise StrawchemyFieldError(msg)
+            if isinstance(annotation, type) and issubclass(annotation, AggregateFilterDTO):
+                declared[name] = annotation
+        return declared
 
     @staticmethod
     def _validate_marker_context(
@@ -157,13 +168,15 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
             Mapping of field name to ``(marker, annotation_type)``.
 
         Raises:
-            StrawchemyFieldError: If a restricted (``ops``) or custom (``apply``) field has no annotation.
+            StrawchemyFieldError: If a declared field annotation is unresolvable, or missing on an ``ops``/``apply`` field.
         """
-        # Resolve string annotations (modules using `from __future__ import annotations`).
-        annotations = inspect.get_annotations(base, eval_str=True)
+        annotations = get_type_hints_partial(base)
         declared: dict[str, tuple[FilterFieldMarker, Any]] = {}
         for name, marker in inspect.getmembers(base, lambda v: isinstance(v, FilterFieldMarker)):
             annotation = annotations.get(name)
+            if isinstance(annotation, str):
+                msg = f"Filter field {name!r}: cannot resolve annotation {annotation!r}"
+                raise StrawchemyFieldError(msg)
             if annotation is None and (marker.ops is not None or marker.apply is not None):
                 msg = f"Filter field {name!r} needs a type annotation to determine its data type"
                 raise StrawchemyFieldError(msg)
@@ -458,12 +471,17 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
 
         yield from self._iter_custom_filter_fields(declared_filters, model, dto_config)
 
-        stripped = set(declared_filters) | set(declared_aggregates)
-        if base is not None and stripped:
+        if base is not None:
+            self._finalize_base(base)
+
+    @override
+    def _finalize_base(self, base: type[Any]) -> None:
+        stripped = set(self.parse_declared_filter_fields(base)) | set(self._declared_aggregate_types(base))
+        if stripped:
             # Declared filter fields and declared aggregate annotations supply only a data type
             # or a target type, not a final GraphQL type. Drop their annotations from the base so
             # the strawberry backend does not treat them as verbatim type overrides; the
-            # comparison/custom/aggregate types injected above win.
+            # comparison/custom/aggregate types generated for them win.
             base.__annotations__ = {
                 declared_name: annotation_type
                 for declared_name, annotation_type in inspect.get_annotations(base).items()

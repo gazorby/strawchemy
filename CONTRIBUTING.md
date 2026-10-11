@@ -104,6 +104,10 @@ This helps maintain code quality and consistency across contributions.
 
    Check that the release and then the publish workflows run successfully
 
+   The release deploys its documentation to `https://strawchemy.pages.dev`. The bump commits a snapshot of it to
+   `docs/archive/vX.Y.Z/`, which every later build serves under `/vX.Y.Z/`. Pushes to `main` deploy to
+   `https://dev.strawchemy.pages.dev`. Fixes to `docs/archive/` reach production with the next release.
+
 ### Using the mise task
 
 1. Run `mise run auto-bump` to automatically bump the version
