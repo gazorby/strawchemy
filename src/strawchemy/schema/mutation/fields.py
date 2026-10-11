@@ -11,7 +11,7 @@ from strawchemy.constants import DATA_KEY, FILTER_KEY, UPSERT_CONFLICT_FIELDS, U
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.field import StrawchemyField
 from strawchemy.schema.mutation.input import Input
-from strawchemy.utils.strawberry import is_list
+from strawchemy.utils.strawberry import dto_model_from_type, is_list, strawberry_contained_user_type
 from strawchemy.validation import InputValidationError
 
 if TYPE_CHECKING:
@@ -80,6 +80,17 @@ class _StrawchemyMutationField(StrawchemyField):
     @override
     def _auto_description(self, definition: StrawberryObjectDefinition) -> str:
         return f"{self._action} {'objects' if self.is_list else 'object'} in the {definition.name} collection"
+
+    @override
+    def _validate_type(self, type_: StrawberryType | type[WithStrawberryObjectDefinition] | Any) -> None:
+        """Validate the resolved field type, whose model the auto resolver writes to.
+
+        Raises:
+            ReadOnlyModelError: If the field has no resolver and its model maps a join or a selectable.
+        """
+        super()._validate_type(type_)
+        if self.base_resolver is None:
+            self._config.inspector.check_writable(dto_model_from_type(strawberry_contained_user_type(type_)))
 
     async def _input_result_async(
         self, repository_call: Awaitable[GraphQLResult[Any, Any]], input_data: Input[Any]

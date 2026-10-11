@@ -15,6 +15,7 @@ __all__ = (
     "ModelInspectorError",
     "QueryHookError",
     "QueryResultError",
+    "ReadOnlyModelError",
     "SessionNotFoundError",
     "StrawchemyError",
     "StrawchemyFieldError",
@@ -76,6 +77,10 @@ class FilterValueError(StrawchemyError):
 
 class ModelInspectorError(DTOError):
     """Raised when a model field cannot be inspected as requested."""
+
+
+class ReadOnlyModelError(StrawchemyError):
+    """Raised when a mutation or a write input targets a model strawchemy can only read."""
 
 
 class TranspilingError(StrawchemyError):
