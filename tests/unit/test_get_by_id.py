@@ -29,12 +29,24 @@ class _AliasedKey(_Base):
     id: Mapped[UUID] = mapped_column(primary_key=True, info=field(configs={Purpose.READ: PurposeConfig(alias="pk")}))
 
 
+class _AliasedCompositeKey(_Base):
+    __tablename__ = "get_by_id_aliased_composite_key"
+    left_id: Mapped[int] = mapped_column(
+        primary_key=True, info=field(configs={Purpose.READ: PurposeConfig(alias="left")})
+    )
+    right_id: Mapped[int] = mapped_column(primary_key=True)
+
+
 @strawchemy.type(Color, include="all")
 class ColorType: ...
 
 
 @strawchemy.type(_AliasedKey, include="all")
 class AliasedKeyType: ...
+
+
+@strawchemy.type(_AliasedCompositeKey, include="all")
+class AliasedCompositeKeyType: ...
 
 
 @strawberry.type
@@ -45,6 +57,7 @@ class Query:
     )
     aliased_key: AliasedKeyType | None = strawchemy.field()
     aliased_key_by_pk: AliasedKeyType | None = strawchemy.field(id_field_name="pk")
+    aliased_composite_key: AliasedCompositeKeyType | None = strawchemy.field()
 
 
 schema = strawberry.Schema(query=Query)
@@ -72,3 +85,13 @@ def test_get_by_id_filters_on_primary_key(
 
     assert not result.errors
     assert captured_statements[0].compile().params == {"id_1": color_id}
+
+
+def test_get_by_id_names_composite_key_arguments_after_aliases(captured_statements: list[Select[Any]]) -> None:
+    """Test that a get-by-id field on a composite key with an aliased column filters on every key column."""
+    result = schema.execute_sync(
+        "{ aliasedCompositeKey(left: 1, rightId: 2) { left rightId } }", context_value=MockContext("postgresql")
+    )
+
+    assert not result.errors
+    assert captured_statements[0].compile().params == {"left_id_1": 1, "right_id_1": 2}
