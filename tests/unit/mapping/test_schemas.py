@@ -7,10 +7,11 @@ from datetime import timedelta
 from importlib import import_module
 from importlib.util import find_spec
 from typing import TYPE_CHECKING, Any
+from uuid import UUID
 
 import pytest
 import strawberry
-from strawberry import auto
+from strawberry import auto, relay
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
@@ -22,14 +23,16 @@ from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Color, Fruit, User
+from tests.unit.models import Color, Container, Fruit, User
 from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
+    from typing_extensions import Self
 
     from strawchemy.mapper import Strawchemy
+    from strawchemy.schema.factories.base import TypeScope
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
 
@@ -181,6 +184,22 @@ def test_multiple_types_error(path: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "path",
+    [
+        pytest.param("override_relation_filter", id="override_declared_after_auto_type"),
+        pytest.param("override_relation_filter_paginated", id="override_declared_after_auto_type_paginated"),
+        pytest.param("override_relation_filter_declared_first", id="override_declared_after_parent"),
+    ],
+)
+def test_relation_to_overridden_type_has_its_filter(path: str) -> None:
+    """Test that a relation retargeted to an override takes the filter argument the override declares."""
+    query = import_module(f"tests.unit.schemas.override.{path}").Query
+    schema = strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert re.search(r"colors\([^)]*filter: ColorFilter = null[^)]*\): \[ColorType!\]!", str(schema))
+
+
+@pytest.mark.parametrize(
     "module",
     [
         pytest.param("tests.unit.schemas.aggregations.type_mismatch", id="strawchemy_type"),
@@ -319,6 +338,31 @@ def test_postponed_delete_mutation_resolves_type_defined_after_it() -> None:
     field = get_object_definition(Mutation, strict=True).get_field("delete_colors")
     assert field is not None
     assert strawberry_contained_user_type(field.type) is ColorType
+
+
+@pytest.mark.parametrize(
+    "module",
+    [
+        pytest.param("late_type.relation_annotation", id="same_module"),
+        pytest.param("late_type.relation_annotation_private", id="with_private_field"),
+        pytest.param("late_type.relation_annotation_class_alias", id="with_class_body_alias"),
+        pytest.param("late_type_module.query", id="other_module"),
+    ],
+)
+def test_postponed_relation_annotation_resolves_type_defined_after_it(module: str) -> None:
+    """Test that a relation annotated with a later-defined type keeps the other base annotations resolvable."""
+    schema_module = import_module(f"tests.unit.schemas.{module}")
+
+    schema = strawberry.Schema(query=schema_module.Query)
+    fruit_type = schema.get_type_by_name("FruitType")
+    assert isinstance(fruit_type, StrawberryObjectDefinition)
+    color = fruit_type.get_field("color")
+    assert color is not None
+    assert color.type is schema_module.ColorType
+    name = fruit_type.get_field("name")
+    assert name is not None
+    assert name.type is str
+    assert "secret: " not in str(schema)
 
 
 def test_query_hooks_wrong_relationship_load_spec() -> None:
@@ -822,6 +866,174 @@ def test_pydantic_validation_nested() -> None:
     ]
 
 
+def _tag_validation_body() -> dict[str, Any]:
+    from pydantic import field_validator, model_validator
+
+    class Body:
+        name: str
+
+        @field_validator("name")
+        @classmethod
+        def lower_case(cls, value: str) -> str:
+            if not value.islower():
+                msg = "name must be lower cased"
+                raise ValueError(msg)
+            return value
+
+        @model_validator(mode="after")
+        def not_reserved(self) -> Body:
+            if self.name == "admin":
+                msg = "reserved name"
+                raise ValueError(msg)
+            return self
+
+        def shout(self) -> str:
+            return self.name.upper()
+
+        @property
+        def shout_property(self) -> str:
+            return self.shout()
+
+        @classmethod
+        def label(cls) -> str:
+            return cls.__name__
+
+    return {key: value for key, value in vars(Body).items() if not key.startswith("__")}
+
+
+@pytest.mark.parametrize("mode", ["create", "pk_update", "filter_update"])
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_keeps_class_body(mode: str, strawchemy: Strawchemy) -> None:
+    """Test that validators and methods declared in a pydantic validation class body are kept."""
+    from pydantic import ValidationError
+
+    from tests.unit.models import Tag
+
+    decorator = getattr(strawchemy.pydantic, mode)(Tag, include=["name"])
+    validation = decorator(type("TagValidation", (), _tag_validation_body()))
+    pk = {"id": "da636751-b276-4546-857f-3c73ea914467"} if mode == "pk_update" else {}
+
+    for name in ("UPPER", "admin"):
+        with pytest.raises(ValidationError):
+            validation(name=name, **pk)
+
+    instance = validation(name="bob", **pk)
+    assert instance.shout() == "BOB"
+    assert instance.shout_property == "BOB"
+    assert validation.label() == "TagValidation"
+
+
+@pytest.mark.filterwarnings("error")
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_class_body_validators_with_annotated_field(strawchemy: Strawchemy) -> None:
+    """Test that class-body validators run, without warnings, on a field the class body re-annotates with a default."""
+    from pydantic import ValidationError, field_validator, model_validator
+
+    from tests.unit.models import Tag
+
+    @strawchemy.pydantic.create(Tag, include=["name"])
+    class TagValidation:
+        name: str | None = None
+
+        @field_validator("name")
+        @classmethod
+        def lower_case(cls, value: str | None) -> str | None:
+            if value is not None and not value.islower():
+                msg = "name must be lower cased"
+                raise ValueError(msg)
+            return value
+
+        @model_validator(mode="after")
+        def not_reserved(self) -> Self:
+            if self.name == "admin":
+                msg = "reserved name"
+                raise ValueError(msg)
+            return self
+
+    validation: type[Any] = TagValidation
+    field = validation.model_fields["name"]
+    assert field.annotation == str | None
+    assert field.default is None
+    assert validation().name is None
+    assert validation(name="bob").name == "bob"
+    for name in ("UPPER", "admin"):
+        with pytest.raises(ValidationError):
+            validation(name=name)
+
+
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_keeps_user_bases(strawchemy: Strawchemy) -> None:
+    """Test that a pydantic validation class keeps the validators and methods of its plain bases."""
+    from pydantic import ValidationError
+
+    from tests.unit.models import Tag
+
+    mixin = type("TagValidationMixin", (), _tag_validation_body())
+    validation: type[Any] = strawchemy.pydantic.create(Tag, include=["name"])(type("TagValidation", (mixin,), {}))
+
+    with pytest.raises(ValidationError):
+        validation(name="UPPER")
+    assert validation(name="bob").shout() == "BOB"
+    assert issubclass(validation, mixin)
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_error"),
+    [
+        pytest.param(
+            "UPPER",
+            {"id": "ERROR", "loc": ["name"], "message": "Value error, name must be lower cased", "type": "value_error"},
+            id="field-validator",
+        ),
+        pytest.param(
+            "admin",
+            {"id": "ERROR", "loc": [], "message": "Value error, reserved name", "type": "value_error"},
+            id="model-validator",
+        ),
+    ],
+)
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_validation_class_body_in_mutation(
+    name: str, expected_error: dict[str, Any], strawchemy: Strawchemy
+) -> None:
+    """Test that a mutation rejects input failing validators declared in the validation class body."""
+    from strawchemy import ValidationErrorType
+    from strawchemy.validation.pydantic import PydanticValidation
+    from tests.unit.models import Tag
+
+    @strawchemy.create_input(Tag, include=["name"])
+    class TagCreate: ...
+
+    @strawchemy.type(Tag, include=["id", "name"])
+    class TagType: ...
+
+    validation = strawchemy.pydantic.create(Tag, include=["name"])(type("TagValidation", (), _tag_validation_body()))
+
+    @strawberry.type
+    class Mutation:
+        create_tag: TagType | ValidationErrorType = strawchemy.create(
+            TagCreate, validation=PydanticValidation(validation)
+        )
+
+    query = f"""
+        mutation {{
+            createTag(data: {{ name: "{name}" }}) {{
+                __typename
+                ... on ValidationErrorType {{
+                    id
+                    errors {{ id loc message type }}
+                }}
+            }}
+        }}
+    """
+    schema = strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES)
+    result = schema.execute_sync(query, context_value=MockContext("postgresql"))
+    assert not result.errors
+    assert result.data
+    assert result.data["createTag"]["__typename"] == "ValidationErrorType"
+    assert result.data["createTag"]["errors"] == [expected_error]
+
+
 @pytest.mark.parametrize(
     "module_name",
     [
@@ -839,6 +1051,71 @@ def test_schema_scope_override(module_name: str) -> None:
 
     assert "GroupType" not in schemas_str
     assert "GraphQLGroup" in schemas_str
+
+
+@pytest.mark.parametrize("container_scope", [pytest.param(None, id="unscoped"), pytest.param("schema", id="scoped")])
+def test_scoped_type_shares_relation_aggregate(strawchemy: Strawchemy, container_scope: TypeScope | None) -> None:
+    """Test that a later type aggregating the same relation as a schema-scoped type reuses its aggregate type (#419)."""
+
+    @strawchemy.type(Color, include="all", scope="schema")
+    class ColorType: ...
+
+    @strawchemy.type(Container, include=["id", "fruits"], scope=container_scope)
+    class ContainerType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+        containers: list[ContainerType] = strawchemy.field()
+
+    schema_str = str(strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("fruitsAggregate: FruitAggregate!") == 2
+    assert schema_str.count("type FruitAggregate ") == 1
+
+
+def test_scoped_input_shares_upsert_enums(strawchemy: Strawchemy) -> None:
+    """Test that a later input upserting the same relation as a schema-scoped input reuses its upsert enums (#419)."""
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.create_input(Color, include="all", scope="schema")
+    class ColorCreate: ...
+
+    @strawchemy.pk_update_input(Color, include="all")
+    class ColorUpdate: ...
+
+    @strawberry.type
+    class Mutation:
+        create_color: ColorType = strawchemy.create(ColorCreate)
+        update_colors: list[ColorType] = strawchemy.update_by_ids(ColorUpdate)
+
+    schema_str = str(strawberry.Schema(query=DefaultQuery, mutation=Mutation, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("enum ColorFruitsUpdateFields ") == 1
+    assert schema_str.count("enum ColorFruitsConflictFields ") == 1
+
+
+def test_scoped_aggregate_filter_shares_argument_enums(strawchemy: Strawchemy) -> None:
+    """Test that a filter aggregating the same model as a schema-scoped aggregate filter reuses its argument enums (#419)."""
+
+    @strawchemy.aggregate_filter(Fruit, include="all", scope="schema")
+    class FruitAggregateFilter: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter)
+
+    schema_str = str(strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES))
+
+    assert schema_str.count("enum FruitCountFields ") == 1
 
 
 def test_json_column_class_body_resolver_executes() -> None:
@@ -867,6 +1144,47 @@ def test_exclude_relationships_avoids_stub_collision(strawchemy: Strawchemy) -> 
     fruit_fields = set(DTOInspect(FruitNode).annotations())
     assert "color" not in fruit_fields
     assert {"id", "name", "sweetness", "color_id"} <= fruit_fields
+
+
+def _schema_field_type(schema: strawberry.Schema, type_name: str, field_name: str) -> object:
+    type_definition = schema.get_type_by_name(type_name)
+    assert isinstance(type_definition, StrawberryObjectDefinition)
+    field = type_definition.get_field(field_name)
+    return None if field is None else field.type
+
+
+def test_class_annotation_does_not_leak_into_related_types(strawchemy: Strawchemy) -> None:
+    """Test that a class annotation overrides its own field but not the same-named field of related types (#422)."""
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitType:
+        id: strawberry.ID
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert _schema_field_type(schema, "FruitType", "id") is strawberry.ID
+    assert _schema_field_type(schema, "ColorType", "id") is UUID
+
+
+def test_relay_node_id_annotation_does_not_leak_into_related_types(strawchemy: Strawchemy) -> None:
+    """Test that a private relay NodeID annotation leaves the same-named field of related types public (#422)."""
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitType:
+        name: relay.NodeID[str]
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert _schema_field_type(schema, "FruitType", "name") is None
+    assert _schema_field_type(schema, "ColorType", "name") is str
 
 
 def test_default_order_by_on_non_list_field_raises() -> None:

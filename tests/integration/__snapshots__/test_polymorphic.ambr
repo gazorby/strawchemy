@@ -1,0 +1,489 @@
+# serializer version: 1
+# name: test_paginated_relation[session-async-tracked-base-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.name AS name,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY vehicle_1.id ASC, vehicle_1.id) AS rank
+            FROM vehicle AS vehicle_1
+           WHERE vehicle_1.garage_id IS NOT NULL
+           GROUP BY vehicle_1.id,
+                    vehicle_1.name,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY vehicle_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.name
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-base-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.name AS name,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY vehicle_1.id ASC, vehicle_1.id) AS `rank`
+            FROM vehicle AS vehicle_1
+           WHERE vehicle_1.garage_id IS NOT NULL
+           GROUP BY vehicle_1.id,
+                    vehicle_1.name,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY vehicle_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.name
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %s,
+                 %s
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.`rank` > %s
+     AND anon_1.`rank` <= %s
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-base-psycopg_async_engine]
+  '''
+  SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.name
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS garage
+    LEFT OUTER JOIN LATERAL (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.name AS name,
+                 vehicle_1.kind AS kind
+            FROM vehicle AS vehicle_1
+           WHERE garage.id = vehicle_1.garage_id
+           ORDER BY vehicle_1.id ASC
+           LIMIT %(param_3)s::INTEGER
+          OFFSET %(param_4)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-joined-table-subclass-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT car_1.id AS id,
+                 car_1.doors AS doors,
+                 vehicle_1.id AS id_2,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY car_1.id ASC, car_1.id) AS rank
+            FROM vehicle AS vehicle_1
+            JOIN car AS car_1
+              ON vehicle_1.id = car_1.id
+           WHERE vehicle_1.garage_id IS NOT NULL
+           GROUP BY car_1.id,
+                    car_1.doors,
+                    vehicle_1.id,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY car_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.id_2,
+         anon_1.kind,
+         anon_1.doors
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-joined-table-subclass-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT car_1.id AS id,
+                 car_1.doors AS doors,
+                 vehicle_1.id AS id_2,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY car_1.id ASC, car_1.id) AS `rank`
+            FROM vehicle AS vehicle_1
+           INNER JOIN car AS car_1
+              ON vehicle_1.id = car_1.id
+           WHERE vehicle_1.garage_id IS NOT NULL
+           GROUP BY car_1.id,
+                    car_1.doors,
+                    vehicle_1.id,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY car_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.id_2,
+         anon_1.kind,
+         anon_1.doors
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %s,
+                 %s
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.`rank` > %s
+     AND anon_1.`rank` <= %s
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-joined-table-subclass-psycopg_async_engine]
+  '''
+  SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.id_2,
+         anon_1.kind,
+         anon_1.doors
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS garage
+    LEFT OUTER JOIN LATERAL (
+          SELECT car_1.id AS id,
+                 car_1.doors AS doors,
+                 vehicle_1.id AS id_2,
+                 vehicle_1.kind AS kind
+            FROM vehicle AS vehicle_1
+            JOIN car AS car_1
+              ON vehicle_1.id = car_1.id
+           WHERE garage.id = vehicle_1.garage_id
+           ORDER BY car_1.id ASC
+           LIMIT %(param_3)s::INTEGER
+          OFFSET %(param_4)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-single-table-subclass-aiosqlite_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.gears AS gears,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY vehicle_1.id ASC, vehicle_1.id) AS rank
+            FROM vehicle AS vehicle_1
+           WHERE vehicle_1.garage_id IS NOT NULL
+             AND vehicle_1.kind IN (__[POSTCOMPILE_kind_1])
+           GROUP BY vehicle_1.id,
+                    vehicle_1.gears,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY vehicle_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.gears
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_2])
+     AND anon_1.rank > ?
+     AND anon_1.rank <= ?
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_3])
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-single-table-subclass-asyncmy_engine]
+  '''
+  WITH anon_1 AS (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.gears AS gears,
+                 vehicle_1.kind AS kind,
+                 vehicle_1.garage_id AS garage_id,
+                 dense_rank() OVER (PARTITION BY vehicle_1.garage_id ORDER BY vehicle_1.id ASC, vehicle_1.id) AS `rank`
+            FROM vehicle AS vehicle_1
+           WHERE vehicle_1.garage_id IS NOT NULL
+             AND vehicle_1.kind IN (__[POSTCOMPILE_kind_1])
+           GROUP BY vehicle_1.id,
+                    vehicle_1.gears,
+                    vehicle_1.kind,
+                    vehicle_1.garage_id
+           ORDER BY vehicle_1.id ASC
+         ) SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.gears
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %s,
+                 %s
+         ) AS garage
+    LEFT OUTER JOIN anon_1
+      ON garage.id = anon_1.garage_id
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_2])
+     AND anon_1.`rank` > %s
+     AND anon_1.`rank` <= %s
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_3])
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_relation[session-async-tracked-single-table-subclass-psycopg_async_engine]
+  '''
+  SELECT garage.id,
+         anon_1.id AS id_1,
+         anon_1.kind,
+         anon_1.gears
+    FROM (
+          SELECT garage.id AS id
+            FROM garage AS garage
+           ORDER BY garage.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS garage
+    LEFT OUTER JOIN LATERAL (
+          SELECT vehicle_1.id AS id,
+                 vehicle_1.gears AS gears,
+                 vehicle_1.kind AS kind
+            FROM vehicle AS vehicle_1
+           WHERE garage.id = vehicle_1.garage_id
+             AND vehicle_1.kind IN (__[POSTCOMPILE_kind_1])
+             AND vehicle_1.kind IN (__[POSTCOMPILE_kind_2])
+           ORDER BY vehicle_1.id ASC
+           LIMIT %(param_3)s::INTEGER
+          OFFSET %(param_4)s::INTEGER
+         ) AS anon_1
+      ON TRUE
+     AND anon_1.kind IN (__[POSTCOMPILE_kind_3])
+   ORDER BY garage.id ASC,
+            anon_1.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-base-aiosqlite_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.name
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.name AS name,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           ORDER BY vehicle.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS vehicle
+   ORDER BY vehicle.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-base-asyncmy_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.name
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.name AS name,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           ORDER BY vehicle.id ASC
+           LIMIT %s,
+                 %s
+         ) AS vehicle
+   ORDER BY vehicle.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-base-psycopg_async_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.name
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.name AS name,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           ORDER BY vehicle.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS vehicle
+   ORDER BY vehicle.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-joined-table-subclass-aiosqlite_engine]
+  '''
+  SELECT car.id,
+         car.id_1,
+         car.kind,
+         car.name,
+         car.doors
+    FROM (
+          SELECT car_car.id AS id,
+                 car_vehicle.name AS name,
+                 car_car.doors AS doors,
+                 car_vehicle.id AS id_1,
+                 car_vehicle.kind AS kind
+            FROM vehicle AS car_vehicle
+            JOIN car AS car_car
+              ON car_vehicle.id = car_car.id
+           ORDER BY car_car.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS car
+   ORDER BY car.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-joined-table-subclass-asyncmy_engine]
+  '''
+  SELECT car.id,
+         car.id_1,
+         car.kind,
+         car.name,
+         car.doors
+    FROM (
+          SELECT car_car.id AS id,
+                 car_vehicle.name AS name,
+                 car_car.doors AS doors,
+                 car_vehicle.id AS id_1,
+                 car_vehicle.kind AS kind
+            FROM vehicle AS car_vehicle
+           INNER JOIN car AS car_car
+              ON car_vehicle.id = car_car.id
+           ORDER BY car_car.id ASC
+           LIMIT %s,
+                 %s
+         ) AS car
+   ORDER BY car.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-joined-table-subclass-psycopg_async_engine]
+  '''
+  SELECT car.id,
+         car.id_1,
+         car.kind,
+         car.name,
+         car.doors
+    FROM (
+          SELECT car_car.id AS id,
+                 car_vehicle.name AS name,
+                 car_car.doors AS doors,
+                 car_vehicle.id AS id_1,
+                 car_vehicle.kind AS kind
+            FROM vehicle AS car_vehicle
+            JOIN car AS car_car
+              ON car_vehicle.id = car_car.id
+           ORDER BY car_car.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS car
+   ORDER BY car.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-single-table-subclass-aiosqlite_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.gears
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.gears AS gears,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           WHERE vehicle.kind IN (__[POSTCOMPILE_kind_1])
+           ORDER BY vehicle.id ASC
+           LIMIT ?
+          OFFSET ?
+         ) AS vehicle
+   WHERE vehicle.kind IN (__[POSTCOMPILE_kind_2])
+   ORDER BY vehicle.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-single-table-subclass-asyncmy_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.gears
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.gears AS gears,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           WHERE vehicle.kind IN (__[POSTCOMPILE_kind_1])
+           ORDER BY vehicle.id ASC
+           LIMIT %s,
+                 %s
+         ) AS vehicle
+   WHERE vehicle.kind IN (__[POSTCOMPILE_kind_2])
+   ORDER BY vehicle.id ASC
+  '''
+# ---
+# name: test_paginated_root[session-async-tracked-single-table-subclass-psycopg_async_engine]
+  '''
+  SELECT vehicle.id,
+         vehicle.kind,
+         vehicle.gears
+    FROM (
+          SELECT vehicle.id AS id,
+                 vehicle.gears AS gears,
+                 vehicle.kind AS kind
+            FROM vehicle AS vehicle
+           WHERE vehicle.kind IN (__[POSTCOMPILE_kind_1])
+           ORDER BY vehicle.id ASC
+           LIMIT %(param_1)s::INTEGER
+          OFFSET %(param_2)s::INTEGER
+         ) AS vehicle
+   WHERE vehicle.kind IN (__[POSTCOMPILE_kind_2])
+   ORDER BY vehicle.id ASC
+  '''
+# ---

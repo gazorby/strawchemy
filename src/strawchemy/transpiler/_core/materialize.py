@@ -112,7 +112,7 @@ def _materialize(level: Level, rows: RowSet, projection: Projection) -> QueryPla
         assert join.alias is not None
         return QueryPlan(RowSet.over(join.alias), projection, level.context, join_to_parent=join)
     rendered = render_rows(rows, exported, db_features)
-    page = rendered.statement.subquery(level.request.model.__tablename__)
+    page = rendered.statement.subquery(SQLAlchemyInspector.table_name(level.request.model))
     entities = _entities_over(page, row_aliases)
     page_rows = RowSet.over(entities[rows.source]).with_order_by(
         OrderPriority.CLIENT, *adapt_clauses(rendered.order_by, page)
@@ -160,13 +160,15 @@ def _reads_other(element: ClauseElement, from_clauses: Collection[FromClause]) -
 
 
 def _entity_reads(alias: AliasedClass[Any], loaded: Sequence[str] | None, hooks: Sequence[QueryHook[Any]]) -> list[Any]:
-    """Returns what an entity loads: every column of ``loaded`` or of each undeferred property, its keys, its hooks'."""
+    """Returns what an entity loads: all columns of ``loaded`` or undeferred properties, keys, discriminator, hooks'."""
     alias_insp = inspect(alias)
     mapper = alias_insp.mapper
     keys = loaded if loaded is not None else [prop.key for prop in mapper.column_attrs if not prop.deferred]
     keys = [*keys, *(attribute.key for attribute in SQLAlchemyInspector.pk_attributes(mapper))]
     reads: list[Any] = [getattr(alias, key) for key in keys]
     adapter = ClauseAdapter(alias_insp.selectable)
+    always_loaded = [*mapper.primary_key, *([] if mapper.polymorphic_on is None else [mapper.polymorphic_on])]
+    reads.extend(map(adapter.traverse, always_loaded))
     reads.extend(
         adapter.traverse(column) for prop in mapper.column_attrs if prop.key in keys for column in prop.columns[1:]
     )
