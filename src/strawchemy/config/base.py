@@ -24,6 +24,8 @@ class StrawchemyConfig:
     dialect: SupportedDialect
     session_getter: AnySessionGetter = default_session_getter
     """Function to retrieve SQLAlchemy session from strawberry `Info` object."""
+    read_session_getter: AnySessionGetter | None = None
+    """Function returning a dedicated session for each read root field, enabling concurrent reads."""
     auto_snake_case: bool = True
     """Automatically convert snake cased names to camel case"""
     repository_type: AnyRepositoryType = StrawchemySyncRepository

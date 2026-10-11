@@ -13,6 +13,13 @@ from strawchemy.dto.base import TYPING_NS
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from strawchemy.dto.utils import read_all_config
 from strawchemy.exceptions import StrawchemyFieldError
+from strawchemy.repository.strawberry._session import (
+    SessionScope,
+    async_read_scope,
+    async_write_scope,
+    sync_read_scope,
+    sync_write_scope,
+)
 from strawchemy.schema.factories import (
     AggregateFilterFactory,
     AggregateRootTypeFactory,
@@ -49,10 +56,11 @@ if TYPE_CHECKING:
     from collections.abc import Sequence
 
     from sqlalchemy.orm import DeclarativeBase
+    from strawberry import Info
     from strawberry.types.arguments import StrawberryArgument
 
     from strawchemy.dto.types import FieldSpec
-    from strawchemy.repository.typing import QueryHookCallable
+    from strawchemy.repository.typing import AsyncSessionGetter, QueryHookCallable, SyncSessionGetter
     from strawchemy.schema.filters.fields import CustomFilterApply, JoinStrategy
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
@@ -190,6 +198,22 @@ class Strawchemy:
 
         return PydanticMapper(self)
 
+    def read_session(self, info: Info[Any, Any]) -> SessionScope:
+        """Return a scope yielding a read session, the request session when it holds pending writes."""
+        getter, read_getter = self.config.session_getter, self.config.read_session_getter
+        return SessionScope(
+            async_read_scope(info, cast("AsyncSessionGetter", getter), cast("AsyncSessionGetter | None", read_getter)),
+            sync_read_scope(info, cast("SyncSessionGetter", getter), cast("SyncSessionGetter | None", read_getter)),
+        )
+
+    def write_session(self, info: Info[Any, Any]) -> SessionScope:
+        """Return a scope yielding the request session, recording that it was written to."""
+        getter = self.config.session_getter
+        return SessionScope(
+            async_write_scope(info, cast("AsyncSessionGetter", getter)),
+            sync_write_scope(info, cast("SyncSessionGetter", getter)),
+        )
+
     @overload
     def field(
         self,
@@ -209,6 +233,7 @@ class Strawchemy:
         query_hook: QueryHook[Any] | Sequence[QueryHook[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
         root_field: bool = True,
+        read_only: bool = False,
         **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> StrawchemyField: ...
 
@@ -230,6 +255,7 @@ class Strawchemy:
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
         root_field: bool = True,
+        read_only: bool = False,
         **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> Any: ...
 
@@ -251,6 +277,7 @@ class Strawchemy:
         query_hook: QueryHookCallable[Any] | Sequence[QueryHookCallable[Any]] | None = None,
         repository_type: AnyRepositoryType | None = None,
         root_field: bool = True,
+        read_only: bool = False,
         **field_kwargs: Unpack[OutputFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL field with enhanced SQLAlchemy capabilities.
@@ -284,6 +311,8 @@ class Strawchemy:
             query_hook: A callable or sequence of callables to modify the SQLAlchemy query.
             repository_type: A custom strawberry class for data fetching logic.
             root_field: Indicates if this is a root-level field.
+            read_only: Marks a custom resolver as only reading, so that ``StrawchemyExecutionContext``
+                may run it concurrently with neighbouring read root fields of a mutation.
             **field_kwargs: ``strawberry.field`` arguments forwarded to the generated field
                 (see ``OutputFieldKwargs``). ``name`` maps to the GraphQL field name.
 
@@ -311,6 +340,7 @@ class Strawchemy:
             root_aggregations=root_aggregations,
             query_hook=query_hook,
             model_field=model_field,
+            read_only=read_only,
             python_name=None,
             graphql_name=field_kwargs.get("name"),
             type_annotation=type_annotation,
