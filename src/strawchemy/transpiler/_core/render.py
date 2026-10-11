@@ -57,6 +57,16 @@ def _by_depth(joins: Mapping[Any, Join]) -> list[Join]:
     return sorted(joins.values(), key=lambda join: join.key[1].level)
 
 
+def _join_target(join: Join) -> FromClause | AliasedClass[Any]:
+    """Returns the entity reading the FROM clause ``join`` targets, if any, so that the ORM puts its criteria in ON.
+
+    Outside the join, a single-table subclass's criterion goes to WHERE and drops the parents an outer join keeps.
+    """
+    if join.alias is not None and inspect(join.alias).selectable is join.target:
+        return join.alias
+    return join.target
+
+
 def _assemble(
     statement: Select[Any],
     *,
@@ -79,7 +89,7 @@ def _assemble(
     statement, edit_order_by = _run_edits(statement, rows.edits)
     for join in joins:
         if join.left is None:
-            statement = statement.join(join.target, onclause=join.onclause, isouter=join.is_outer)
+            statement = statement.join(_join_target(join), onclause=join.onclause, isouter=join.is_outer)
         else:
             statement = statement.join_from(join.left, join.target, onclause=join.onclause, isouter=join.is_outer)
     if where:
