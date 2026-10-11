@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import shutil
+import tempfile
 from pathlib import Path
 
 from cyclopts import App
@@ -59,16 +60,21 @@ def snapshot(version: str, output: Path = REPO_ROOT / "docs" / "archive", *, doc
         msg = f"Snapshot already exists: {folder}"
         raise FileExistsError(msg)
     source = docs / "src"
-    shutil.copytree(source, folder)
-    for page in folder.rglob("*.md"):
-        origin = source / page.relative_to(folder)
-        text = expand_includes(page.read_text(encoding="utf-8"), origin.parent)
-        page.write_text(version_links(text, version), encoding="utf-8")
-    navigation = json.loads((docs / ".vitepress" / "navigation.json").read_text(encoding="utf-8"))
-    reference_sidebar = json.loads((docs / ".vitepress" / "reference-sidebar.json").read_text(encoding="utf-8"))
-    (folder / "navigation.json").write_text(
-        json.dumps(merged_navigation(navigation, reference_sidebar), indent=2) + "\n", encoding="utf-8"
-    )
+    output.mkdir(parents=True, exist_ok=True)
+    # Built aside and moved in last, so a failure never leaves a partial folder that blocks the retry.
+    with tempfile.TemporaryDirectory(dir=output) as staging:
+        draft = Path(staging) / version
+        shutil.copytree(source, draft)
+        for page in draft.rglob("*.md"):
+            origin = source / page.relative_to(draft)
+            text = expand_includes(page.read_text(encoding="utf-8"), origin.parent)
+            page.write_text(version_links(text, version), encoding="utf-8")
+        navigation = json.loads((docs / ".vitepress" / "navigation.json").read_text(encoding="utf-8"))
+        reference_sidebar = json.loads((docs / ".vitepress" / "reference-sidebar.json").read_text(encoding="utf-8"))
+        (draft / "navigation.json").write_text(
+            json.dumps(merged_navigation(navigation, reference_sidebar), indent=2) + "\n", encoding="utf-8"
+        )
+        draft.rename(folder)
     print(f"Wrote {folder}")
     return folder
 

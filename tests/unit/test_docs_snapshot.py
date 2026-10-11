@@ -111,3 +111,11 @@ def test_snapshot_refuses_existing_folder(docs_snapshot: ModuleType, docs: Path,
     (tmp_path / "archive" / "v0.25.0").mkdir(parents=True)
     with pytest.raises(FileExistsError):
         docs_snapshot.snapshot("v0.25.0", tmp_path / "archive", docs=docs)
+
+
+def test_failed_snapshot_leaves_no_folder(docs_snapshot: ModuleType, docs: Path, tmp_path: Path) -> None:
+    """Test that a snapshot failing midway leaves the archive untouched, so a retry can succeed."""
+    (docs.parent / "CHANGELOG.md").unlink()
+    with pytest.raises(FileNotFoundError):
+        docs_snapshot.snapshot("v0.25.0", tmp_path / "archive", docs=docs)
+    assert list((tmp_path / "archive").iterdir()) == []
