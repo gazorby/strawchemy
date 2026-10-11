@@ -87,6 +87,7 @@ __all__ = (
     "ASYNCPG_ENGINE_PARAM",
     "ASYNC_ENGINE_PARAMS",
     "QueryTracker",
+    "StatementCounter",
     "any_async_query",
     "any_async_session",
     "any_query",
@@ -1031,3 +1032,17 @@ class QueryTracker:
             return
         for query in filtered:
             assert query.statement_formatted == snapshot
+
+
+@dataclass
+class StatementCounter:
+    """Count the ORM statements executed on an async session."""
+
+    session: AsyncSession
+    count: int = 0
+
+    def __post_init__(self) -> None:
+        listens_for(self.session.sync_session, "do_orm_execute")(self._on_execute)
+
+    def _on_execute(self, _: object) -> None:
+        self.count += 1
