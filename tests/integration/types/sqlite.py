@@ -28,6 +28,7 @@ from tests.integration.models import (
     Car,
     Color,
     DateTimeModel,
+    Driver,
     ExprBike,
     ExprGarage,
     ExprVehicle,
@@ -472,6 +473,10 @@ class BikeType: ...
 
 @strawchemy.type(Garage, include="all", paginate="all", order="all", override=True)
 class GarageType: ...
+
+
+@strawchemy.type(Driver, include="all", override=True)
+class DriverType: ...
 
 
 # Expression polymorphic types
@@ -993,6 +998,8 @@ class PolymorphicAsyncQuery:
     cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
     bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
     garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
+    all_vehicles: list[VehicleType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    drivers: list[DriverType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
 
 
 @strawberry.type
@@ -1001,6 +1008,8 @@ class PolymorphicSyncQuery:
     cars: list[CarType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
     bikes: list[BikeType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
     garages: list[GarageType] = strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
+    all_vehicles: list[VehicleType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    drivers: list[DriverType] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 @strawberry.type
