@@ -64,6 +64,18 @@ async def test_many(any_async_query: AnyQueryExecutor, raw_users: RawRecordData)
     assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
 
 
+async def test_root_fields_share_async_session(
+    any_async_query: AnyQueryExecutor, raw_users: RawRecordData, raw_colors: RawRecordData
+) -> None:
+    """Test that sibling root fields resolved concurrently on one async session all succeed."""
+    result = await maybe_async(any_async_query("{ users { name } colors { name } }"))
+
+    assert not result.errors
+    assert result.data
+    assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
+    assert result.data["colors"] == [{"name": color["name"]} for color in raw_colors]
+
+
 async def test_relation(any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
     result = await maybe_async(any_async_query("{ fruits { color { id } } }"))
 

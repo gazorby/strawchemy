@@ -6,8 +6,8 @@ import pytest
 import strawberry
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
-from strawberry.exceptions import UnresolvedFieldTypeError
 from strawberry.types import get_object_definition
+from strawberry.types.base import StrawberryOptional
 
 from strawchemy import Strawchemy
 from strawchemy.exceptions import StrawchemyFieldError
@@ -37,7 +37,7 @@ _sc = Strawchemy("sqlite")
 
 @_sc.type(_Color, include=["id", "name"])
 class _ColorType:
-    extra: _Later | None = None
+    extra: _LaterType | None = None
 
 
 @_sc.filter(_Color, include=["id", "name"])
@@ -55,20 +55,20 @@ class _Later:
     value: int
 
 
-@pytest.mark.parametrize("dto", [_ColorType, _ColorFilter, _ColorOrder])
-def test_late_declared_annotation_is_kept_as_forward_reference(dto: type[Any]) -> None:
-    """Test that an annotation naming a class declared later reaches strawberry unevaluated."""
+@strawberry.type
+class _LaterType:
+    value: int
+
+
+@pytest.mark.parametrize(("dto", "expected"), [(_ColorType, _LaterType), (_ColorFilter, _Later), (_ColorOrder, _Later)])
+def test_late_declared_annotation_resolves(dto: type[Any], expected: type[Any]) -> None:
+    """Test that an annotation naming a class declared later resolves to that class."""
     extra = next(f for f in get_object_definition(dto, strict=True).fields if f.name == "extra")
 
-    assert extra.type_annotation is not None
-    assert extra.type_annotation.annotation == "_Later | None"
+    assert isinstance(extra.type, StrawberryOptional)
+    assert extra.type.of_type is expected
 
 
-@pytest.mark.xfail(
-    raises=UnresolvedFieldTypeError,
-    strict=True,
-    reason="generated DTOs resolve forward references against strawchemy's module, not the user's",
-)
 def test_late_declared_annotation_resolves_in_schema() -> None:
     """Test that the schema resolves an annotation naming a class declared after the inputs."""
 

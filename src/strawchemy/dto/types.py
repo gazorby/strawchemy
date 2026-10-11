@@ -11,7 +11,7 @@ from typing import TYPE_CHECKING, Any, Literal, TypeAlias, final
 
 from typing_extensions import Self, TypeIs, override
 
-from strawchemy.utils.annotation import get_type_hints_partial
+from strawchemy.utils.annotation import get_type_hints_partial, without_classvars
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator, Mapping
@@ -344,7 +344,7 @@ class DTOConfig:
         exclude_defaults: bool | type[DTOUnset] = DTOUnset,
         alias_generator: Callable[[str], str] | type[DTOUnset] = DTOUnset,
         partial_default: Any | type[DTOUnset] = DTOUnset,
-        scope: DTOScope | type[DTOUnset] = DTOUnset,
+        scope: DTOScope | type[DTOUnset] | None = DTOUnset,
         exclude_from_scope: bool | type[DTOUnset] = DTOUnset,
         tags: set[str] | type[DTOUnset] = DTOUnset,
     ) -> DTOConfig:
@@ -400,7 +400,7 @@ class DTOConfig:
         include = set(include_set.field_set)
         include_all = FieldGroup.ALL in include_set.field_set or bool(FieldSet(self.exclude))
         annotation_overrides: dict[str, Any] = self.annotation_overrides
-        base_annotations = get_type_hints_partial(base)
+        base_annotations = without_classvars(get_type_hints_partial(base))
         for name, annotation in base_annotations.items():
             if not include_all:
                 include.add(name)

@@ -4,12 +4,13 @@ import dataclasses
 from collections import defaultdict
 from copy import copy
 from enum import Enum
+from functools import partial
 from typing import TYPE_CHECKING, Any, ForwardRef, NewType, TypeVar, cast, overload
 
 import strawberry
 from strawberry import LazyType
 from strawberry.annotation import StrawberryAnnotation
-from strawberry.types import get_object_definition, has_object_definition
+from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryContainer
 from strawberry.types.field import StrawberryField
 from strawberry.types.union import StrawberryUnion
@@ -17,6 +18,7 @@ from strawberry.types.union import StrawberryUnion
 from strawchemy.dto.strawberry import MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import FieldSet
 from strawchemy.exceptions import StrawchemyError
+from strawchemy.schema.field import RegistryAnnotation
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
 
@@ -199,7 +201,11 @@ class StrawberryRegistry:
         if field.type_annotation:
             for type_ in inner_types(field.type_annotation.raw_annotation):
                 if isinstance(type_, (str, ForwardRef)):
-                    field.type_annotation.namespace = self.namespace(graphql_type)
+                    field.type_annotation = RegistryAnnotation(
+                        field.type_annotation.raw_annotation,
+                        registry_namespace_getter=partial(self.namespace, graphql_type),
+                        namespace=field.type_annotation.namespace,
+                    )
                     return type_.__forward_arg__ if isinstance(type_, ForwardRef) else type_
 
         if field_type_def := get_object_definition(inner_type):
@@ -369,7 +375,7 @@ class StrawberryRegistry:
             order=order if isinstance(order, type) else FieldSet(order),
             distinct_on=distinct_on if isinstance(distinct_on, type) else FieldSet(distinct_on),
             paginate=FieldSet(paginate),
-            scope=dto_config.scope,
+            scope=dto_config.scope if current_node is None else None,
             model=model,
             exclude_from_scope=dto_config.exclude_from_scope,
         )
@@ -444,9 +450,8 @@ class StrawberryRegistry:
             default_name=default_name,
         )
         self._check_conflicts(type_info)
-        if has_object_definition(dto):
-            # ``TypeGuard`` replaces the type instead of intersecting it, dropping the DTO type var.
-            return cast("type[StrawchemyDTOT]", dto)
+        if "__strawberry_definition__" in vars(dto):
+            return dto
         if existing := self._get(type_info):
             return existing
 
@@ -461,6 +466,9 @@ class StrawberryRegistry:
                 directives=directives,
             ),
         )
+        definition = get_object_definition(strawberry_type, strict=True)
+        # The user class inheriting an interface exposes its definition too, so strawberry lists the interface twice.
+        definition.interfaces = list({id(interface): interface for interface in definition.interfaces}.values())
         self._register(type_info, strawberry_type)
         return strawberry_type
 

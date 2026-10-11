@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import date
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Optional, Union
 from unittest.mock import Mock
 
 import pytest
@@ -10,7 +10,7 @@ from sqlalchemy import JSON, Column, Dialect, Integer, MetaData, Table, TypeDeco
 from sqlalchemy.dialects import postgresql
 
 from strawchemy.exceptions import SessionNotFoundError
-from strawchemy.utils.annotation import get_type_hints_partial, inner_types
+from strawchemy.utils.annotation import get_type_hints_partial, inner_types, is_classvar
 from strawchemy.utils.postgres import as_jsonb, comparable
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -107,6 +107,28 @@ def test_get_type_hints_partial_resolves_names_from_given_localns() -> None:
         "later": Later,
         "missing": "NotDefinedYet",
     }
+
+
+@pytest.mark.parametrize(
+    ("annotation", "expected"),
+    [
+        (ClassVar, True),
+        (ClassVar[int], True),
+        ("ClassVar[int]", True),
+        ("typing.ClassVar[int]", True),
+        (int, False),
+        (list[int], False),
+        ("list[ClassVar[int]]", False),
+        ("ClassVariable", False),
+        ("'ClassVar[int]'", True),
+        ("\"'ClassVar[int]'\"", True),
+        ("'list[int]'", False),
+        ("ClassVar[", False),
+    ],
+)
+def test_is_classvar(annotation: object, expected: bool) -> None:
+    """Test that ClassVar annotations are detected, evaluated or as strings."""
+    assert is_classvar(annotation) is expected
 
 
 class _JSONBDecorator(TypeDecorator[Any]):
