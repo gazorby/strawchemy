@@ -40,6 +40,7 @@ interval_metadata = MetaData()
 date_time_metadata = MetaData()
 polymorphic_metadata = MetaData()
 expression_polymorphic_metadata = MetaData()
+table_mapped_metadata = MetaData()
 
 TextArrayType = ARRAY(Text).with_variant(postgresql.ARRAY(Text), "postgresql")
 JSONType = (
@@ -123,6 +124,11 @@ class PolymorphicBase(DeclarativeBase):
 class ExpressionPolymorphicBase(BaseColumns, DeclarativeBase):
     __abstract__ = True
     registry = Registry(metadata=expression_polymorphic_metadata)
+
+
+class TableMappedBase(DeclarativeBase):
+    __abstract__ = True
+    registry = Registry(metadata=table_mapped_metadata)
 
 
 # Models
@@ -353,3 +359,31 @@ class ExprVehicle(ExpressionPolymorphicBase):
 
 class ExprBike(ExprVehicle):
     __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
+table_mapped_color = Table(
+    "table_mapped_color",
+    table_mapped_metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR(255), nullable=True),
+)
+
+table_mapped_fruit = Table(
+    "table_mapped_fruit",
+    table_mapped_metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", VARCHAR(255), nullable=True),
+    Column("color_id", ForeignKey("table_mapped_color.id"), nullable=True),
+)
+
+
+class TableMappedColor(TableMappedBase):
+    __table__ = table_mapped_color
+    __tablename__ = "table_mapped_color"  # Root queries read it until #417 is fixed.
+
+
+class TableMappedFruit(TableMappedBase):
+    __table__ = table_mapped_fruit
+    __tablename__ = "table_mapped_fruit"  # Root queries read it until #417 is fixed.
+
+    color = relationship(TableMappedColor)

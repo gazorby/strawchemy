@@ -40,6 +40,7 @@ from tests.integration.models import (
     JSONModel,
     PostgresJSONModel,
     RankedUser,
+    TableMappedFruit,
     User,
     Vehicle,
 )
@@ -433,6 +434,13 @@ class ArrayFilter: ...
 
 @strawchemy.type(ArrayModel, include="all")
 class ArrayType: ...
+
+
+# Table-mapped models
+
+
+@strawchemy.type(TableMappedFruit, include="all")
+class TableMappedFruitType: ...
 
 
 # Interval type
@@ -997,6 +1005,16 @@ class SyncQuery:
     def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         return repo.get_one_or_none().graphql_type_or_none()
+
+
+@strawberry.type
+class TableMappedAsyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class TableMappedSyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 @strawberry.type

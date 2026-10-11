@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Optional
 
 import pytest
 from sqlalchemy import ARRAY, JSON, Column, ForeignKey, Integer, String, Table, case, inspect, join
@@ -21,6 +21,7 @@ from strawberry.types import get_object_definition
 from strawchemy import Strawchemy
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from tests.unit.models import TableMappedColor, TableMappedFruit
 from tests.unit.schemas.join_mapped import JoinedAB
 
 
@@ -144,6 +145,12 @@ class WheeledBike(WheeledVehicle):
     __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
 
 
+class Note(_Base):
+    __tablename__ = "rev_note"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    body: Mapped[str] = mapped_column(nullable=True)
+
+
 _Base.registry.configure()
 
 _ALL_RELATIONSHIPS = [
@@ -223,3 +230,51 @@ def test_id_field_definitions_of_join_mapped_class() -> None:
         ("id", JoinedAB.id),
         ("b_id", JoinedAB.b_id),
     ]
+
+
+@pytest.mark.parametrize(
+    ("model", "key", "expected"),
+    [
+        pytest.param(TableMappedFruit, "id", int, id="primary-key"),
+        pytest.param(TableMappedFruit, "name", Optional[str], id="nullable-column"),
+        pytest.param(TableMappedFruit, "sweetness", int, id="non-nullable-column"),
+        pytest.param(TableMappedFruit, "color_id", Optional[int], id="nullable-foreign-key"),
+        pytest.param(TableMappedFruit, "required_color_id", int, id="non-nullable-foreign-key"),
+        pytest.param(TableMappedFruit, "color", Optional[TableMappedColor], id="nullable-to-one"),
+        pytest.param(TableMappedFruit, "required_color", TableMappedColor, id="non-nullable-to-one"),
+        pytest.param(TableMappedColor, "fruits", "TableMappedFruit", id="to-many"),
+        pytest.param(TableMappedColor, "required_fruit", Optional["TableMappedFruit"], id="reverse-one-to-one"),
+        pytest.param(Note, "body", str, id="annotated-nullable-column"),
+    ],
+)
+def test_field_definition_type_hint_nullability(model: type[DeclarativeBase], key: str, expected: object) -> None:
+    """Test that a column or to-one relation without a `Mapped` hint is optional when nullable, unlike a hinted one."""
+    inspector = SQLAlchemyInspector()
+    type_hint = inspector.get_type_hints(model).get(key, DTOMissing)
+    attribute = inspect(model).attrs[key].class_attribute
+    field_definition = inspector.field_definition(attribute, DTOConfig(Purpose.READ), type_hint=type_hint)
+    assert field_definition.type_hint == expected
+
+
+@pytest.mark.geo
+@pytest.mark.extras
+def test_field_definition_type_hint_geometry_nullability() -> None:
+    """Test that a geometry column without a `Mapped` hint is optional only when nullable."""
+    geoalchemy2 = pytest.importorskip("geoalchemy2")
+    shapely = pytest.importorskip("shapely")
+
+    class GeoTableMapped(_Base):
+        __table__ = Table(
+            "rev_geo_table_mapped",
+            _Base.metadata,
+            Column("id", Integer, primary_key=True),
+            Column("point", geoalchemy2.Geometry("POINT"), nullable=True),
+            Column("point_required", geoalchemy2.Geometry("POINT"), nullable=False),
+        )
+
+    inspector = SQLAlchemyInspector()
+    attrs = inspect(GeoTableMapped).attrs
+    point = inspector.field_definition(attrs["point"].class_attribute, DTOConfig(Purpose.READ))
+    point_required = inspector.field_definition(attrs["point_required"].class_attribute, DTOConfig(Purpose.READ))
+    assert point.type_hint == Optional[shapely.Point]
+    assert point_required.type_hint is shapely.Point

@@ -38,6 +38,7 @@ from tests.integration.models import (
     IntervalModel,
     JSONModel,
     RankedUser,
+    TableMappedFruit,
     User,
     Vehicle,
 )
@@ -421,6 +422,13 @@ class RankedUserType: ...
 @strawchemy.pydantic.create(RankedUser, include="all")
 class RankedUserCreateValidation:
     name: Annotated[str, AfterValidator(_check_lower_case)]
+
+
+# Table-mapped models
+
+
+@strawchemy.type(TableMappedFruit, include="all")
+class TableMappedFruitType: ...
 
 
 # Interval type
@@ -969,6 +977,16 @@ class SyncQuery:
     def get_color(self, info: strawberry.Info, color: str) -> ColorType | None:
         repo = StrawchemySyncRepository(ColorType, info, filter_statement=select(Color).where(Color.name == color))
         return repo.get_one_or_none().graphql_type_or_none()
+
+
+@strawberry.type
+class TableMappedAsyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+
+
+@strawberry.type
+class TableMappedSyncQuery:
+    table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field(repository_type=StrawchemySyncRepository)
 
 
 @strawberry.type
