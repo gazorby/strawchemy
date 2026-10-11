@@ -6,6 +6,8 @@ pattern, built on top of SQLAlchemy's asynchronous API.
 
 from __future__ import annotations
 
+import asyncio
+from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar
 
@@ -15,6 +17,7 @@ from strawchemy.utils.strawberry import default_session_getter, dto_model_from_t
 
 if TYPE_CHECKING:
     import builtins
+    from collections.abc import AsyncIterator
 
     from strawberry import Info
 
@@ -26,6 +29,8 @@ if TYPE_CHECKING:
 __all__ = ("StrawchemyAsyncRepository",)
 
 T = TypeVar("T")
+
+_SESSION_LOCK_KEY = "strawchemy_session_lock"
 
 
 @dataclass
@@ -73,6 +78,13 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             default_order_by=self.default_order_by,
         )
 
+    @asynccontextmanager
+    async def _graphql_repository(self) -> AsyncIterator[SQLAlchemyGraphQLAsyncRepository[Any]]:
+        # Sibling resolvers may run concurrently, and a session forbids concurrent operations.
+        repository = self.graphql_repository()
+        async with repository.session.info.setdefault(_SESSION_LOCK_KEY, asyncio.Lock()):
+            yield repository
+
     async def get_one_or_none(
         self,
         filter_input: BooleanFilterDTO | None = None,
@@ -93,15 +105,16 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the result or None
         """
-        query_results = await self.graphql_repository().get_one(
-            selection=self._tree,
-            dto_filter=filter_input or None,
-            order_by=list(order_by or []),
-            distinct_on=distinct_on,
-            limit=limit,
-            offset=offset,
-            query_hooks=self._query_hooks,
-        )
+        async with self._graphql_repository() as repository:
+            query_results = await repository.get_one(
+                selection=self._tree,
+                dto_filter=filter_input or None,
+                order_by=list(order_by or []),
+                distinct_on=distinct_on,
+                limit=limit,
+                offset=offset,
+                query_hooks=self._query_hooks,
+            )
         return GraphQLResult(query_results, self._tree)
 
     async def get_one(
@@ -128,15 +141,16 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             NoResultFound: If no results are found
             MultipleResultsFound: If multiple results are found
         """
-        query_results = await self.graphql_repository().get_one(
-            selection=self._tree,
-            dto_filter=filter_input or None,
-            order_by=list(order_by or []),
-            distinct_on=distinct_on,
-            limit=limit,
-            offset=offset,
-            query_hooks=self._query_hooks,
-        )
+        async with self._graphql_repository() as repository:
+            query_results = await repository.get_one(
+                selection=self._tree,
+                dto_filter=filter_input or None,
+                order_by=list(order_by or []),
+                distinct_on=distinct_on,
+                limit=limit,
+                offset=offset,
+                query_hooks=self._query_hooks,
+            )
         return GraphQLResult(query_results, self._tree)
 
     async def get_by_id(self, **kwargs: Any) -> GraphQLResult[Any, T]:
@@ -151,9 +165,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Raises:
             NoResultFound: If no entity with the given ID exists
         """
-        query_results = await self.graphql_repository().get_by_id(
-            selection=self._tree, query_hooks=self._query_hooks, **kwargs
-        )
+        async with self._graphql_repository() as repository:
+            query_results = await repository.get_by_id(selection=self._tree, query_hooks=self._query_hooks, **kwargs)
         return GraphQLResult(query_results, self._tree)
 
     async def list(
@@ -176,15 +189,16 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the list of matching entities
         """
-        query_results = await self.graphql_repository().list(
-            selection=self._tree,
-            dto_filter=filter_input or None,
-            order_by=list(order_by or []),
-            distinct_on=distinct_on,
-            limit=limit,
-            offset=offset,
-            query_hooks=self._query_hooks,
-        )
+        async with self._graphql_repository() as repository:
+            query_results = await repository.list(
+                selection=self._tree,
+                dto_filter=filter_input or None,
+                order_by=list(order_by or []),
+                distinct_on=distinct_on,
+                limit=limit,
+                offset=offset,
+                query_hooks=self._query_hooks,
+            )
         return GraphQLResult(query_results, self._tree)
 
     async def create(self, data: Input[InputModel]) -> GraphQLResult[InputModel, T]:
@@ -196,7 +210,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the created entity
         """
-        query_results = await self.graphql_repository().create(data, self._tree)
+        async with self._graphql_repository() as repository:
+            query_results = await repository.create(data, self._tree)
         return GraphQLResult(query_results, self._tree)
 
     async def upsert(
@@ -217,9 +232,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the upserted entity
         """
-        query_results = await self.graphql_repository().upsert(
-            data, self._tree, update_fields, conflict_fields, filter_input
-        )
+        async with self._graphql_repository() as repository:
+            query_results = await repository.upsert(data, self._tree, update_fields, conflict_fields, filter_input)
         return GraphQLResult(query_results, self._tree)
 
     async def update_by_id(self, data: Input[InputModel]) -> GraphQLResult[InputModel, T]:
@@ -234,7 +248,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Raises:
             NoResultFound: If no entity with the given ID exists
         """
-        query_results = await self.graphql_repository().update_by_ids(data, self._tree)
+        async with self._graphql_repository() as repository:
+            query_results = await repository.update_by_ids(data, self._tree)
         return GraphQLResult(query_results, self._tree)
 
     async def update_by_filter(
@@ -249,7 +264,8 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the updated entities
         """
-        query_results = await self.graphql_repository().update_by_filter(data, filter_input, self._tree)
+        async with self._graphql_repository() as repository:
+            query_results = await repository.update_by_filter(data, filter_input, self._tree)
         return GraphQLResult(query_results, self._tree)
 
     async def delete(self, filter_input: BooleanFilterDTO | None) -> GraphQLResult[Any, T]:
@@ -261,5 +277,6 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the deleted entities
         """
-        query_results = await self.graphql_repository().delete(self._tree, filter_input or None)
+        async with self._graphql_repository() as repository:
+            query_results = await repository.delete(self._tree, filter_input or None)
         return GraphQLResult(query_results, self._tree)

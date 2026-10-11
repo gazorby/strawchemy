@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import re
-from typing import Any, Optional, get_args
+from typing import Any, ClassVar, Optional, get_args
 from uuid import UUID, uuid4
 
 import pytest
@@ -82,6 +82,22 @@ def test_base_annotations_exclude_override(factory: AnyFactory, model: type[Toma
         "sweetness": float,
         "weight": float,
     }
+
+
+@pytest.mark.parametrize("model", [Tomato, TomatoDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+def test_base_classvar_is_not_a_field(factory: AnyFactory, model: type[Tomato | TomatoDataclass]) -> None:
+    """Test that a ClassVar on the base is neither a DTO field nor a type override."""
+
+    class Base:
+        name: ClassVar[int] = 1
+        kind: ClassVar[str] = "tomato"
+
+    config = DTOConfig(Purpose.READ, include={"name"}).with_base_annotations(Base)
+    dto = factory.factory(model, config, base=Base)
+
+    assert DTOInspect(dto).annotations() == {"name": str}
+    assert getattr(dto, "kind", "tomato") == "tomato"
 
 
 @pytest.mark.parametrize("models", [(Fruit, Color), (FruitDataclass, ColorDataclass)])

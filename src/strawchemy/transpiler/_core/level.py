@@ -76,7 +76,7 @@ class PlanContext:
         default_order_by: Sequence[OrderByExpr] | None = None,
     ) -> PlanContext:
         """Builds the context of a query on ``model``."""
-        inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [model.registry])
+        inspector = SQLAlchemyGraphQLInspector(cast("SupportedDialect", dialect.name), [inspect(model).registry])
         return cls(
             dialect=dialect,
             db_features=inspector.db_features,
@@ -321,7 +321,8 @@ class Level:
     def dml(cls, request: QueryRequest, context: PlanContext) -> Level:
         """Creates a level whose alias reads the table's own columns, as UPDATE and DELETE need in their WHERE."""
         model = request.model
-        alias = aliased(model.__mapper__, model.__table__)
+        mapper = inspect(model)
+        alias = aliased(mapper, mapper.local_table)
         return cls(request=request, context=context, node=request.selection.root, alias=alias, kind="dml")
 
     def hooks(self, node: QueryNodeType) -> Sequence[QueryHook[Any]]:

@@ -473,9 +473,11 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         mapper = inspect(model)
         type_hints = self.get_type_hints(model)
         for prop in mapper.attrs:
-            mapper_attr = mapper.attrs[prop.key]
+            # Skips properties SQLAlchemy maps without instrumenting them, like `_sa_polymorphic_on`
+            if prop.key not in mapper.all_orm_descriptors:
+                continue
             type_hint = type_hints.get(prop.key, DTOMissing)
-            yield prop.key, self.field_definition(mapper_attr.class_attribute, dto_config, type_hint=type_hint)
+            yield prop.key, self.field_definition(prop.class_attribute, dto_config, type_hint=type_hint)
 
     @override
     def id_field_definitions(
@@ -561,6 +563,27 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     def is_foreign_key(self, model_field: QueryableAttribute[Any]) -> bool:
         return self._is_column(model_field.property) and any(
             column.foreign_keys for column in model_field.property.columns
+        )
+
+    def foreign_key_relationships(self, model_field: QueryableAttribute[Any]) -> list[QueryableAttribute[Any]]:
+        """Many-to-one relationships whose local columns include the ``model_field`` column."""
+        columns = set(model_field.property.columns)
+        return [
+            relationship.class_attribute
+            for relationship in model_field.parent.mapper.relationships
+            if relationship.direction is RelationshipDirection.MANYTOONE and columns & relationship.local_columns
+        ]
+
+    def foreign_key_set_by_parent(
+        self, model_field: QueryableAttribute[Any], node: Node[Relation[DeclarativeBase, Any], None]
+    ) -> bool:
+        """Whether a one-to-many relationship of the parent node model targets the ``model_field`` column."""
+        if node.parent is None:
+            return False
+        columns = set(model_field.property.columns)
+        return any(
+            relationship.direction is RelationshipDirection.ONETOMANY and columns & relationship.remote_side
+            for relationship in node.parent.value.model.__mapper__.relationships
         )
 
     @override
