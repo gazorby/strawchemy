@@ -31,9 +31,11 @@ on:
       - 'README.md'
       - '.github/workflows/docs-deploy.yaml'
 
+# Every release deploys production, so releases share one group. They queue rather than cancel, so an older tag
+# dispatched later cannot cancel the newest one mid-deploy; it fails the newest-tag check instead.
 concurrency:
-  group: docs-${{ inputs.version || 'dev' }}
-  cancel-in-progress: true
+  group: docs-${{ (inputs.version || 'dev') == 'dev' && 'dev' || 'production' }}
+  cancel-in-progress: ${{ (inputs.version || 'dev') == 'dev' }}
 
 jobs:
   deploy:
