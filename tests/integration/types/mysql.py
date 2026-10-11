@@ -511,6 +511,23 @@ class ExprBikeType: ...
 class ExprGarageType: ...
 
 
+# Interface
+
+
+@strawberry.interface
+class Named:
+    name: str
+
+
+@strawchemy.type(Color, include={"id", "name"})
+class NamedColorType(Named): ...
+
+
+@strawchemy.type(Fruit, include={"id", "name"})
+class NamedFruitType(Named):
+    color: NamedColorType | None
+
+
 # Queries
 
 
@@ -1057,6 +1074,24 @@ class ExprVehicleSyncQuery:
         repository_type=StrawchemySyncRepository,
     )
     garages: list[ExprGarageType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+
+
+@strawberry.type
+class InterfaceAsyncQuery:
+    fruits: list[NamedFruitType] = strawchemy.field(filter_input=True, repository_type=StrawchemyAsyncRepository)
+
+    @strawberry.field
+    async def named(self, info: strawberry.Info) -> list[Named]:
+        return [*(await StrawchemyAsyncRepository(NamedFruitType, info).list()).graphql_list()]
+
+
+@strawberry.type
+class InterfaceSyncQuery:
+    fruits: list[NamedFruitType] = strawchemy.field(filter_input=True, repository_type=StrawchemySyncRepository)
+
+    @strawberry.field
+    def named(self, info: strawberry.Info) -> list[Named]:
+        return [*StrawchemySyncRepository(NamedFruitType, info).list().graphql_list()]
 
 
 # Mutations
