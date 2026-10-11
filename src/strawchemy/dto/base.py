@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import contextlib
 import dataclasses
 import types
 import typing
@@ -43,6 +42,7 @@ from strawchemy.dto.utils import config
 from strawchemy.exceptions import DTOError, EmptyDTOError
 from strawchemy.utils.annotation import (
     get_annotations,
+    get_type_hints_partial,
     inner_types,
     is_type_hint_optional,
     non_optional_type_hint,
@@ -216,8 +216,12 @@ class DTOBackend(Protocol, Generic[DTOBaseT]):
         Raises:
             NotImplementedError: _description_
         """
-        with contextlib.suppress(NameError):
-            dto.__annotations__ = get_type_hints(dto, localns={**TYPING_NS, **namespace}, include_extras=True)
+        localns = {**TYPING_NS, **namespace}
+        try:
+            dto.__annotations__ = get_type_hints(dto, localns=localns, include_extras=True)
+        except NameError:
+            type_hints = get_type_hints_partial(dto, localns=localns)
+            dto.__annotations__ = {name: type_hints[name] for name in dto.__annotations__}
 
     def copy(self, dto: type[DTOBaseT], name: str) -> type[DTOBaseT]:
         return cast("type[DTOBaseT]", new_class(name, (dto,)))

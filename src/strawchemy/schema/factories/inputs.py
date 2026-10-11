@@ -33,7 +33,12 @@ from strawchemy.typing import (
     GraphQLPurpose,
     GraphQLType,
 )
-from strawchemy.utils.annotation import annotation_name, get_origin_or_self, non_optional_type_hint
+from strawchemy.utils.annotation import (
+    annotation_name,
+    get_origin_or_self,
+    get_type_hints_partial,
+    non_optional_type_hint,
+)
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
@@ -89,14 +94,20 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
 
         Returns:
             Mapping of attribute name to the declared aggregate filter type.
+
+        Raises:
+            StrawchemyFieldError: If a ``<relation>_aggregate`` annotation cannot be resolved.
         """
         if base is None:
             return {}
-        return {
-            name: annotation
-            for name, annotation in inspect.get_annotations(base, eval_str=True).items()
-            if isinstance(annotation, type) and issubclass(annotation, AggregateFilterDTO)
-        }
+        declared: dict[str, type[AggregateFilterDTO]] = {}
+        for name, annotation in get_type_hints_partial(base).items():
+            if isinstance(annotation, str) and name.endswith("_aggregate"):
+                msg = f"Filter field {name!r}: cannot resolve annotation {annotation!r}"
+                raise StrawchemyFieldError(msg)
+            if isinstance(annotation, type) and issubclass(annotation, AggregateFilterDTO):
+                declared[name] = annotation
+        return declared
 
     @staticmethod
     def _validate_marker_context(
@@ -157,13 +168,15 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
             Mapping of field name to ``(marker, annotation_type)``.
 
         Raises:
-            StrawchemyFieldError: If a restricted (``ops``) or custom (``apply``) field has no annotation.
+            StrawchemyFieldError: If a declared field annotation is unresolvable, or missing on an ``ops``/``apply`` field.
         """
-        # Resolve string annotations (modules using `from __future__ import annotations`).
-        annotations = inspect.get_annotations(base, eval_str=True)
+        annotations = get_type_hints_partial(base)
         declared: dict[str, tuple[FilterFieldMarker, Any]] = {}
         for name, marker in inspect.getmembers(base, lambda v: isinstance(v, FilterFieldMarker)):
             annotation = annotations.get(name)
+            if isinstance(annotation, str):
+                msg = f"Filter field {name!r}: cannot resolve annotation {annotation!r}"
+                raise StrawchemyFieldError(msg)
             if annotation is None and (marker.ops is not None or marker.apply is not None):
                 msg = f"Filter field {name!r} needs a type annotation to determine its data type"
                 raise StrawchemyFieldError(msg)
