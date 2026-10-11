@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from importlib.util import find_spec
 from typing import Any
 from uuid import uuid4
 
@@ -12,6 +13,7 @@ from strawberry.types.base import StrawberryObjectDefinition
 
 from strawchemy import Strawchemy
 from strawchemy.dto.types import FieldSpec
+from strawchemy.exceptions import DTOError
 from strawchemy.schema.mutation import Input
 from tests.unit.dc_models import ColorDataclass, FruitDataclass
 from tests.unit.models import Color, Fruit
@@ -190,6 +192,46 @@ def test_pk_update_input_excludes_relation_writing_primary_key() -> None:
     assert "basket" not in {field.name for field in get_object_definition(BasketItemUpdate, strict=True).fields}
 
 
+@pytest.mark.parametrize(
+    "config",
+    [
+        {"include": ["basket_id", "label", "basket"]},
+        {"include": ["basket"]},
+        {"include": "all", "type_map": {"basket": int}},
+    ],
+)
+def test_pk_update_input_rejects_explicit_relation_writing_primary_key(config: dict[str, Any]) -> None:
+    """Test that explicitly requesting a to-one relation writing the key in an update-by-ids input raises."""
+    strawchemy = Strawchemy("postgresql")
+
+    with pytest.raises(DTOError, match=r"_BasketItem\.basket writes primary key column basket_id"):
+
+        @strawchemy.pk_update_input(_BasketItem, **config)
+        class BasketItemUpdate: ...
+
+
+def test_pk_update_input_rejects_annotated_relation_writing_primary_key() -> None:
+    """Test that annotating a to-one relation writing the key on an update-by-ids input raises."""
+    strawchemy = Strawchemy("postgresql")
+
+    with pytest.raises(DTOError, match=r"_BasketItem\.basket writes primary key column basket_id"):
+
+        @strawchemy.pk_update_input(_BasketItem, include="all")
+        class BasketItemUpdate:
+            basket: int | None
+
+
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_pk_update_rejects_explicit_relation_writing_primary_key() -> None:
+    """Test that the pydantic update-by-ids model raises on an explicitly included relation writing the key."""
+    strawchemy = Strawchemy("postgresql")
+
+    with pytest.raises(DTOError, match=r"_BasketItem\.basket writes primary key column basket_id"):
+
+        @strawchemy.pydantic.pk_update(_BasketItem, include=["basket_id", "label", "basket"])
+        class BasketItemUpdate: ...
+
+
 @pytest.mark.parametrize("decorator", ["create_input", "filter_update_input"])
 def test_non_pk_update_inputs_exclude_foreign_key_primary_key(decorator: str) -> None:
     """Test that inputs not identifying rows by key leave out a primary key column that is also a foreign key."""
@@ -201,3 +243,14 @@ def test_non_pk_update_inputs_exclude_foreign_key_primary_key(decorator: str) ->
     fields = {field.name for field in get_object_definition(BasketItemInput, strict=True).fields}
     assert "basket_id" not in fields
     assert {"label", "name", "basket"} <= fields
+
+
+@pytest.mark.parametrize("decorator", ["create_input", "filter_update_input"])
+def test_non_pk_update_inputs_keep_explicit_relation_writing_primary_key(decorator: str) -> None:
+    """Test that inputs not identifying rows by key accept an explicitly included relation writing the key."""
+    strawchemy = Strawchemy("postgresql")
+
+    @getattr(strawchemy, decorator)(_BasketItem, include=["label", "basket"])
+    class BasketItemInput: ...
+
+    assert "basket" in {field.name for field in get_object_definition(BasketItemInput, strict=True).fields}

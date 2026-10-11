@@ -23,9 +23,9 @@ from strawchemy.dto.strawberry import (
     MappedStrawberryGraphQLDTO,
     OrderByDTO,
 )
-from strawchemy.dto.types import DTOConfig, DTOMissing, FieldSpec, Purpose, is_fields_iterable
+from strawchemy.dto.types import DTOConfig, DTOMissing, FieldSet, FieldSpec, Purpose, is_fields_iterable
 from strawchemy.dto.utils import read_partial, write_all_config
-from strawchemy.exceptions import EmptyDTOError
+from strawchemy.exceptions import DTOError, EmptyDTOError
 from strawchemy.schema.factories import (
     AggregationInspector,
     EnumFactory,
@@ -103,7 +103,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
-        aggregate_dto_config = dto_config.copy_with(annotation_overrides={})
+        aggregate_dto_config = dto_config.copy_with(annotation_overrides={}, scope=None)
         dto = self._aggregation_factory.factory(
             model=related_model, dto_config=aggregate_dto_config, parent_field_def=field_def
         )
@@ -628,7 +628,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_update_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
             name=name,
             description="Update fields enum",
         )
@@ -644,7 +644,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_conflict_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all"),
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
             name=name,
             description="Conflict fields enum",
         )
@@ -671,13 +671,26 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             for relationship in self.inspector.foreign_key_relationships(field.model_field)
         )
 
-    def _relation_sets_primary_key(self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]]) -> bool:
+    def _primary_key_set_by_relation(self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]]) -> list[str]:
         prop = field.model_field.property
-        return (
-            isinstance(prop, RelationshipProperty)
-            and prop.direction is MANYTOONE
-            and any(column.primary_key for column in prop.local_columns)
-        )
+        if not isinstance(prop, RelationshipProperty) or prop.direction is not MANYTOONE:
+            return []
+        return [column.key for column in prop.local_columns if column.primary_key and column.key is not None]
+
+    def _reject_explicit_key_relation(
+        self, field: DTOFieldDefinition[Any, QueryableAttribute[Any]], dto_config: DTOConfig, key_columns: list[str]
+    ) -> None:
+        name = field.model_field_name
+        if (
+            name in FieldSet(dto_config.include).field_set
+            or name in dto_config.annotation_overrides
+            or name in dto_config.type_overrides
+        ):
+            msg = (
+                f"{field.model.__name__}.{name} writes primary key column {', '.join(key_columns)}: update by ids "
+                "identifies rows by their key, so the relation cannot be part of a pk_update input"
+            )
+            raise DTOError(msg)
 
     def _description(self, mode: GraphQLPurpose) -> str:
         if mode == "create_input":
@@ -794,8 +807,12 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             aggregations=aggregations,
             **factory_kwargs,
         ):
-            if mode == "update_by_pk_input" and node.is_root and self._relation_sets_primary_key(field):
-                # Writing the key through a relation would make the update match another row.
+            if (
+                mode == "update_by_pk_input"
+                and node.is_root
+                and (key_columns := self._primary_key_set_by_relation(field))
+            ):
+                self._reject_explicit_key_relation(field, dto_config, key_columns)
                 continue
             if mode == "update_by_pk_input" and self.inspector.is_primary_key(field.model_field):
                 field.type_ = non_optional_type_hint(field.type_)

@@ -149,10 +149,10 @@ async def test_update_by_ids_matches_every_key_column(
     assert [tuple(row) for row in rows] == [(1, "apple"), (2, "plum")]
 
 
-async def test_update_by_ids_cannot_rewrite_key_through_relation(
+async def test_update_by_ids_input_leaves_out_relation_writing_key(
     any_query: AnyQueryExecutor, any_session: AnySession
 ) -> None:
-    """Test that update by ids refuses a to-one relation write targeting a column of the identifying key."""
+    """Test that an update-by-ids input built with include="all" has no to-one relation writing the key."""
     result = await maybe_async(
         any_query(
             """
@@ -170,6 +170,7 @@ async def test_update_by_ids_cannot_rewrite_key_through_relation(
     )
 
     assert result.errors
+    assert "'BasketItemUpdate' not to include unknown field 'basket'" in result.errors[0].message
 
     rows = await maybe_async(
         any_session.execute(select(BasketItem.basket_id, BasketItem.name).order_by(BasketItem.basket_id))
