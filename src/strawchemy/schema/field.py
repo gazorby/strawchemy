@@ -118,8 +118,14 @@ class RegistryAnnotation(StrawberryAnnotation):
 
     __slots__ = ("registry_namespace_getter",)
 
-    def __init__(self, annotation: object | str, *, registry_namespace_getter: Callable[[], dict[str, Any]]) -> None:
-        super().__init__(annotation)  # strawberry sets namespace to the module declaring the field
+    def __init__(
+        self,
+        annotation: object | str,
+        *,
+        registry_namespace_getter: Callable[[], dict[str, Any]],
+        namespace: dict[str, Any] | None = None,
+    ) -> None:
+        super().__init__(annotation, namespace=namespace)  # strawberry sets namespace to the module declaring the field
         self.registry_namespace_getter = registry_namespace_getter
 
     @classmethod

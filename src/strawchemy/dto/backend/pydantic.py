@@ -97,6 +97,8 @@ class PydanticDTOBackend(DTOBackend[PydanticDTOT]):
         module = __name__
         if model_module := getmodule(self.dto_base):
             module = model_module.__name__
+        if base:
+            module = base.__module__
 
         with warnings.catch_warnings():
             # Fields redeclared from the user class above shadow its class attributes on purpose.
