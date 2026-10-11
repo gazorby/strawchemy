@@ -50,9 +50,18 @@ def is_type_hint_optional(type_hint: Any) -> bool:
     return False
 
 
-def get_annotations(obj: Any) -> dict[str, Any]:
-    """Get the annotations of the given object."""
-    return inspect.get_annotations(obj)
+if sys.version_info < (3, 14):
+
+    def get_annotations(obj: Any) -> dict[str, Any]:
+        """Get the annotations of the given object."""
+        return inspect.get_annotations(obj)
+
+else:
+    import annotationlib
+
+    def get_annotations(obj: Any) -> dict[str, Any]:
+        """Get the annotations of the given object, keeping undefined names as forward references."""
+        return annotationlib.get_annotations(obj, format=annotationlib.Format.FORWARDREF)
 
 
 def _class_namespaces(owner: type[Any], localns: Mapping[str, Any] | None) -> tuple[dict[str, Any], Mapping[str, Any]]:
