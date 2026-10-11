@@ -21,6 +21,7 @@ from strawberry.types import get_object_definition
 from strawchemy import Strawchemy
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
+from tests.unit.schemas.join_mapped import JoinedAB
 
 
 class _Base(DeclarativeBase):
@@ -206,3 +207,19 @@ def test_expression_discriminator_model_generates(
     names = {field.python_name for field in get_object_definition(generated, strict=True).fields}
     assert {"id", "wheels"} <= names
     assert "_sa_polymorphic_on" not in names
+
+
+def test_pk_attributes_of_join_mapped_class() -> None:
+    """Test that a class mapped onto a join gets the attribute of each primary key column, not one per column key."""
+    assert SQLAlchemyInspector.pk_attributes(inspect(JoinedAB)) == [JoinedAB.id, JoinedAB.b_id]
+
+
+def test_id_field_definitions_of_join_mapped_class() -> None:
+    """Test that a class mapped onto a join gets one id field per primary key attribute."""
+    inspector = SQLAlchemyInspector([JoinedAB.registry])
+    definitions = inspector.id_field_definitions(JoinedAB, DTOConfig(Purpose.READ))
+
+    assert [(name, definition.model_field) for name, definition in definitions] == [
+        ("id", JoinedAB.id),
+        ("b_id", JoinedAB.b_id),
+    ]
