@@ -417,6 +417,12 @@ DEFAULT_SPEC = ReferenceSpec(
             ("StrawchemyAsyncRepository", "StrawchemySyncRepository"),
         ),
         PageSpec(
+            "reference/api/execution",
+            "Execution",
+            "The execution context that runs consecutive read root fields of a mutation concurrently.",
+            ("StrawchemyExecutionContext",),
+        ),
+        PageSpec(
             "reference/api/comparisons",
             "Comparisons",
             "The comparison types behind each filter operator, one per family of column types.",
