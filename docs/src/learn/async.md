@@ -93,3 +93,75 @@ class Mutation:
 
 Every other field on `Query` and `Mutation` still runs through `StrawchemySyncRepository`; only
 `create_post` needs an async session.
+
+## Concurrent reads
+
+By default every root field of a request runs on the request session, one after the other. Set `read_session_getter` on `StrawchemyConfig` to give each read root field its own pooled session and run them concurrently:
+
+```python
+from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig
+
+strawchemy = Strawchemy(
+    StrawchemyConfig(
+        "postgresql",
+        repository_type=StrawchemyAsyncRepository,
+        read_session_getter=lambda info: info.context["sessionmaker"](),  # [!code focus]
+    )
+)
+```
+
+The getter receives `Info`, so it can apply per-request setup (tenant `search_path`, a read replica engine). Left unset, behaviour is unchanged. Only async repositories run concurrently; sync ones always use the request session.
+
+A read gets its own session only while the request session has no pending writes. Once a strawchemy mutation, or a `write_session`, has written to the request session, later reads stay on it so they see that write. Committing the request session makes reads concurrent again. A query operation needs nothing more: graphql-core already resolves its root fields concurrently.
+
+### Custom resolvers
+
+`strawchemy.read_session(info)` and `strawchemy.write_session(info)` apply the same rule in your own resolvers. Mark a resolver that only reads with `read_only=True`:
+
+```python
+@strawberry.type
+class Query:
+    @strawchemy.field(read_only=True)
+    async def fruit_count(self, info: strawberry.Info) -> int:
+        async with strawchemy.read_session(info) as session:
+            return (await session.execute(select(func.count(Fruit.id)))).scalar_one()
+```
+
+`read_only` is a promise and is not verified. The session can be handed to a repository: `StrawchemyAsyncRepository(PostType, info, session=session)`. The sync variants are plain `with` blocks and always yield the request session.
+
+### Mutations
+
+graphql-core runs the root fields of a mutation serially. Pass `StrawchemyExecutionContext` to the schema to run each run of consecutive read fields concurrently, while writes keep their order:
+
+```python
+from strawchemy import StrawchemyExecutionContext
+
+schema = strawberry.Schema(
+    query=Query,
+    mutation=Mutation,
+    execution_context_class=StrawchemyExecutionContext,  # [!code focus]
+)
+```
+
+For `mutation { listColors getFruitById updateFruits listFruits updateColorById }`:
+
+| Fields                       | Runs on                                        |
+| ---------------------------- | ---------------------------------------------- |
+| `listColors`, `getFruitById` | Two read sessions, concurrently                |
+| `updateFruits`               | The request session                            |
+| `listFruits`                 | The request session, so it sees `updateFruits` |
+| `updateColorById`            | The request session                            |
+
+Results come back in document order. A custom resolver not marked `read_only=True` runs alone and splits the group. If you already have an `ExecutionContext` subclass, mix `StrawchemyExecutionContext` into it.
+
+If a nullable read fails, that field is `null` with an error and later fields still run. If a non-null read fails, `data` becomes `null`, later root fields (mutations) do not run, and the other concurrent reads are cancelled and their sessions closed. A failing `read_session_getter` or an exhausted pool is a field error on that field. Read sessions are closed on every path.
+
+### Pool size
+
+Each concurrent read holds a connection. When read sessions are opened only by root fields, peak connections per request equal the widest group of reads; there is no built-in cap, so size `pool_size` accordingly. `read_session(info)` is meant for root resolvers: in a nested resolver under a list, it opens one session per parent item, all at once.
+
+::: warning
+- Concurrent reads use different connections and may see different snapshots if another transaction commits between them.
+- A write made directly on the request session outside `write_session` or a strawchemy write, such as `session.add(obj); await session.flush()` or `session.execute(update(...))` in a custom resolver, is not detected once flushed, and later reads may miss it. Wrap such resolvers in `strawchemy.write_session(info)`, or commit the request session before the reads.
+- The getter must return sessions on independent connections. An in-memory SQLite engine with `StaticPool` shares one connection and cannot serve concurrent reads.
+:::
