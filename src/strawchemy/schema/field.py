@@ -550,8 +550,8 @@ class StrawchemyField(StrawberryField):
             else:
                 arguments.extend(
                     [
-                        StrawberryArgument(name, None, type_annotation=StrawberryAnnotation(field.type_))
-                        for name, field in id_fields
+                        StrawberryArgument(field.name, None, type_annotation=StrawberryAnnotation(field.type_))
+                        for _, field in id_fields
                     ]
                 )
         return arguments
