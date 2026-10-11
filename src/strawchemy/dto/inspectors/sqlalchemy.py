@@ -15,11 +15,11 @@ from sqlalchemy import (
     JSON,
     Column,
     ColumnDefault,
-    ColumnElement,
     PrimaryKeyConstraint,
     Sequence,
     SQLColumnExpression,
     Table,
+    TableClause,
     TypeDecorator,
     UniqueConstraint,
     event,
@@ -66,7 +66,7 @@ from strawchemy.schema.filters import (
 from strawchemy.utils.annotation import get_origin_or_self, is_type_hint_optional
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable, Generator
     from types import ModuleType
 
     from shapely import Geometry
@@ -369,28 +369,15 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
             )
         }
 
-    def _field_definitions_from_columns(
-        self, model: type[DeclarativeBase], columns: Iterable[ColumnElement[Any]], dto_config: DTOConfig
-    ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
-        mapper = inspect(model)
-        type_hints = self.get_type_hints(model)
-
-        return [
-            (
-                column.key,
-                self.field_definition(
-                    mapper.attrs[column.key].class_attribute,
-                    dto_config,
-                    type_hint=type_hints.get(column.key, DTOMissing),
-                ),
-            )
-            for column in columns
-            if column.key
-        ]
-
     @classmethod
     def pk_attributes(cls, mapper: Mapper[Any]) -> list[QueryableAttribute[Any]]:
-        return [mapper.attrs[column.key].class_attribute for column in mapper.primary_key if column.key]
+        return [mapper.get_property_by_column(column).class_attribute for column in mapper.primary_key]
+
+    @classmethod
+    def table_name(cls, model: type[Any]) -> str:
+        """Returns the name of the table ``model`` maps, or of ``model`` itself when it maps a join or a selectable."""
+        table = inspect(model).local_table
+        return table.name if isinstance(table, TableClause) else model.__name__
 
     @classmethod
     def loaded_attributes(cls, model: DeclarativeBase) -> set[str]:
@@ -481,16 +468,24 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
         mapper = inspect(model)
         type_hints = self.get_type_hints(model)
         for prop in mapper.attrs:
-            mapper_attr = mapper.attrs[prop.key]
+            # Skips properties SQLAlchemy maps without instrumenting them, like `_sa_polymorphic_on`
+            if prop.key not in mapper.all_orm_descriptors:
+                continue
             type_hint = type_hints.get(prop.key, DTOMissing)
-            yield prop.key, self.field_definition(mapper_attr.class_attribute, dto_config, type_hint=type_hint)
+            yield prop.key, self.field_definition(prop.class_attribute, dto_config, type_hint=type_hint)
 
     @override
     def id_field_definitions(
         self, model: type[DeclarativeBase], dto_config: DTOConfig
     ) -> list[tuple[str, DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]]]:
-        mapper = inspect(model)
-        return self._field_definitions_from_columns(model, mapper.primary_key, dto_config)
+        type_hints = self.get_type_hints(model)
+        return [
+            (
+                attribute.key,
+                self.field_definition(attribute, dto_config, type_hint=type_hints.get(attribute.key, DTOMissing)),
+            )
+            for attribute in self.pk_attributes(inspect(model))
+        ]
 
     @override
     def relation_model(self, model_field: QueryableAttribute[Any]) -> type[DeclarativeBase]:
@@ -563,6 +558,27 @@ class SQLAlchemyInspector(ModelInspector[DeclarativeBase, QueryableAttribute[Any
     def is_foreign_key(self, model_field: QueryableAttribute[Any]) -> bool:
         return self._is_column(model_field.property) and any(
             column.foreign_keys for column in model_field.property.columns
+        )
+
+    def foreign_key_relationships(self, model_field: QueryableAttribute[Any]) -> list[QueryableAttribute[Any]]:
+        """Many-to-one relationships whose local columns include the ``model_field`` column."""
+        columns = set(model_field.property.columns)
+        return [
+            relationship.class_attribute
+            for relationship in model_field.parent.mapper.relationships
+            if relationship.direction is RelationshipDirection.MANYTOONE and columns & relationship.local_columns
+        ]
+
+    def foreign_key_set_by_parent(
+        self, model_field: QueryableAttribute[Any], node: Node[Relation[DeclarativeBase, Any], None]
+    ) -> bool:
+        """Whether a one-to-many relationship of the parent node model targets the ``model_field`` column."""
+        if node.parent is None:
+            return False
+        columns = set(model_field.property.columns)
+        return any(
+            relationship.direction is RelationshipDirection.ONETOMANY and columns & relationship.remote_side
+            for relationship in node.parent.value.model.__mapper__.relationships
         )
 
     @override

@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import ast
 import inspect
 import sys
 import typing
-from typing import Any, ForwardRef, Optional, TypeVar, Union, get_args, get_origin
+from typing import Any, ClassVar, ForwardRef, Optional, TypeVar, Union, get_args, get_origin, get_type_hints
 
 from strawchemy.typing import UNION_TYPES
 
@@ -11,6 +12,20 @@ if typing.TYPE_CHECKING:
     from collections.abc import Mapping
 
 T = TypeVar("T", bound="Any")
+
+
+def _is_classvar_expression(source: str) -> bool:
+    try:
+        node = ast.parse(source.strip(), mode="eval").body
+    except SyntaxError:
+        return False
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):  # quoted under postponed annotations
+        return _is_classvar_expression(node.value)
+    if isinstance(node, ast.Subscript):
+        node = node.value
+    return (isinstance(node, ast.Name) and node.id == "ClassVar") or (
+        isinstance(node, ast.Attribute) and node.attr == "ClassVar"
+    )
 
 
 def non_optional_type_hint(type_hint: Any) -> Any:
@@ -50,9 +65,60 @@ def is_type_hint_optional(type_hint: Any) -> bool:
     return False
 
 
-def get_annotations(obj: Any) -> dict[str, Any]:
-    """Get the annotations of the given object."""
-    return inspect.get_annotations(obj)
+if sys.version_info < (3, 14):
+
+    def get_annotations(obj: Any) -> dict[str, Any]:
+        """Get the annotations of the given object."""
+        return inspect.get_annotations(obj)
+
+else:
+    import annotationlib
+
+    def get_annotations(obj: Any) -> dict[str, Any]:
+        """Get the annotations of the given object, keeping undefined names as forward references."""
+        return annotationlib.get_annotations(obj, format=annotationlib.Format.FORWARDREF)
+
+
+def _class_namespaces(owner: type[Any], localns: Mapping[str, Any] | None) -> tuple[dict[str, Any], Mapping[str, Any]]:
+    module_ns = getattr(sys.modules.get(owner.__module__), "__dict__", {})
+    if localns is None:
+        # Same swap as `typing.get_type_hints`: module names take precedence over the class namespace.
+        return dict(vars(owner)), module_ns
+    return module_ns, localns
+
+
+def get_type_hints_partial(
+    cls: type[Any], localns: Mapping[str, Any] | None = None, include_extras: bool = True
+) -> dict[str, Any]:
+    """Resolve the type hints of a class, keeping the unresolvable ones as their raw annotation."""
+    try:
+        return get_type_hints(cls, localns=localns, include_extras=include_extras)
+    except NameError:
+        pass
+    type_hints: dict[str, Any] = {}
+    for owner in reversed(cls.__mro__):
+        globalns, owner_localns = _class_namespaces(owner, localns)
+        for name, annotation in get_annotations(owner).items():
+            single = type(owner.__name__, (), {"__module__": owner.__module__, "__annotations__": {name: annotation}})
+            try:
+                type_hints[name] = get_type_hints(
+                    single, globalns=globalns, localns=owner_localns, include_extras=include_extras
+                )[name]
+            except NameError:
+                type_hints[name] = annotation
+    return type_hints
+
+
+def is_classvar(annotation: object) -> bool:
+    """Whether `annotation` is a `ClassVar`, including an unevaluated string annotation."""
+    if isinstance(annotation, str):
+        return _is_classvar_expression(annotation)
+    return annotation is ClassVar or get_origin(annotation) is ClassVar
+
+
+def without_classvars(annotations: Mapping[str, Any]) -> dict[str, Any]:
+    """Drop `ClassVar` entries from an annotations mapping."""
+    return {name: annotation for name, annotation in annotations.items() if not is_classvar(annotation)}
 
 
 def get_origin_or_self(annotation: Any) -> Any:

@@ -28,6 +28,7 @@ from msgspec import convert
 from strawberry.types import get_object_definition, has_object_definition
 from strawberry.types.enum import StrawberryEnumDefinition
 from strawberry.types.lazy_type import LazyType
+from strawberry.types.private import is_private
 
 from strawchemy.constants import DISTINCT_ON_KEY, JSON_PATH_KEY, ORDER_BY_KEY
 from strawchemy.dto.base import ModelT
@@ -48,7 +49,7 @@ if TYPE_CHECKING:
     from strawberry.types.field import StrawberryField
 
     from strawchemy.transpiler import QueryResult
-    from strawchemy.typing import QueryNodeType, StrawchemyObjectWithStrawberryObjectDefinition
+    from strawchemy.typing import DataclassProtocol, QueryNodeType, StrawchemyObjectWithStrawberryObjectDefinition
 
 __all__ = ("IS_ASYNC_REPOSITORY", "IS_SYNC_REPOSITORY", "GraphQLResult", "StrawchemyRepository")
 
@@ -269,6 +270,16 @@ class StrawchemyRepository(Generic[T]):
             hook.info_var.set(self.info)
             node_hooks.append(hook)
 
+    @classmethod
+    def _add_private_columns(cls, dto: type[StrawchemyObject], node: QueryNodeType) -> None:
+        for field in dataclasses.fields(cast("DataclassProtocol", dto)):
+            field_definition = dto.__dto_field_definitions__.get(field.name)
+            if field_definition is None or field_definition.is_relation or not is_private(field.type):
+                continue
+            cls._upsert_child(
+                node, StrawberryQueryNode(value=field_definition, node_metadata=NodeMetadata(QueryNodeMetadata()))
+            )
+
     @staticmethod
     def _upsert_child(node: QueryNodeType, child: QueryNodeType) -> QueryNodeType:
         return next(
@@ -294,6 +305,7 @@ class StrawchemyRepository(Generic[T]):
         strawberry_definition = get_object_definition(selection_type, strict=True)
 
         self._add_query_hooks(selection_type.__strawchemy_definition__.query_hooks, node)
+        self._add_private_columns(selection_type, node)
 
         for selection in cast("Sequence[FieldNode | FragmentSpreadNode | InlineFragmentNode]", selections):
             if not self._is_included(selection):
