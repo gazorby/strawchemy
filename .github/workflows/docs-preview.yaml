@@ -7,6 +7,7 @@ on:
       - 'docs/**'
       - 'src/**'
       - 'tools/docs_reference.py'
+      - 'tools/docs_snapshot.py'
       - 'README.md'
       - '.github/workflows/docs-preview.yaml'
 
@@ -40,8 +41,24 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Check whether the documentation changes
+        id: changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          if git diff --name-only "$BASE_SHA"...HEAD | grep -qv '^src/'; then
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          elif mise run docs:reference-changed "$BASE_SHA" >&2; then
+            echo "build=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "build=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - name: Build documentation
+        if: steps.changes.outputs.build == 'true'
         run: mise run docs:build
+        env:
+          DOCS_VERSION: pr-${{ github.event.number }}
 
       - name: Check the pull request is still open
         id: pr
@@ -53,7 +70,7 @@ jobs:
 
       - name: Deploy preview
         id: deploy
-        if: steps.pr.outputs.state == 'OPEN'
+        if: steps.pr.outputs.state == 'OPEN' && steps.changes.outputs.build == 'true'
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -61,7 +78,7 @@ jobs:
           command: pages deploy docs/.vitepress/dist --project-name=strawchemy --branch=pr-${{ github.event.number }}
 
       - name: Comment the preview URL
-        if: steps.pr.outputs.state == 'OPEN'
+        if: steps.pr.outputs.state == 'OPEN' && steps.changes.outputs.build == 'true'
         uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
         with:
           header: docs-preview
@@ -69,3 +86,11 @@ jobs:
             📚 Documentation preview: https://pr-${{ github.event.number }}.strawchemy.pages.dev
 
             Built from ${{ github.event.pull_request.head.sha }}.
+
+      - name: Comment the skipped preview
+        if: steps.pr.outputs.state == 'OPEN' && steps.changes.outputs.build == 'false'
+        uses: marocchino/sticky-pull-request-comment@773744901bac0e8cbb5a0dc842800d45e9b2b405 # v2
+        with:
+          header: docs-preview
+          message: |
+            📚 Reference unchanged; preview not rebuilt for ${{ github.event.pull_request.head.sha }}.

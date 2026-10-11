@@ -100,6 +100,28 @@ Delete the Cloudflare Pages deployments of a documentation preview branch
 
 Generate the reference pages from the source tree
 
+## `docs:reference-changed`
+
+Exit 1 when the generated reference differs from the one of the given revision
+
+
+- **Usage:** `docs:reference-changed <base>`
+
+### Arguments
+- **`<base>`**
+
+## `docs:snapshot`
+
+Freeze the current documentation into docs/archive as an archived release
+
+
+- Depends: docs:reference
+
+- **Usage:** `docs:snapshot <version>`
+
+### Arguments
+- **`<version>`**
+
 ## `format`
 
 - Depends: ruff:format, tombi

@@ -2,19 +2,40 @@ name: 📚 Deploy documentation
 
 on:
   workflow_call:
+    inputs:
+      ref:
+        description: Git ref to build the documentation from
+        required: true
+        type: string
+      version:
+        description: Release tag (vX.Y.Z) or dev
+        required: true
+        type: string
   workflow_dispatch:
+    inputs:
+      ref:
+        description: Git ref to build the documentation from
+        required: true
+        type: string
+      version:
+        description: Release tag (vX.Y.Z) or dev
+        required: true
+        type: string
   push:
     branches: [ main ]
     paths:
       - 'docs/**'
       - 'src/**'
       - 'tools/docs_reference.py'
+      - 'tools/docs_snapshot.py'
       - 'README.md'
       - '.github/workflows/docs-deploy.yaml'
 
+# Every release deploys production, so releases share one group. They queue rather than cancel, so an older tag
+# dispatched later cannot cancel the newest one mid-deploy; it fails the newest-tag check instead.
 concurrency:
-  group: docs-production
-  cancel-in-progress: true
+  group: docs-${{ (inputs.version || 'dev') == 'dev' && 'dev' || 'production' }}
+  cancel-in-progress: ${{ (inputs.version || 'dev') == 'dev' }}
 
 jobs:
   deploy:
@@ -22,10 +43,22 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      DOCS_REF: ${{ inputs.ref || 'main' }}
+      DOCS_VERSION: ${{ inputs.version || 'dev' }}
+      RELEASE_TAG: '^v[0-9]+\.[0-9]+\.[0-9]+$'
     steps:
+      - name: Check the version
+        run: |
+          if ! [[ "$DOCS_VERSION" == dev || "$DOCS_VERSION" =~ $RELEASE_TAG ]]; then
+            echo "::error::version must be dev or vX.Y.Z, got '$DOCS_VERSION'"
+            exit 1
+          fi
+
       - name: Checkout repository
         uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
         with:
+          ref: ${{ env.DOCS_REF }}
           fetch-depth: 0
           persist-credentials: 'false'
 
@@ -39,12 +72,25 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Check the release is the newest and is checked out
+        if: env.DOCS_VERSION != 'dev'
+        run: |
+          latest=$(git tag --list 'v*' --sort=-v:refname | grep -E "$RELEASE_TAG" | head -n1)
+          if [[ "$DOCS_VERSION" != "$latest" ]]; then
+            echo "::error::$DOCS_VERSION is not the newest release ($latest), which the root documents"
+            exit 1
+          fi
+          if [[ "$(git rev-parse HEAD)" != "$(git rev-parse "$DOCS_VERSION^{commit}")" ]]; then
+            echo "::error::ref $DOCS_REF is not the $DOCS_VERSION tag"
+            exit 1
+          fi
+
       - name: Build documentation
         run: mise run docs:build
 
-      - name: Deploy to Cloudflare Pages
+      - name: Deploy
         uses: cloudflare/wrangler-action@9acf94ace14e7dc412b076f2c5c20b8ce93c79cd # v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: pages deploy docs/.vitepress/dist --project-name=strawchemy --branch=main
+          command: pages deploy docs/.vitepress/dist --project-name=strawchemy --branch=${{ env.DOCS_VERSION == 'dev' && 'dev' || 'main' }}

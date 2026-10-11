@@ -242,9 +242,51 @@ def test_sidebar_groups_pages_by_directory(
 def test_command_writes_pages_and_sidebar(docs_reference: ModuleType, tmp_path: Path) -> None:
     """Test that a run writes every page plus the sidebar the VitePress config imports, then exits successfully."""
     with pytest.raises(SystemExit) as exit_info:
-        docs_reference.app(["--output", str(tmp_path)])
+        docs_reference.app(["--output", str(tmp_path / "src"), "--sidebar", str(tmp_path / "sidebar.json")])
     assert exit_info.value.code == 0
-    assert (tmp_path / "reference" / "api" / "mapper.md").is_file()
-    assert (tmp_path / "reference" / "config.md").is_file()
-    assert (tmp_path / "reference" / "graphql" / "operators.md").is_file()
-    assert (tmp_path / ".vitepress" / "reference-sidebar.json").is_file()
+    assert (tmp_path / "src" / "reference" / "api" / "mapper.md").is_file()
+    assert (tmp_path / "src" / "reference" / "config.md").is_file()
+    assert (tmp_path / "src" / "reference" / "graphql" / "operators.md").is_file()
+    assert (tmp_path / "sidebar.json").is_file()
+
+
+def test_reference_diff_ignores_source_line_shifts(docs_reference: ModuleType) -> None:
+    """Test that outputs differing only by source line anchors compare equal."""
+    link = "[source](https://github.com/gazorby/strawchemy/blob/v1.0.0/src/strawchemy/mapper.py#L{})"
+    head = {"reference/api/mapper": f"# Mapper\n{link.format(12)}\n"}
+    base = {"reference/api/mapper": f"# Mapper\n{link.format(40)}\n"}
+    assert docs_reference.reference_diff(head, base) == []
+
+
+def test_reference_diff_reports_changed_page(docs_reference: ModuleType) -> None:
+    """Test that a page whose text differs is reported as changed."""
+    head = {"reference/api/mapper": "Map models.\n"}
+    base = {"reference/api/mapper": "Map SQLAlchemy models.\n"}
+    assert docs_reference.reference_diff(head, base) == ["changed reference/api/mapper"]
+
+
+def test_reference_diff_reports_added_and_removed_pages(docs_reference: ModuleType) -> None:
+    """Test that pages present on one side only are reported as added or removed."""
+    head = {"reference/a": "A\n"}
+    base = {"reference/b": "B\n"}
+    assert docs_reference.reference_diff(head, base) == ["added reference/a", "removed reference/b"]
+
+
+def test_reference_diff_reports_sidebar_change(docs_reference: ModuleType) -> None:
+    """Test that a sidebar difference is reported under the sidebar key."""
+    head = {"sidebar": '[{"text": "API"}]\n'}
+    base = {"sidebar": '[{"text": "Reference"}]\n'}
+    assert docs_reference.reference_diff(head, base) == ["changed sidebar"]
+
+
+def test_read_reference_output_round_trips(docs_reference: ModuleType, tmp_path: Path) -> None:
+    """Test that written pages and sidebar read back as the in-memory output."""
+    pages = [
+        docs_reference.Page("reference/api/mapper", "Mapper", "# Mapper\n"),
+        docs_reference.Page("reference/config", "Config", "# Config\n"),
+    ]
+    writer = docs_reference.SiteWriter(tmp_path / "src", docs_reference.DEFAULT_SPEC.layout)
+    writer.write_pages(pages)
+    writer.write_sidebar(pages, tmp_path / "sidebar.json")
+    expected = docs_reference.reference_output(pages, writer.sidebar_entries(pages))
+    assert docs_reference.read_reference_output(tmp_path / "src", tmp_path / "sidebar.json") == expected

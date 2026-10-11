@@ -5,6 +5,9 @@ default_stages:
   - pre-commit
   - pre-push
 
+# Archived documentation is a frozen snapshot of a release.
+exclude: ^docs/archive/
+
 repos:
   # General hooks
   - repo: https://github.com/pre-commit/pre-commit-hooks

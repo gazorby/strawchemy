@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+    outputs:
+      tag: ${{ steps.notes.outputs.tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -101,6 +103,9 @@ jobs:
 
   docs:
     name: Deploy documentation
-    needs: release
+    needs: [ build, release ]
     uses: ./.github/workflows/docs-deploy.yaml
+    with:
+      ref: ${{ needs.build.outputs.tag }}
+      version: ${{ needs.build.outputs.tag }}
     secrets: inherit

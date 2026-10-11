@@ -4,6 +4,10 @@ from __future__ import annotations
 
 import json
 import re
+import shutil
+import subprocess
+import sys
+import tempfile
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol, get_args
@@ -34,6 +38,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 _HEADING = re.compile(r"^(#{2,6}) `([A-Za-z_][\w.]*)`$", re.MULTILINE)
 _CROSSREF = re.compile(r"\[([^\]]*)\]\(#([^)]*)\)")
 _ANCHOR = re.compile(r"\{#([^}]+)\}")
+_SOURCE_LINE = re.compile(r"(\[source\]\([^)#]*)#L\d+\)")
 
 RENDER_CONFIG: ConfigDict = {
     "docstring_style": "google",
@@ -165,6 +170,37 @@ def resolve_crossrefs(pages: Sequence[Page]) -> list[Page]:
         return replace(page, content=_CROSSREF.sub(replace_crossref, page.content))
 
     return [resolve_page(page) for page in pages]
+
+
+def normalize_source_lines(content: str) -> str:
+    """Drop the line anchor of source links, which shifts with any edit above a definition."""
+    return _SOURCE_LINE.sub(r"\1)", content)
+
+
+def reference_output(pages: Sequence[Page], sidebar_entries: list[dict[str, object]]) -> dict[str, str]:
+    """Key every page's content by its path, plus the sidebar JSON under ``sidebar``."""
+    return {page.path: page.content for page in pages} | {"sidebar": json.dumps(sidebar_entries, indent=2) + "\n"}
+
+
+def read_reference_output(pages_root: Path, sidebar: Path) -> dict[str, str]:
+    """Read back a reference written by `SiteWriter`, shaped like `reference_output`."""
+    pages = {
+        path.relative_to(pages_root).with_suffix("").as_posix(): path.read_text(encoding="utf-8")
+        for path in (pages_root / "reference").rglob("*.md")
+    }
+    return pages | {"sidebar": sidebar.read_text(encoding="utf-8")}
+
+
+def reference_diff(head: Mapping[str, str], base: Mapping[str, str]) -> list[str]:
+    """List the pages added, removed or changed between two reference outputs."""
+    added = [f"added {key}" for key in head.keys() - base.keys()]
+    removed = [f"removed {key}" for key in base.keys() - head.keys()]
+    changed = [
+        f"changed {key}"
+        for key in head.keys() & base.keys()
+        if normalize_source_lines(head[key]) != normalize_source_lines(base[key])
+    ]
+    return sorted(added + removed + changed)
 
 
 @dataclass(frozen=True)
@@ -344,9 +380,8 @@ class SiteWriter:
             destination.parent.mkdir(parents=True, exist_ok=True)
             destination.write_text(page.content, encoding="utf-8")
 
-    def write_sidebar(self, pages: Sequence[Page]) -> None:
-        """Write the generated sidebar next to the VitePress config."""
-        destination = self.output_root / ".vitepress" / "reference-sidebar.json"
+    def write_sidebar(self, pages: Sequence[Page], destination: Path) -> None:
+        """Write the generated sidebar the VitePress config imports."""
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(self.sidebar_entries(pages), indent=2) + "\n", encoding="utf-8")
 
@@ -452,13 +487,46 @@ def package_version() -> str:
 
 
 @app.default
-def generate(output: Path = DEFAULT_SPEC.repo_root / "docs") -> None:
+def generate(
+    output: Path = DEFAULT_SPEC.repo_root / "docs" / "src",
+    *,
+    sidebar: Path = DEFAULT_SPEC.repo_root / "docs" / ".vitepress" / "reference-sidebar.json",
+) -> None:
     """Generate the reference pages into the given directory."""
     pages = ReferenceGenerator(DEFAULT_SPEC).generate()
     writer = SiteWriter(output, DEFAULT_SPEC.layout)
     writer.write_pages(pages)
-    writer.write_sidebar(pages)
+    writer.write_sidebar(pages, sidebar)
     print(f"Wrote {len(pages)} reference pages to {output}")
+
+
+@app.command
+def changed(base: str) -> None:
+    """Exit with status 1 when the reference differs from the one generated at the base revision."""
+    pages = ReferenceGenerator(DEFAULT_SPEC).generate()
+    head = reference_output(pages, SiteWriter(REPO_ROOT, DEFAULT_SPEC.layout).sidebar_entries(pages))
+    git = shutil.which("git") or "git"
+    with tempfile.TemporaryDirectory() as tmp:
+        tree, output = Path(tmp) / "tree", Path(tmp) / "output"
+        subprocess.run([git, "worktree", "add", "--detach", str(tree), base], check=True, cwd=REPO_ROOT)  # noqa: S603  # fixed argv, no shell
+        try:
+            # The base revision's own generator and dependencies render the base reference.
+            subprocess.run(  # noqa: S603  # fixed argv, no shell
+                [
+                    shutil.which("uv") or "uv",
+                    *("run", "--frozen", "--extra", "geo", "--extra", "pydantic", "--group", "docs"),
+                    *("python", "tools/docs_reference.py", "--output", str(output)),
+                    *("--sidebar", str(output / "sidebar.json")),
+                ],
+                check=True,
+                cwd=tree,
+            )
+        finally:
+            subprocess.run([git, "worktree", "remove", "--force", str(tree)], check=True, cwd=REPO_ROOT)  # noqa: S603  # fixed argv, no shell
+        diff = reference_diff(head, read_reference_output(output, output / "sidebar.json"))
+    for line in diff:
+        print(line)
+    sys.exit(1 if diff else 0)
 
 
 if __name__ == "__main__":

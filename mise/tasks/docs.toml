@@ -7,6 +7,17 @@ run = "bun install --frozen-lockfile"
 description = "Generate the reference pages from the source tree"
 run = "{{vars.uv_run}} --extra geo --extra pydantic --group docs python tools/docs_reference.py"
 
+["docs:reference-changed"]
+description = "Exit 1 when the generated reference differs from the one of the given revision"
+usage = 'arg "<base>"'
+run = '{{vars.uv_run}} --extra geo --extra pydantic --group docs python tools/docs_reference.py changed "${usage_base?}"'
+
+["docs:snapshot"]
+description = "Freeze the current documentation into docs/archive as an archived release"
+depends = ["docs:reference"]
+usage = 'arg "<version>"'
+run = '{{vars.uv_run}} --no-default-groups --group docs python tools/docs_snapshot.py "${usage_version?}"'
+
 ["docs:preview-cleanup"]
 description = "Delete the Cloudflare Pages deployments of a documentation preview branch"
 usage = 'arg "<branch>"'
