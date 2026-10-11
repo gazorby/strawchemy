@@ -5,6 +5,8 @@ ignore_merge_commits = true
 # so we can do our own skip logic in workflow
 skip_ci = "[ci-skip]"
 pre_bump_hooks = ["git restore cog.toml", "uv version --no-sync {{version}}", "git add :pyproject.toml :uv.lock"]
+# After the bump commit, so the archived changelog lists the release and its tag does not contain its own archive.
+post_bump_hooks = ["mise run docs:snapshot {{version_tag}}", "git add docs/archive", "git commit -m 'docs: archive {{version_tag}}'"]
 
 [changelog]
 path = "CHANGELOG.md"
@@ -29,4 +31,4 @@ test = { omit_from_changelog = true }
 
 [bump_profiles.ci]
 pre_bump_hooks = ["git restore cog.toml", "uv version --no-sync {{version}}", "git add :pyproject.toml :uv.lock", "git config user.name 'github-actions[bot]'", "git config user.email 'github-actions[bot]@users.noreply.github.com'"]
-post_bump_hooks = ["git push", "git push origin {{version_tag}}"]
+post_bump_hooks = ["mise run docs:snapshot {{version_tag}}", "git add docs/archive", "git commit -m 'docs: archive {{version_tag}}'", "git push", "git push origin {{version_tag}}"]
