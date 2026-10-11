@@ -1,76 +1,54 @@
-import { defineConfig } from 'vitepress'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
+import { join } from 'node:path'
+import { defineVersionedConfig } from '@viteplus/versions'
+import type { DefaultTheme } from 'vitepress'
+import navigation from './navigation.json'
 import referenceSidebar from './reference-sidebar.json'
+import { RELEASE } from './theme/versions'
+
+type Navigation = { nav: DefaultTheme.NavItem[]; sidebar: Record<string, DefaultTheme.SidebarItem[]> }
+
+const docsVersion = process.env.DOCS_VERSION ?? 'dev'
+const archive = join(import.meta.dirname, '..', 'archive')
+
+function newestFirst(a: string, b: string): number {
+  const [left, right] = [a, b].map((version) => version.slice(1).split('.').map(Number))
+  const index = left.findIndex((part, i) => part !== right[i])
+  return index === -1 ? 0 : right[index] - left[index]
+}
+
+const archivedVersions = existsSync(archive)
+  ? readdirSync(archive).filter((name) => RELEASE.test(name)).sort(newestFirst)
+  : []
+
+const archived: Record<string, Navigation> = Object.fromEntries(
+  archivedVersions.map((version) => [version, JSON.parse(readFileSync(join(archive, version, 'navigation.json'), 'utf8'))]),
+)
+
+const switcher = { component: 'VersionSwitcher', props: { latestLabel: RELEASE.test(docsVersion) ? 'latest' : '' } }
 
 // https://vitepress.dev/reference/site-config
-export default defineConfig({
+export default defineVersionedConfig({
   title: "Strawchemy",
   description: "Generate GraphQL API from SQLAlchemy models",
   srcExclude: ['superpowers/**'],
+  versionsConfig: { current: docsVersion, versionSwitcher: false },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    nav: [
-      { text: 'Learn', link: '/learn/' },
-      { text: 'Reference', link: '/reference/api/mapper' },
-      { text: 'Changelog', link: '/changelog' },
-    ],
+    docsVersion,
+    archivedVersions,
+    nav: {
+      root: [...navigation.nav, switcher],
+      ...Object.fromEntries(archivedVersions.map((version) => [version, [...archived[version].nav, switcher]])),
+    },
     sidebar: {
-      '/learn/': [
-        {
-          text: 'Introduction',
-          collapsed: false,
-          items: [
-            { text: 'Strawchemy', link: '/learn/' },
-            { text: 'Strawchemy and Strawberry', link: '/learn/strawchemy-and-strawberry' },
-            { text: 'Getting started', link: '/learn/getting-started' },
-          ],
-        },
-        {
-          text: 'Schema',
-          collapsed: false,
-          items: [
-            { text: 'Mapping models', link: '/learn/mapping-models' },
-            { text: 'Configuration', link: '/learn/configuration' },
-          ],
-        },
-        {
-          text: 'Querying',
-          collapsed: false,
-          items: [
-            { text: 'Queries', link: '/learn/queries' },
-            { text: 'Filtering', link: '/learn/filtering' },
-            { text: 'Ordering', link: '/learn/ordering' },
-            { text: 'Pagination', link: '/learn/pagination' },
-            { text: 'Aggregations', link: '/learn/aggregations' },
-            { text: 'Custom resolvers', link: '/learn/resolvers' },
-            { text: 'Query hooks', link: '/learn/query-hooks' },
-          ],
-        },
-        {
-          text: 'Mutating',
-          collapsed: false,
-          items: [
-            { text: 'Mutations', link: '/learn/mutations/' },
-            { text: 'Create', link: '/learn/mutations/create' },
-            { text: 'Nested create', link: '/learn/mutations/relationships-create' },
-            { text: 'Update', link: '/learn/mutations/update' },
-            { text: 'Nested update', link: '/learn/mutations/relationships-update' },
-            { text: 'Delete', link: '/learn/mutations/delete' },
-            { text: 'Upsert', link: '/learn/mutations/upsert' },
-            { text: 'Validation', link: '/learn/mutations/validation' },
-          ],
-        },
-        {
-          text: 'Advanced',
-          collapsed: false,
-          items: [
-            { text: 'Architecture', link: '/learn/architecture' },
-            { text: 'Transpiler internals', link: '/learn/transpiler' },
-            { text: 'Geometry', link: '/learn/geometry' },
-            { text: 'Async sessions', link: '/learn/async' },
-          ],
-        },
-      ],
+      ...navigation.sidebar,
       '/reference/': referenceSidebar,
+      ...Object.fromEntries(
+        archivedVersions.flatMap((version) =>
+          Object.entries(archived[version].sidebar).map(([path, items]) => [`/${version}${path}`, items]),
+        ),
+      ),
     },
     outline: { level: [2, 3], label: 'On this page' },
     search: { provider: 'local' },

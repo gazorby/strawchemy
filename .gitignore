@@ -210,6 +210,6 @@ docs/superpowers
 docs/node_modules/
 docs/.vitepress/dist
 docs/.vitepress/cache
-docs/reference/
+docs/src/reference/
 docs/.vitepress/reference-sidebar.json
 .wrangler/
