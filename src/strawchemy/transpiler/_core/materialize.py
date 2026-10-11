@@ -205,14 +205,18 @@ def _reads_other(element: ClauseElement, from_clauses: Collection[FromClause]) -
 
 
 def _entity_reads(alias: AliasedClass[Any], loaded: Sequence[str] | None, hooks: Sequence[QueryHook[Any]]) -> list[Any]:
-    """Returns what an entity loads: ``loaded`` or undeferred columns, its mapper's keys and discriminator, hooks'."""
+    """Returns what an entity loads: all columns of ``loaded`` or undeferred properties, keys, discriminator, hooks'."""
     alias_insp = inspect(alias)
     mapper = alias_insp.mapper
     keys = loaded if loaded is not None else [prop.key for prop in mapper.column_attrs if not prop.deferred]
+    keys = [*keys, *(attribute.key for attribute in SQLAlchemyInspector.pk_attributes(mapper))]
     reads: list[Any] = [getattr(alias, key) for key in keys]
-    reads.extend(getattr(alias, attribute.key) for attribute in SQLAlchemyInspector.pk_attributes(mapper))
+    adapter = ClauseAdapter(alias_insp.selectable)
     always_loaded = [*mapper.primary_key, *([] if mapper.polymorphic_on is None else [mapper.polymorphic_on])]
-    reads.extend(map(ClauseAdapter(alias_insp.selectable).traverse, always_loaded))
+    reads.extend(map(adapter.traverse, always_loaded))
+    reads.extend(
+        adapter.traverse(column) for prop in mapper.column_attrs if prop.key in keys for column in prop.columns[1:]
+    )
     for hook in hooks:
         statement, _ = hook.load_columns(select(), alias, "add")
         reads.extend(statement.selected_columns)
