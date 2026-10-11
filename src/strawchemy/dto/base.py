@@ -41,7 +41,13 @@ from strawchemy.dto.types import (
 )
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import DTOError, EmptyDTOError
-from strawchemy.utils.annotation import get_annotations, inner_types, is_type_hint_optional, non_optional_type_hint
+from strawchemy.utils.annotation import (
+    get_annotations,
+    inner_types,
+    is_type_hint_optional,
+    non_optional_type_hint,
+    without_classvars,
+)
 from strawchemy.utils.graph import Node
 
 if TYPE_CHECKING:
@@ -517,7 +523,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     ) -> Hashable:
         base_key = self._base_cache_key(dto_config)
         node_key = frozenset()
-        if node.is_root and dto_config.scope != "global":
+        if node.is_root:
             node_key = self._root_cache_key(dto_config)
         return (model, base_key, node_key)
 
@@ -636,7 +642,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if base:
             with suppress(NameError):
                 base.__annotations__ = self.inspector.get_type_hints(base)
-                annotations = base.__annotations__ | dto_config.annotation_overrides
+                annotations = without_classvars(base.__annotations__) | dto_config.annotation_overrides
 
         for model_field_name, field_def in self.inspector.field_definitions(model, dto_config):
             has_override = model_field_name in annotations
@@ -685,10 +691,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.root_dto_name(model, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
-        scoped_cache_key = self._scoped_cache_key(model, dto_config) if not dto_config.exclude_from_scope else DTOUnset
+        # The schema-scoped type stands in for relations only: root declarations keep their own config.
+        scoped_cache_key = (
+            self._scoped_cache_key(model, dto_config)
+            if not node.is_root and not dto_config.exclude_from_scope
+            else DTOUnset
+        )
         cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
-        if dto_config.scope == "global":
+        if node.is_root and dto_config.scope == "global":
             self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
 
         if not no_cache and ((dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key))):
@@ -730,7 +741,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         self._dto_cache[cache_key] = dto
 
-        if dto_config.scope is not None:
+        if node.is_root and dto_config.scope is not None:
             self._dto_cache[self._scoped_cache_key(model, dto_config)] = dto
 
         return dto
