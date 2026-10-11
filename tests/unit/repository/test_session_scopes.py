@@ -2,19 +2,24 @@
 
 from __future__ import annotations
 
+import asyncio
+import threading
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
-from sqlalchemy import String, insert, update
+from sqlalchemy import String, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, Session, mapped_column, sessionmaker
 
 from strawchemy.repository.strawberry._session import (
+    async_locked,
     async_read_scope,
     async_write_scope,
     has_pending_writes,
+    sync_locked,
     sync_read_scope,
+    sync_write_scope,
 )
 from strawchemy.utils.strawberry import default_session_getter
 
@@ -181,3 +186,55 @@ def test_sync_read_scope_yields_request_session() -> None:
 
     with sync_read_scope(info, default_session_getter, read_getter) as session:
         assert session is request_session
+
+
+async def test_write_scope_nests_in_same_task(env: Env) -> None:
+    """Test that a scope on a session already locked by the same task does not wait on itself."""
+
+    async def nested() -> None:
+        async with async_write_scope(env.info, default_session_getter) as session, async_locked(session):
+            await session.execute(select(Item))
+
+    await asyncio.wait_for(nested(), timeout=5)
+
+
+async def test_lock_still_serializes_tasks(env: Env) -> None:
+    """Test that another task waits for the lock held by a scope."""
+    events: list[str] = []
+
+    async def other() -> None:
+        async with async_locked(env.request_session):
+            events.append("other")
+
+    async with async_locked(env.request_session):
+        task = asyncio.create_task(other())
+        await asyncio.sleep(0.01)
+        events.append("owner")
+    await asyncio.wait_for(task, timeout=5)
+    assert events == ["owner", "other"]
+
+
+def test_sync_write_scope_nests() -> None:
+    """Test that a sync scope nested in another on the same session does not deadlock."""
+    info = _info({"session": sessionmaker()()})
+
+    def nested() -> None:
+        with sync_write_scope(info, default_session_getter) as session, sync_locked(session):
+            pass
+
+    thread = threading.Thread(target=nested, daemon=True)
+    thread.start()
+    thread.join(timeout=5)
+    assert not thread.is_alive()
+
+
+async def test_fallback_read_keeps_flushed_add_visible(env: Env) -> None:
+    """Test that a read flushing pending adds on the request session keeps later reads on it."""
+    env.request_session.add(Item(id=2, name="y"))
+    async with async_read_scope(env.info, default_session_getter, env.read_getter) as session:
+        assert session is env.request_session
+        await session.execute(select(Item))
+    assert not env.request_session.new
+    async with async_read_scope(env.info, default_session_getter, env.read_getter) as session:
+        assert session is env.request_session
+    assert env.opened == []

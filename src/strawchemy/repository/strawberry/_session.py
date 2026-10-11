@@ -3,6 +3,7 @@ from __future__ import annotations
 import asyncio
 import threading
 from contextlib import asynccontextmanager, contextmanager
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_scoped_session
@@ -42,6 +43,28 @@ _SESSION_LOCK_KEY = "strawchemy_session_lock"
 _WRITE_TXN_KEY = "strawchemy_write_txn"
 
 
+@dataclass(slots=True)
+class _TaskLock:
+    """Lock the task holding it can acquire again, so session scopes nest within one resolver."""
+
+    _lock: asyncio.Lock = field(default_factory=asyncio.Lock)
+    _owner: asyncio.Task[Any] | None = None
+    _depth: int = 0
+
+    async def __aenter__(self) -> None:
+        task = asyncio.current_task()
+        if task is None or self._owner is not task:
+            await self._lock.acquire()
+            self._owner = task
+        self._depth += 1
+
+    async def __aexit__(self, *_: object) -> None:
+        self._depth -= 1
+        if self._depth == 0:
+            self._owner = None
+            self._lock.release()
+
+
 def _underlying_session(session: AnySession) -> Session:
     if isinstance(session, (async_scoped_session, scoped_session)):
         session = session()
@@ -64,14 +87,14 @@ def has_pending_writes(session: AnySession) -> bool:
 @asynccontextmanager
 async def async_locked(session: AnyAsyncSession) -> AsyncIterator[AnyAsyncSession]:
     """Yield the session while holding its lock, as a session forbids concurrent operations."""
-    async with session.info.setdefault(_SESSION_LOCK_KEY, asyncio.Lock()):
+    async with session.info.setdefault(_SESSION_LOCK_KEY, _TaskLock()):
         yield session
 
 
 @contextmanager
 def sync_locked(session: AnySyncSession) -> Iterator[AnySyncSession]:
     """Yield the session while holding its lock."""
-    with session.info.setdefault(_SESSION_LOCK_KEY, threading.Lock()):
+    with session.info.setdefault(_SESSION_LOCK_KEY, threading.RLock()):
         yield session
 
 
@@ -114,7 +137,7 @@ async def async_read_scope(
         finally:
             await read_session.close()
     else:
-        async with async_locked(request_session) as session:
+        async with async_locked_write(request_session) as session:  # autoflush empties `new` without a marker
             yield session
 
 
