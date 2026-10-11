@@ -301,7 +301,7 @@ class StrawchemyField(StrawberryField):
     def _get_by_id_resolver(
         self, info: Info, **kwargs: Any
     ) -> GetByIdResolverResult | Coroutine[GetByIdResolverResult, Any, Any]:
-        if len(self._id_field_definitions) == 1:
+        if len(self._id_field_definitions) == 1 and self.id_field_name in kwargs:
             kwargs[self._id_field_definitions[0][0]] = kwargs.pop(self.id_field_name)
         repository = self._get_repository(info)
         if self._is_repo_async(repository):
