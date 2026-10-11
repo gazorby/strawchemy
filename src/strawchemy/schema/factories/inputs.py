@@ -458,12 +458,17 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
 
         yield from self._iter_custom_filter_fields(declared_filters, model, dto_config)
 
-        stripped = set(declared_filters) | set(declared_aggregates)
-        if base is not None and stripped:
+        if base is not None:
+            self._finalize_base(base)
+
+    @override
+    def _finalize_base(self, base: type[Any]) -> None:
+        stripped = set(self.parse_declared_filter_fields(base)) | set(self._declared_aggregate_types(base))
+        if stripped:
             # Declared filter fields and declared aggregate annotations supply only a data type
             # or a target type, not a final GraphQL type. Drop their annotations from the base so
             # the strawberry backend does not treat them as verbatim type overrides; the
-            # comparison/custom/aggregate types injected above win.
+            # comparison/custom/aggregate types generated for them win.
             base.__annotations__ = {
                 declared_name: annotation_type
                 for declared_name, annotation_type in inspect.get_annotations(base).items()
