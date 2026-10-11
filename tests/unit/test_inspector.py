@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
-from sqlalchemy import ARRAY, JSON, Column, ForeignKey, Integer, String, Table, inspect, join
+from sqlalchemy import ARRAY, JSON, Column, ForeignKey, Integer, String, Table, case, inspect, join
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.orm import (
     DeclarativeBase,
@@ -16,7 +16,9 @@ from sqlalchemy.orm import (
 )
 from sqlalchemy.sql.sqltypes import NullType
 from sqlalchemy.sql.type_api import TypeDecorator, TypeEngine
+from strawberry.types import get_object_definition
 
+from strawchemy import Strawchemy
 from strawchemy.dto.inspectors import SQLAlchemyInspector
 from strawchemy.dto.types import DTOConfig, DTOMissing, Purpose
 from tests.unit.schemas.join_mapped import JoinedAB
@@ -126,6 +128,22 @@ class Spot:
 
 
 _Base.registry.map_imperatively(Spot, _spot_table)
+
+
+class WheeledVehicle(_Base):
+    __tablename__ = "rev_wheeled_vehicle"
+    id: Mapped[int] = mapped_column(primary_key=True)
+    wheels: Mapped[int] = mapped_column()
+    __mapper_args__ = {  # noqa: RUF012
+        "polymorphic_on": case((wheels == 2, "bike"), else_="vehicle"),
+        "polymorphic_identity": "vehicle",
+    }
+
+
+class WheeledBike(WheeledVehicle):
+    __mapper_args__ = {"polymorphic_identity": "bike"}  # noqa: RUF012
+
+
 _Base.registry.configure()
 
 _ALL_RELATIONSHIPS = [
@@ -170,6 +188,25 @@ def test_python_type(type_engine: TypeEngine[Any], expected: type[Any]) -> None:
 def test_table_name(model: type[Any], expected: str) -> None:
     """Test that a mapped class is named after its own table, or after itself when mapped onto a join."""
     assert SQLAlchemyInspector.table_name(model) == expected
+
+
+@pytest.mark.parametrize("model", [WheeledVehicle, WheeledBike])
+def test_field_definitions_skip_expression_discriminator(model: type[WheeledVehicle]) -> None:
+    """Test that the hidden property SQLAlchemy maps for an expression `polymorphic_on` yields no field."""
+    names = [name for name, _ in SQLAlchemyInspector().field_definitions(model, DTOConfig(Purpose.READ))]
+    assert names == ["id", "wheels"]
+
+
+@pytest.mark.parametrize("decorator", ["type", "filter", "order"])
+@pytest.mark.parametrize("model", [WheeledVehicle, WheeledBike])
+def test_expression_discriminator_model_generates(
+    strawchemy: Strawchemy, decorator: str, model: type[WheeledVehicle]
+) -> None:
+    """Test that a model with an expression `polymorphic_on` can be turned into a type and inputs."""
+    generated = getattr(strawchemy, decorator)(model, include="all")(type(f"{model.__name__}{decorator}", (), {}))
+    names = {field.python_name for field in get_object_definition(generated, strict=True).fields}
+    assert {"id", "wheels"} <= names
+    assert "_sa_polymorphic_on" not in names
 
 
 def test_pk_attributes_of_join_mapped_class() -> None:
