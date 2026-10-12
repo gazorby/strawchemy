@@ -105,7 +105,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         self, field_def: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]], dto_config: DTOConfig
     ) -> GraphQLFieldDefinition:
         related_model = self.inspector.relation_model(field_def.model_field)
-        aggregate_dto_config = dto_config.copy_with(annotation_overrides={}, scope=None)
+        aggregate_dto_config = dto_config.for_related_model().copy_with(scope=None)
         dto = self._aggregation_factory.factory(
             model=related_model, dto_config=aggregate_dto_config, parent_field_def=field_def
         )
@@ -123,7 +123,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             return None
         try:
             order_by_input = self._order_by_factory.factory(
-                field.related_model, DTOConfig(Purpose.READ, partial=True, include="all"), if_no_fields="raise"
+                field.related_model, self._mapper.config.field_config.copy_with(partial=True), if_no_fields="raise"
             )
         except EmptyDTOError:
             order_by_input = None
@@ -134,7 +134,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             return None
         try:
             distinct_on_input = self._distinct_on_factory.factory(
-                field.related_model, DTOConfig(Purpose.READ, partial=True, include="all"), if_no_fields="raise"
+                field.related_model, self._mapper.config.field_config.copy_with(partial=True), if_no_fields="raise"
             )
         except EmptyDTOError:
             distinct_on_input = None
@@ -463,7 +463,11 @@ class AggregateFieldsFactory(GraphQLFactory[AggregateDTOT]):
         **kwargs: Any,
     ) -> type[AggregateDTOT]:
         model_field = parent_field_def.model_field if parent_field_def else None
-        aggregate_config = dto_config.copy_with(partial=True, include="all")
+        aggregate_config = (
+            dto_config.copy_with(partial=True, include="all")
+            if dto_config.declares_selection
+            else dto_config.copy_with(partial=True)
+        )
         field_definitions: list[FunctionFieldDefinition] = [
             FunctionFieldDefinition(
                 dto_config=dto_config,
@@ -630,7 +634,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_update_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
+            dto_config.for_related_model().copy_with(purpose=Purpose.WRITE, scope=None),
             name=name,
             description="Update fields enum",
         )
@@ -646,7 +650,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         assert related_model
         return self._upsert_conflict_fields_enum_factory.factory(
             related_model,
-            dto_config.copy_with(purpose=Purpose.WRITE, include="all", scope=None),
+            dto_config.copy_with(purpose=Purpose.WRITE, include="all", exclude=dto_config.global_exclude, scope=None),
             name=name,
             description="Conflict fields enum",
         )

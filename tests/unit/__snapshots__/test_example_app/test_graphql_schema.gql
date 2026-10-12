@@ -11,9 +11,7 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input CustomerAggregateBoolExp {
   count: CustomerAggregateBoolExpCount
-  maxDatetime: CustomerAggregateBoolExpMaxdatetime
   maxString: CustomerAggregateBoolExpMaxstring
-  minDatetime: CustomerAggregateBoolExpMindatetime
   minString: CustomerAggregateBoolExpMinstring
 }
 
@@ -25,23 +23,9 @@ input CustomerAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input CustomerAggregateBoolExpMaxdatetime {
-  arguments: [CustomerMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
 input CustomerAggregateBoolExpMaxstring {
   arguments: [CustomerMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input CustomerAggregateBoolExpMindatetime {
-  arguments: [CustomerMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
   distinct: Boolean = false
 }
 
@@ -53,12 +37,6 @@ input CustomerAggregateBoolExpMinstring {
 }
 
 """GraphQL type"""
-input CustomerAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum
-  updatedAt: OrderByEnum
-}
-
-"""GraphQL type"""
 input CustomerAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
@@ -66,9 +44,7 @@ input CustomerAggregateMinMaxStringFieldsOrderBy {
 """GraphQL type"""
 input CustomerAggregateOrderBy {
   count: OrderByEnum
-  maxDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
   maxString: CustomerAggregateMinMaxStringFieldsOrderBy
-  minDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
   minString: CustomerAggregateMinMaxStringFieldsOrderBy
 }
 
@@ -84,9 +60,6 @@ input CustomerBoolExp {
 
 enum CustomerCountFields {
   name
-  id
-  createdAt
-  updatedAt
 }
 
 """Create input"""
@@ -96,16 +69,9 @@ input CustomerCreate {
   id: UUID
 }
 
-enum CustomerMinMaxDateTimeFieldsEnum {
-  createdAt
-  updatedAt
-}
-
 """GraphQL type"""
 type CustomerMinMaxFields {
   name: String
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 enum CustomerMinMaxStringFieldsEnum {
@@ -144,9 +110,7 @@ input CustomerProjectsIdFieldsInputProjectCreateCustomerProjectsUpdateFieldsCust
 
 """Update fields enum"""
 enum CustomerProjectsUpdateFields {
-  tagId
   name
-  id
 }
 
 """GraphQL type"""
@@ -230,9 +194,7 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input MilestoneAggregateBoolExp {
   count: MilestoneAggregateBoolExpCount
-  maxDatetime: MilestoneAggregateBoolExpMaxdatetime
   maxString: MilestoneAggregateBoolExpMaxstring
-  minDatetime: MilestoneAggregateBoolExpMindatetime
   minString: MilestoneAggregateBoolExpMinstring
 }
 
@@ -244,23 +206,9 @@ input MilestoneAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input MilestoneAggregateBoolExpMaxdatetime {
-  arguments: [MilestoneMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
 input MilestoneAggregateBoolExpMaxstring {
   arguments: [MilestoneMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input MilestoneAggregateBoolExpMindatetime {
-  arguments: [MilestoneMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
   distinct: Boolean = false
 }
 
@@ -272,12 +220,6 @@ input MilestoneAggregateBoolExpMinstring {
 }
 
 """GraphQL type"""
-input MilestoneAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum
-  updatedAt: OrderByEnum
-}
-
-"""GraphQL type"""
 input MilestoneAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
@@ -285,9 +227,7 @@ input MilestoneAggregateMinMaxStringFieldsOrderBy {
 """GraphQL type"""
 input MilestoneAggregateOrderBy {
   count: OrderByEnum
-  maxDatetime: MilestoneAggregateMinMaxDatetimeFieldsOrderBy
   maxString: MilestoneAggregateMinMaxStringFieldsOrderBy
-  minDatetime: MilestoneAggregateMinMaxDatetimeFieldsOrderBy
   minString: MilestoneAggregateMinMaxStringFieldsOrderBy
 }
 
@@ -303,10 +243,6 @@ input MilestoneBoolExp {
 
 enum MilestoneCountFields {
   name
-  projectId
-  id
-  createdAt
-  updatedAt
 }
 
 """Create input"""
@@ -316,16 +252,9 @@ input MilestoneCreate {
   id: UUID
 }
 
-enum MilestoneMinMaxDateTimeFieldsEnum {
-  createdAt
-  updatedAt
-}
-
 """GraphQL type"""
 type MilestoneMinMaxFields {
   name: String
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 enum MilestoneMinMaxStringFieldsEnum {
@@ -363,9 +292,7 @@ input MilestoneProjectIdFieldsInputProjectCreateMilestoneProjectUpdateFieldsMile
 
 """Update fields enum"""
 enum MilestoneProjectUpdateFields {
-  tagId
   name
-  id
 }
 
 """GraphQL type"""
@@ -460,8 +387,6 @@ input ProjectFilter {
 """GraphQL type"""
 type ProjectMinMaxFields {
   name: String
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 """Ordering input."""
@@ -585,9 +510,7 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input TicketAggregateBoolExp {
   count: TicketAggregateBoolExpCount
-  maxDatetime: TicketAggregateBoolExpMaxdatetime
   maxString: TicketAggregateBoolExpMaxstring
-  minDatetime: TicketAggregateBoolExpMindatetime
   minString: TicketAggregateBoolExpMinstring
 }
 
@@ -599,23 +522,9 @@ input TicketAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input TicketAggregateBoolExpMaxdatetime {
-  arguments: [TicketMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare max aggregation."""
 input TicketAggregateBoolExpMaxstring {
   arguments: [TicketMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare min aggregation."""
-input TicketAggregateBoolExpMindatetime {
-  arguments: [TicketMinMaxDateTimeFieldsEnum!]!
-  predicate: DateTimeComparison!
   distinct: Boolean = false
 }
 
@@ -627,12 +536,6 @@ input TicketAggregateBoolExpMinstring {
 }
 
 """GraphQL type"""
-input TicketAggregateMinMaxDatetimeFieldsOrderBy {
-  createdAt: OrderByEnum
-  updatedAt: OrderByEnum
-}
-
-"""GraphQL type"""
 input TicketAggregateMinMaxStringFieldsOrderBy {
   name: OrderByEnum
 }
@@ -640,9 +543,7 @@ input TicketAggregateMinMaxStringFieldsOrderBy {
 """GraphQL type"""
 input TicketAggregateOrderBy {
   count: OrderByEnum
-  maxDatetime: TicketAggregateMinMaxDatetimeFieldsOrderBy
   maxString: TicketAggregateMinMaxStringFieldsOrderBy
-  minDatetime: TicketAggregateMinMaxDatetimeFieldsOrderBy
   minString: TicketAggregateMinMaxStringFieldsOrderBy
 }
 
@@ -658,10 +559,6 @@ input TicketBoolExp {
 
 enum TicketCountFields {
   name
-  projectId
-  id
-  createdAt
-  updatedAt
 }
 
 """Create input"""
@@ -686,16 +583,9 @@ input TicketFilter {
   updatedAt: DateTimeComparison
 }
 
-enum TicketMinMaxDateTimeFieldsEnum {
-  createdAt
-  updatedAt
-}
-
 """GraphQL type"""
 type TicketMinMaxFields {
   name: String
-  createdAt: DateTime
-  updatedAt: DateTime
 }
 
 enum TicketMinMaxStringFieldsEnum {
@@ -750,9 +640,7 @@ input TicketProjectIdFieldsInputTicketProjectInputTicketProjectUpdateFieldsTicke
 
 """Update fields enum"""
 enum TicketProjectUpdateFields {
-  tagId
   name
-  id
 }
 
 """GraphQL type"""

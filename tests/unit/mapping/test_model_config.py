@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, cast
 from uuid import UUID  # noqa: TC003  # resolved at runtime from the relay node annotations
 
 import pytest
@@ -10,10 +10,23 @@ from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryList, has_object_definition
 
 from strawchemy import Strawchemy, StrawchemyConfig
+from strawchemy.dto.types import FieldSpec
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.unit.models import Color, Container, Fruit, Tag, User
 
+if TYPE_CHECKING:
+    from strawberry.types.base import StrawberryObjectDefinition
+    from strawberry.types.enum import StrawberryEnumDefinition
+
 TYPE_DECORATOR_NAMES: list[str] = ["type", "aggregate", "filter", "aggregate_filter", "order"]
+MODEL_DTO_DECORATOR_NAMES: list[str] = [
+    "type",
+    "filter",
+    "order",
+    "create_input",
+    "pk_update_input",
+    "filter_update_input",
+]
 
 
 @pytest.mark.parametrize("decorator", TYPE_DECORATOR_NAMES)
@@ -289,6 +302,148 @@ def test_nested_order_by_follows_config_include_and_exclude() -> None:
     assert fruits_field is not None
     fruit_order = strawberry_contained_user_type(fruits_field.type)
     assert {field.name for field in get_object_definition(fruit_order, strict=True).fields} == {"id", "name"}
+
+
+@pytest.mark.parametrize("decorator", MODEL_DTO_DECORATOR_NAMES)
+@pytest.mark.parametrize(
+    "selection",
+    [{"include": "all"}, {"include": ["id", "name", "sweetness", "color"]}, {"exclude": ["name"]}, {"exclude": []}],
+)
+def test_declared_root_ignores_config_selection(decorator: str, selection: dict[str, FieldSpec]) -> None:
+    """Test that a root declaring `include` or `exclude` keeps a field the config leaves out."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "color"], exclude=["sweetness"]))
+
+    @getattr(strawchemy, decorator)(Fruit, **selection)
+    class FruitDTO: ...
+
+    assert get_object_definition(FruitDTO, strict=True).get_field("sweetness") is not None
+
+
+@pytest.mark.parametrize("decorator", MODEL_DTO_DECORATOR_NAMES)
+def test_bare_root_follows_config_exclude(decorator: str) -> None:
+    """Test that a root declaring neither `include` nor `exclude` leaves out the config's excluded fields."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", exclude=["sweetness"]))
+
+    @getattr(strawchemy, decorator)(Fruit)
+    class FruitDTO: ...
+
+    type_def = get_object_definition(FruitDTO, strict=True)
+    assert type_def.get_field("name") is not None
+    assert type_def.get_field("sweetness") is None
+
+
+@pytest.mark.parametrize("decorator", MODEL_DTO_DECORATOR_NAMES)
+def test_bare_root_follows_config_include(decorator: str) -> None:
+    """Test that a root declaring neither `include` nor `exclude` keeps to the config's included fields."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
+
+    @getattr(strawchemy, decorator)(Fruit)
+    class FruitDTO: ...
+
+    type_def = get_object_definition(FruitDTO, strict=True)
+    assert type_def.get_field("name") is not None
+    assert type_def.get_field("sweetness") is None
+
+
+def test_relation_aggregates_drop_config_excluded_columns() -> None:
+    """Test that relation aggregates of types, filters and order-by inputs leave out config-excluded columns."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", exclude=["sweetness"]))
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.order(Color, include="all")
+    class ColorOrder: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, order_by_input=ColorOrder)
+
+    schema = strawberry.Schema(query=Query)
+
+    def field_names(type_name: str) -> set[str]:
+        return {field.name for field in cast("StrawberryObjectDefinition", schema.get_type_by_name(type_name)).fields}
+
+    count_fields = cast("StrawberryEnumDefinition", schema.get_type_by_name("FruitCountFields"))
+    assert {value.name for value in count_fields.values} == {"id", "name", "colorId"}
+    assert field_names("FruitMinMaxFields") == {"name"}
+    assert field_names("FruitAggregate") == {"count", "max", "min"}
+    assert field_names("FruitAggregateBoolExp") == {"count", "max_string", "min_string"}
+    assert field_names("FruitAggregateOrderBy") == {"count", "max_string", "min_string"}
+    for numeric_type in ("FruitNumericFieldsEnum", "FruitSumFieldsEnum", "FruitMinMaxNumericFieldsEnum"):
+        assert schema.get_type_by_name(numeric_type) is None
+    assert "sweetness" not in str(schema)
+
+
+def test_relation_aggregate_arguments_follow_config_include_in_order_by_and_filter() -> None:
+    """Test that the argument enums an order-by and a filter aggregate share keep to the config include."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
+
+    @strawchemy.order(Color, include="all")
+    class ColorOrder: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, order_by_input=ColorOrder)
+
+    count_fields = cast("StrawberryEnumDefinition", strawberry.Schema(query=Query).get_type_by_name("FruitCountFields"))
+    assert {value.name for value in count_fields.values} == {"id", "name"}
+
+
+def test_generated_relation_inputs_drop_config_excluded_columns() -> None:
+    """Test that order-by, distinct-on and upsert inputs generated for a relation leave out config-excluded columns."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", exclude=["sweetness"]))
+
+    @strawchemy.type(Color, include="all", order="all", distinct_on="all")
+    class ColorType: ...
+
+    @strawchemy.create_input(Color, include="all")
+    class ColorCreate: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+
+    @strawberry.type
+    class Mutation:
+        create_color: ColorType = strawchemy.create(ColorCreate)
+
+    schema = strawberry.Schema(query=Query, mutation=Mutation)
+
+    order_by = cast("StrawberryObjectDefinition", schema.get_type_by_name("FruitOrderBy"))
+    assert {field.name for field in order_by.fields} == {"id", "name", "color_id", "color"}
+    for enum_name in ("FruitDistinctOnFields", "ColorFruitsUpdateFields"):
+        enum_def = cast("StrawberryEnumDefinition", schema.get_type_by_name(enum_name))
+        assert {value.name for value in enum_def.values} == {"id", "name", "colorId"}
+    assert "sweetness" not in str(schema)
+
+
+def test_generated_relation_inputs_follow_config_include() -> None:
+    """Test that order-by and distinct-on inputs generated for a relation keep to the config include."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
+
+    @strawchemy.type(Color, include="all", order="all", distinct_on="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query)
+
+    order_by = cast("StrawberryObjectDefinition", schema.get_type_by_name("FruitOrderBy"))
+    assert {field.name for field in order_by.fields} == {"id", "name"}
+    distinct_on = cast("StrawberryEnumDefinition", schema.get_type_by_name("FruitDistinctOnFields"))
+    assert {value.name for value in distinct_on.values} == {"id", "name"}
 
 
 def test_identical_order_keeps_resolved_relations(strawchemy: Strawchemy) -> None:

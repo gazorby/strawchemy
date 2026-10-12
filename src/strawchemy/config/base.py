@@ -49,9 +49,9 @@ class StrawchemyConfig:
     boilerplate. A user-defined is_type_of on the decorated class is always
     respected. Set to False to disable globally."""
     include: FieldSpec = "all"
-    """Globally included fields."""
+    """Fields of generated types and of decorated types selecting none of their own."""
     exclude: FieldSpec | None = None
-    """Globally excluded fields."""
+    """Fields left out of generated types and of decorated types selecting none of their own."""
     pagination: FieldSpec | None = None
     """Enable/disable pagination on list resolvers."""
     order_by: FieldSpec | None = None
