@@ -381,7 +381,6 @@ def test_nested_create_input_ignores_other_root_aliases(declare_other_first: boo
     assert _nested_child_input_fields(ParentPlain).keys() == {"id", "name", "a"}
 
 
-@pytest.mark.xfail(strict=True, reason="Root include='all' widens shared nested inputs, see #484")
 def test_nested_create_input_ignores_other_root_include_all() -> None:
     """Test that another root's include="all" does not widen a nested input built under a narrower config include."""
     strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
@@ -393,3 +392,13 @@ def test_nested_create_input_ignores_other_root_include_all() -> None:
     class ParentSome: ...
 
     assert _nested_child_input_fields(ParentSome).keys() == {"id", "name"}
+
+
+def test_nested_create_input_of_include_all_root_follows_config_include() -> None:
+    """Test that the nested input of an include="all" root keeps to the narrower config include."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
+
+    @strawchemy.create_input(_Parent, include="all")
+    class ParentAll: ...
+
+    assert _nested_child_input_fields(ParentAll).keys() == {"id", "name"}

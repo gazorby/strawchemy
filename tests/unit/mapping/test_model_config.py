@@ -9,7 +9,7 @@ from strawberry import relay
 from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryList, has_object_definition
 
-from strawchemy import Strawchemy
+from strawchemy import Strawchemy, StrawchemyConfig
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.unit.models import Color, Fruit, User
 
@@ -157,6 +157,41 @@ def test_identical_type_relations_use_first_type(strawchemy: Strawchemy) -> None
     schema = _print_schema(color=ColorWithFruitsType, fruit=FruitType, other_fruit=OtherFruitType)
     assert "type FruitType {" in schema
     assert "type OtherFruitType {" in schema
+
+
+@pytest.mark.parametrize("declare_include_all_first", [False, True])
+def test_include_all_type_not_reused_under_narrower_config_include(declare_include_all_first: bool) -> None:
+    """Test that under a narrower config include, relations keep the nested default rather than an include-all type."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name"]))
+
+    if declare_include_all_first:
+
+        @strawchemy.type(Color, include="all")
+        class ColorAll: ...
+
+    @strawchemy.type(Fruit, include=["name", "color"])
+    class FruitWithColor: ...
+
+    color_field = get_object_definition(FruitWithColor, strict=True).get_field("color")
+
+    assert color_field is not None
+    color_type = strawberry_contained_user_type(color_field.type)
+    assert {field.name for field in get_object_definition(color_type, strict=True).fields} == {"id", "name"}
+
+
+def test_nested_order_by_ignores_config_include_but_keeps_config_exclude() -> None:
+    """Test that a nested order-by input orders on every field but the config's excluded ones."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["name"], exclude=["sweetness"]))
+
+    @strawchemy.order(Color, include="all")
+    class ColorOrder: ...
+
+    fruits_field = get_object_definition(ColorOrder, strict=True).get_field("fruits")
+
+    assert fruits_field is not None
+    fruit_order = strawberry_contained_user_type(fruits_field.type)
+    assert {field.name for field in get_object_definition(fruit_order, strict=True).fields} >= {"id", "name"}
+    assert get_object_definition(fruit_order, strict=True).get_field("sweetness") is None
 
 
 def test_identical_order_keeps_resolved_relations(strawchemy: Strawchemy) -> None:

@@ -394,6 +394,26 @@ def test_global_group_include_allows_global_exclude(factory: AnyFactory, model: 
     assert set(DTOInspect(color_dto).annotations()) == {"id"}
 
 
+@pytest.mark.parametrize("model", [Fruit, FruitDataclass])
+@pytest.mark.parametrize("factory", factory_iterator())
+@pytest.mark.parametrize("include", ["all", ["name", "color"]])
+def test_nested_dto_follows_global_include_whatever_root_include(
+    factory: AnyFactory, model: type[Fruit | FruitDataclass], include: FieldSpec
+) -> None:
+    """Test that a nested DTO keeps to `global_include` whether or not the root includes all fields."""
+    dto = factory.factory(model, DTOConfig(Purpose.READ, include=include, global_include=["id", "name"]))
+    annotations = DTOInspect(dto).annotations()
+    color_dto = next((arg for arg in get_args(annotations["color"]) if arg is not type(None)), annotations["color"])
+    assert set(DTOInspect(color_dto).annotations()) == {"id", "name"}
+
+
+@pytest.mark.parametrize("include", ["all", ["name", "color"]])
+def test_global_scope_includes_every_field_without_global_include(include: FieldSpec) -> None:
+    """Test that, without `global_include`, the global scope includes every field whatever the root includes."""
+    dto_config = DTOConfig(Purpose.READ, include=include)
+    assert dto_config.is_field_included("sweetness", scope="global")
+
+
 @pytest.mark.parametrize(
     "include_spec",
     [

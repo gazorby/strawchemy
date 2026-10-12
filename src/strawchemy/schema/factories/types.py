@@ -486,6 +486,18 @@ class DistinctOnEnumFactory(EnumFactory):
         return f"{base_name}DistinctOnFields"
 
     @override
+    def factory(
+        self,
+        model: type[DeclarativeBase],
+        dto_config: DTOConfig,
+        base: type[Any] | None = None,
+        name: str | None = None,
+        **kwargs: Unpack[FactoryMethodKwargs],
+    ) -> type[EnumDTO]:
+        dto_config = dto_config.copy_with(global_include="all", global_exclude=dto_config.global_exclude)
+        return super().factory(model, dto_config, base, name, **kwargs)
+
+    @override
     def _resolve_relation_type(
         self,
         field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],

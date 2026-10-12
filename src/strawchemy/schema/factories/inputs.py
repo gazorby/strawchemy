@@ -970,6 +970,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
         aggregate_filters: bool = True,
         **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[OrderByDTO]:
+        dto_config = dto_config.copy_with(global_include="all", global_exclude=dto_config.global_exclude)
         dto = super().factory(model, dto_config, base, name, aggregate_filters=aggregate_filters, **kwargs)
         dto.__strawchemy_definition__.description = "Ordering options"
         return dto
