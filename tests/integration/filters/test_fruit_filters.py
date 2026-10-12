@@ -1,0 +1,665 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+import pytest
+import strawberry
+from sqlalchemy import Insert, insert
+
+from strawchemy.schema.pagination import DefaultOffsetPagination
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, Fruit
+from tests.integration.utils import to_graphql_representation
+from tests.typing import AnyQueryExecutor
+from tests.utils import maybe_async
+
+if TYPE_CHECKING:
+    from syrupy.assertion import SnapshotAssertion
+
+    from strawchemy import Strawchemy
+    from strawchemy.typing import SupportedDialect
+    from tests.integration.typing import RawRecordData
+
+pytestmark = [pytest.mark.integration]
+
+_COLORS: RawRecordData = [
+    {"id": 1, "name": "Red"},
+    {"id": 2, "name": "Yellow"},
+    {"id": 3, "name": "Orange"},
+    {"id": 4, "name": "Green"},
+    {"id": 5, "name": "Pink"},
+]
+# test_string_filters addresses fruits by index: keep every row and its position.
+_FRUITS: RawRecordData = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 9, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+    {"id": 4, "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": 2},
+    {"id": 5, "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": 2},
+    {"id": 6, "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": 3},
+    {"id": 7, "name": "clementine", "sweetness": 14, "water_percent": 0.9, "color_id": 3},
+    {"id": 8, "name": "Strawberry", "sweetness": 5, "water_percent": 0.91, "color_id": 4},
+    {"id": 9, "name": "Cantaloupe", "sweetness": 0, "water_percent": 0.51, "color_id": 4},
+    {"id": 10, "name": "Watermelon", "sweetness": 7, "water_percent": 0.92, "color_id": 5},
+    {"id": 11, "name": "Pears", "sweetness": 11, "water_percent": 0.15, "color_id": 5},
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(Color, include=["name", "fruits"], override=True)
+    class ColorType: ...
+
+    @strawchemy.filter(Fruit, include=["name", "sweetness", "water_percent", "color"])
+    class FruitFilter: ...
+
+    @strawchemy.filter(Color, include=["name", "fruits"])
+    class ColorFilter: ...
+
+    @strawchemy.order(Color, include=["name"])
+    class ColorOrder: ...
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field(filter_input=FruitFilter)
+        fruits_paginated_default_limit_1: list[FruitType] = strawchemy.field(
+            filter_input=FruitFilter, pagination=DefaultOffsetPagination(limit=1)
+        )
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter)
+        colors_filterable_paginated: list[ColorType] = strawchemy.field(
+            filter_input=ColorFilter, order_by_input=ColorOrder, pagination=True
+        )
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS)]
+
+
+@pytest.mark.snapshot
+async def test_no_filtering(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    result = await maybe_async(any_async_query("{ fruits { id } }"))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["fruits"]) == len(_FRUITS)
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_eq(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { name: { eq: "Apple" } }) {
+                id
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["fruits"]) == 1
+    assert result.data["fruits"][0] == {
+        "id": next(fruit["id"] for fruit in _FRUITS if fruit["name"] == "Apple"),
+        "name": "Apple",
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_neq(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { name: { neq: "Apple" } }) {
+                id
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["fruits"]) == len(_FRUITS) - 1
+
+    assert result.data["fruits"] == [
+        {"id": fruit["id"], "name": fruit["name"]} for fruit in _FRUITS if fruit["name"] != "Apple"
+    ]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+# Tests for in and nin filters
+@pytest.mark.snapshot
+async def test_in(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { in: [ 1, 9 ] } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] in {1, 9}]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_nin(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { nin: [ 1, 9 ] } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] not in {1, 9}]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_gt(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { gt: 10 } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] > 10]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_gte(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { gte: 9 } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] >= 9]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_lt(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { lt: 1 } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] < 1]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_lte(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: { sweetness: { lte: 1 } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] <= 1]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+# Tests for string-specific filters
+@pytest.mark.parametrize(
+    ("filter_name", "value", "expected_ids"),
+    [
+        pytest.param("like", "%Appl%", [0], id="like"),
+        pytest.param("nlike", "%Apple%", list(range(1, 11)), id="nlike"),
+        pytest.param("ilike", "%appl%", [0], id="ilike"),
+        pytest.param("nilike", "%appl%", list(range(1, 11)), id="nilike"),
+        pytest.param("startswith", "Appl", [0], id="startswith"),
+        pytest.param("endswith", "pple", [0], id="endswith"),
+        pytest.param("contains", "Water", [9], id="contains"),
+        pytest.param("istartswith", "appl", [0], id="istartswith"),
+        pytest.param("iendswith", "PPLE", [0], id="iendswith"),
+        pytest.param("icontains", "water", [9], id="icontains"),
+        pytest.param("regexp", "^c.*", [6], id="regexp"),
+        pytest.param("iregexp", "^c.*", [1, 6, 8], id="iregexp"),
+        pytest.param("nregexp", "^c.*", [0, 1, 2, 3, 4, 5, 7, 8, 9, 10], id="nregexp"),
+        pytest.param("inregexp", "^c.*", [0, 2, 3, 4, 5, 7, 9, 10], id="inregexp"),
+    ],
+)
+@pytest.mark.snapshot
+async def test_string_filters(
+    filter_name: str,
+    value: str,
+    expected_ids: list[int],
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = f"""
+        {{
+            fruits(filter: {{ name: {{ {filter_name}: {to_graphql_representation(value, "input")} }} }}) {{
+                id
+                name
+            }}
+        }}
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+    assert len(result.data["fruits"]) == len(expected_ids)
+    for i, expected_id in enumerate(expected_ids):
+        assert result.data["fruits"][i]["id"] == _FRUITS[expected_id]["id"]
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+# Tests for logical operators
+@pytest.mark.snapshot
+async def test_and(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: {
+                _and: [
+                    { sweetness: { gt: 8 } },
+                    { name: { contains: "erry" } }
+                ]
+            }) {
+                id
+                name
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] > 8 and "erry" in fruit["name"]]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_or(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: {
+                _or: [
+                    { sweetness: { gt: 8 } },
+                    { name: { contains: "erry" } }
+                ]
+            }) {
+                id
+                name
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    expected = [fruit for fruit in _FRUITS if fruit["sweetness"] > 8 or "erry" in fruit["name"]]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_not(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:  # sourcery skip: de-morgan
+    query = """
+        {
+            fruits(filter: { _not: { sweetness: { lt: 10 } } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    expected = [fruit for fruit in _FRUITS if not fruit["sweetness"] < 10]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+# Test complex nested logical operators
+@pytest.mark.snapshot
+async def test_complex_logical_operators(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruits(filter: {
+                _or: [
+                    {
+                        _and: [
+                            { sweetness: { gt: 0 } },
+                            { name: { contains: "erry" } }
+                        ]
+                    },
+                    {
+                        _and: [
+                            { waterPercent: { gt: 0.8 } }
+                            { sweetness: { lt: 6 } }
+                        ]
+                    },
+                ]
+            }) {
+                id
+                sweetness
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    expected = [
+        fruit
+        for fruit in _FRUITS
+        if (fruit["sweetness"] > 0 and "erry" in fruit["name"])
+        or (fruit["water_percent"] > 0.8 and fruit["sweetness"] < 6)
+    ]
+    assert len(result.data["fruits"]) == len(expected)
+    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_filter_on_paginated_query(
+    any_async_query: AnyQueryExecutor,
+    query_tracker: QueryTracker,
+    sql_snapshot: SnapshotAssertion,
+) -> None:
+    query = """
+        {
+            fruitsPaginatedDefaultLimit1(filter: { _not: { sweetness: { gt: 11 } } }) {
+                id
+                sweetness
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    expected = [_FRUITS[0]]
+    assert len(result.data["fruitsPaginatedDefaultLimit1"]) == len(expected)
+    assert {result.data["fruitsPaginatedDefaultLimit1"][i]["id"] for i in range(len(expected))} == {
+        fruit["id"] for fruit in expected
+    }
+
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+def _names_by_color(colors: list[dict[str, Any]]) -> dict[str, list[str]]:
+    return {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in colors}
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_keeps_every_selected_related_row(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a filter on a to-many relation selects parents without restricting the selected relation.
+
+    Regression test for #290: the filter join was reused to load the selection, which only kept the matching rows.
+    """
+    query = """
+        {
+            colors(filter: { fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {
+        "Red": ["Apple", "Cherry"],
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_row(
+    any_async_query: AnyQueryExecutor,
+) -> None:
+    """Test that a paginated field and a plain one return the same related rows under a to-many filter."""
+    query = """
+        {
+            colorsFilterablePaginated(filter: { fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colorsFilterablePaginated"]) == {
+        "Red": ["Apple", "Cherry"],
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_paginates_distinct_parents(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a parent matching a to-many filter through several rows takes one slot of the page.
+
+    Regression test for #291: the pagination subquery joined the relation, so LIMIT counted each matching row.
+    """
+    query = """
+        {
+            colorsFilterablePaginated(limit: 3, filter: { fruits: { sweetness: { lte: 5 } } }, orderBy: { name: ASC }) {
+                name
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert result.data["colorsFilterablePaginated"] == [{"name": "Green"}, {"name": "Red"}, {"name": "Yellow"}]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_async_query: AnyQueryExecutor) -> None:
+    """Test that a to-many filter under ``_or`` selects parents without restricting the selected relation."""
+    query = """
+        {
+            colors(filter: { _or: [{ fruits: { name: { eq: "Apple" } } }, { name: { eq: "Pink" } }] }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {"Red": ["Apple", "Cherry"], "Pink": ["Pears", "Watermelon"]}
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a to-many filter reached through a to-one relation leaves the selected relations whole."""
+    query = """
+        {
+            fruits(filter: { color: { fruits: { name: { eq: "Apple" } } } }) {
+                name
+                color { name fruits { name } }
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert sorted(
+        (fruit["name"], fruit["color"]["name"], sorted(sibling["name"] for sibling in fruit["color"]["fruits"]))
+        for fruit in result.data["fruits"]
+    ) == [("Apple", "Red", ["Apple", "Cherry"]), ("Cherry", "Red", ["Apple", "Cherry"])]
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.snapshot
+async def test_to_many_filter_and_column_filter(
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
+) -> None:
+    """Test that a column filter next to a to-many filter restricts the parents outside of the EXISTS subquery."""
+    query = """
+        {
+            colors(filter: { name: { neq: "Red" }, fruits: { sweetness: { lte: 5 } } }) {
+                name
+                fruits { name }
+            }
+        }
+    """
+    result = await maybe_async(any_async_query(query))
+    assert not result.errors
+    assert result.data
+
+    assert _names_by_color(result.data["colors"]) == {
+        "Yellow": ["Banana", "Lemon", "Quince"],
+        "Green": ["Cantaloupe", "Strawberry"],
+    }
+    assert query_tracker.query_count == 1
+    assert query_tracker[0].statement_formatted == sql_snapshot

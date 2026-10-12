@@ -1,22 +1,54 @@
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from sqlalchemy import Insert, insert
 
-from tests.integration.fixtures import QueryTracker
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Department, Group, Topic, User, UserDepartmentJoinTable
 from tests.integration.typing import RawRecordData
-from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
+    from strawchemy.typing import SupportedDialect
+
 pytestmark = [pytest.mark.integration]
 
-_ALL_USERS = ["Alice", "Bob", "Charlie", "Tango"]
+# Group 2 holds no default user: it is the parent of a topic other than "Hello!", and of Charlie in
+# test_aggregate_under_one_of_two_to_many_paths.
+_GROUPS: RawRecordData = [
+    {"id": 1, "name": "Group 1"},
+    {"id": 2, "name": "Group 2"},
+]
+_TOPICS: RawRecordData = [
+    {"id": 1, "name": "Hello!", "group_id": 1},
+    {"id": 2, "name": "Problems", "group_id": 2},
+]
+# Only Alice has a group and only Tango has a bio; Tango belongs to no department and Charlie to two.
+_USERS: RawRecordData = [
+    {"id": 1, "name": "Alice", "group_id": 1, "bio": None},
+    {"id": 2, "name": "Bob", "group_id": None, "bio": None},
+    {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
+    {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
+]
+_DEPARTMENTS: RawRecordData = [
+    {"id": 1, "name": "IT"},
+    {"id": 2, "name": "Sales"},
+    {"id": 3, "name": "Platform"},
+]
+_USER_DEPARTMENTS: RawRecordData = [
+    {"user_id": 1, "department_id": 1},
+    {"user_id": 2, "department_id": 2},
+    {"user_id": 3, "department_id": 3},
+    {"user_id": 3, "department_id": 1},
+]
+_ALL_USERS = sorted(user["name"] for user in _USERS)
 _TEXT_OPERATORS = (
     "eq",
     "neq",
@@ -44,80 +76,75 @@ _TEXT_OPERATORS = (
 )
 
 
-@pytest.mark.snapshot
-async def test_no_filtering(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    result = await maybe_async(any_async_query("{ fruits { id } }"))
-    assert not result.errors
-    assert result.data
-    assert len(result.data["fruits"]) == len(raw_fruits)
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(User, include=["id", "name", "bio"])
+    class UserType: ...
+
+    # The include list also filters the count arguments of the aggregations below it: cases count on `id`.
+    @strawchemy.filter(User, include=["id", "name", "bio", "group", "departments"])
+    class UserFilter: ...
+
+    @strawchemy.distinct_on(User, include=["name"])
+    class UserDistinctOn: ...
+
+    @strawberry.type
+    class Query:
+        users: list[UserType] = strawchemy.field(filter_input=UserFilter, distinct_on=UserDistinctOn)
+        users_paginated: list[UserType] = strawchemy.field(filter_input=UserFilter, pagination=True)
+
+    return Operations(query=Query)
 
 
-@pytest.mark.snapshot
-async def test_eq(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { name: { eq: "Apple" } }) {
-                id
-                name
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    assert len(result.data["fruits"]) == 1
-    assert result.data["fruits"][0] == {
-        "id": next(fruit["id"] for fruit in raw_fruits if fruit["name"] == "Apple"),
-        "name": "Apple",
-    }
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
-@pytest.mark.snapshot
-async def test_neq(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { name: { neq: "Apple" } }) {
-                id
-                name
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    assert len(result.data["fruits"]) == len(raw_fruits) - 1
+@pytest.fixture
+def group_rows() -> RawRecordData:
+    return _GROUPS
 
-    assert result.data["fruits"] == [
-        {"id": fruit["id"], "name": fruit["name"]} for fruit in raw_fruits if fruit["name"] != "Apple"
+
+@pytest.fixture
+def topic_rows() -> RawRecordData:
+    return _TOPICS
+
+
+@pytest.fixture
+def user_rows() -> RawRecordData:
+    return _USERS
+
+
+@pytest.fixture
+def department_rows() -> RawRecordData:
+    return _DEPARTMENTS
+
+
+@pytest.fixture
+def user_department_rows() -> RawRecordData:
+    return _USER_DEPARTMENTS
+
+
+@pytest.fixture
+def seed_insert_statements(
+    group_rows: RawRecordData,
+    topic_rows: RawRecordData,
+    user_rows: RawRecordData,
+    department_rows: RawRecordData,
+    user_department_rows: RawRecordData,
+) -> list[Insert]:
+    return [
+        insert(Group).values(group_rows),
+        insert(Topic).values(topic_rows),
+        insert(User).values(user_rows),
+        insert(Department).values(department_rows),
+        insert(UserDepartmentJoinTable).values(user_department_rows),
     ]
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
 
 
 @pytest.mark.snapshot
 async def test_isnull(
     any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -132,534 +159,9 @@ async def test_isnull(
     result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
-    assert len(result.data["users"]) == len(raw_users) - 1
-    assert result.data["users"] == [{"id": user["id"], "bio": user["bio"]} for user in raw_users if user["bio"] is None]
+    assert len(result.data["users"]) == len(_USERS) - 1
+    assert result.data["users"] == [{"id": user["id"], "bio": user["bio"]} for user in _USERS if user["bio"] is None]
 
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-# Tests for in and nin filters
-@pytest.mark.snapshot
-async def test_in(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { in: [ 1, 9 ] } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] in {1, 9}]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_nin(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { nin: [ 1, 9 ] } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] not in {1, 9}]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_gt(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { gt: 10 } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] > 10]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_gte(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { gte: 9 } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] >= 9]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_lt(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { lt: 1 } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] < 1]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_lte(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: { sweetness: { lte: 1 } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] <= 1]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-# Tests for string-specific filters
-@pytest.mark.parametrize(
-    ("filter_name", "value", "expected_ids"),
-    [
-        pytest.param("like", "%Appl%", [0], id="like"),
-        pytest.param("nlike", "%Apple%", list(range(1, 11)), id="nlike"),
-        pytest.param("ilike", "%appl%", [0], id="ilike"),
-        pytest.param("nilike", "%appl%", list(range(1, 11)), id="nilike"),
-        pytest.param("startswith", "Appl", [0], id="startswith"),
-        pytest.param("endswith", "pple", [0], id="endswith"),
-        pytest.param("contains", "Water", [9], id="contains"),
-        pytest.param("istartswith", "appl", [0], id="istartswith"),
-        pytest.param("iendswith", "PPLE", [0], id="iendswith"),
-        pytest.param("icontains", "water", [9], id="icontains"),
-        pytest.param("regexp", "^c.*", [6], id="regexp"),
-        pytest.param("iregexp", "^c.*", [1, 6, 8], id="iregexp"),
-        pytest.param("nregexp", "^c.*", [0, 1, 2, 3, 4, 5, 7, 8, 9, 10], id="nregexp"),
-        pytest.param("inregexp", "^c.*", [0, 2, 3, 4, 5, 7, 9, 10], id="inregexp"),
-    ],
-)
-@pytest.mark.snapshot
-async def test_string_filters(
-    filter_name: str,
-    value: str,
-    expected_ids: list[int],
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = f"""
-        {{
-            fruits(filter: {{ name: {{ {filter_name}: {to_graphql_representation(value, "input")} }} }}) {{
-                id
-                name
-            }}
-        }}
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-    assert len(result.data["fruits"]) == len(expected_ids)
-    for i, expected_id in enumerate(expected_ids):
-        assert result.data["fruits"][i]["id"] == raw_fruits[expected_id]["id"]
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-# Tests for logical operators
-@pytest.mark.snapshot
-async def test_and(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: {
-                _and: [
-                    { sweetness: { gt: 8 } },
-                    { name: { contains: "erry" } }
-                ]
-            }) {
-                id
-                name
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] > 8 and "erry" in fruit["name"]]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_or(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: {
-                _or: [
-                    { sweetness: { gt: 8 } },
-                    { name: { contains: "erry" } }
-                ]
-            }) {
-                id
-                name
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    expected = [fruit for fruit in raw_fruits if fruit["sweetness"] > 8 or "erry" in fruit["name"]]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_not(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:  # sourcery skip: de-morgan
-    query = """
-        {
-            fruits(filter: { _not: { sweetness: { lt: 10 } } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    expected = [fruit for fruit in raw_fruits if not fruit["sweetness"] < 10]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-# Test complex nested logical operators
-@pytest.mark.snapshot
-async def test_complex_logical_operators(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruits(filter: {
-                _or: [
-                    {
-                        _and: [
-                            { sweetness: { gt: 0 } },
-                            { name: { contains: "erry" } }
-                        ]
-                    },
-                    {
-                        _and: [
-                            { waterPercent: { gt: 0.8 } }
-                            { sweetness: { lt: 6 } }
-                        ]
-                    },
-                ]
-            }) {
-                id
-                sweetness
-                name
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    expected = [
-        fruit
-        for fruit in raw_fruits
-        if (fruit["sweetness"] > 0 and "erry" in fruit["name"])
-        or (fruit["water_percent"] > 0.8 and fruit["sweetness"] < 6)
-    ]
-    assert len(result.data["fruits"]) == len(expected)
-    assert {result.data["fruits"][i]["id"] for i in range(len(expected))} == {fruit["id"] for fruit in expected}
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_filter_on_paginated_query(
-    any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
-    query_tracker: QueryTracker,
-    sql_snapshot: SnapshotAssertion,
-) -> None:
-    query = """
-        {
-            fruitsPaginatedDefaultLimit1(filter: { _not: { sweetness: { gt: 11 } } }) {
-                id
-                sweetness
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    expected = [raw_fruits[0]]
-    assert len(result.data["fruitsPaginatedDefaultLimit1"]) == len(expected)
-    assert {result.data["fruitsPaginatedDefaultLimit1"][i]["id"] for i in range(len(expected))} == {
-        fruit["id"] for fruit in expected
-    }
-
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-def _names_by_color(colors: list[dict[str, Any]]) -> dict[str, list[str]]:
-    return {color["name"]: sorted(fruit["name"] for fruit in color["fruits"]) for color in colors}
-
-
-@pytest.mark.snapshot
-async def test_to_many_filter_keeps_every_selected_related_row(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    """Test that a filter on a to-many relation selects parents without restricting the selected relation.
-
-    Regression test for #290: the filter join was reused to load the selection, which only kept the matching rows.
-    """
-    query = """
-        {
-            colors(filter: { fruits: { sweetness: { lte: 5 } } }) {
-                name
-                fruits { name }
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert _names_by_color(result.data["colors"]) == {
-        "Red": ["Apple", "Cherry"],
-        "Yellow": ["Banana", "Lemon", "Quince"],
-        "Green": ["Cantaloupe", "Strawberry"],
-    }
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-async def test_to_many_filter_on_paginated_field_keeps_every_selected_related_row(
-    any_async_query: AnyQueryExecutor,
-) -> None:
-    """Test that a paginated field and a plain one return the same related rows under a to-many filter."""
-    query = """
-        {
-            colorsFilterablePaginated(filter: { fruits: { sweetness: { lte: 5 } } }) {
-                name
-                fruits { name }
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert _names_by_color(result.data["colorsFilterablePaginated"]) == {
-        "Red": ["Apple", "Cherry"],
-        "Yellow": ["Banana", "Lemon", "Quince"],
-        "Green": ["Cantaloupe", "Strawberry"],
-    }
-
-
-@pytest.mark.snapshot
-async def test_to_many_filter_paginates_distinct_parents(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    """Test that a parent matching a to-many filter through several rows takes one slot of the page.
-
-    Regression test for #291: the pagination subquery joined the relation, so LIMIT counted each matching row.
-    """
-    query = """
-        {
-            colorsFilterablePaginated(limit: 3, filter: { fruits: { sweetness: { lte: 5 } } }, orderBy: { name: ASC }) {
-                name
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert result.data["colorsFilterablePaginated"] == [{"name": "Green"}, {"name": "Red"}, {"name": "Yellow"}]
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-async def test_to_many_filter_in_or_branch_keeps_every_selected_related_row(any_async_query: AnyQueryExecutor) -> None:
-    """Test that a to-many filter under ``_or`` selects parents without restricting the selected relation."""
-    query = """
-        {
-            colors(filter: { _or: [{ fruits: { name: { eq: "Apple" } } }, { name: { eq: "Pink" } }] }) {
-                name
-                fruits { name }
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert _names_by_color(result.data["colors"]) == {"Red": ["Apple", "Cherry"], "Pink": ["Pears", "Watermelon"]}
-
-
-@pytest.mark.snapshot
-async def test_to_many_filter_behind_to_one_keeps_every_selected_related_row(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    """Test that a to-many filter reached through a to-one relation leaves the selected relations whole."""
-    query = """
-        {
-            fruits(filter: { color: { fruits: { name: { eq: "Apple" } } } }) {
-                name
-                color { name fruits { name } }
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert sorted(
-        (fruit["name"], fruit["color"]["name"], sorted(sibling["name"] for sibling in fruit["color"]["fruits"]))
-        for fruit in result.data["fruits"]
-    ) == [("Apple", "Red", ["Apple", "Cherry"]), ("Cherry", "Red", ["Apple", "Cherry"])]
-    assert query_tracker.query_count == 1
-    assert query_tracker[0].statement_formatted == sql_snapshot
-
-
-@pytest.mark.snapshot
-async def test_to_many_filter_and_column_filter(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, sql_snapshot: SnapshotAssertion
-) -> None:
-    """Test that a column filter next to a to-many filter restricts the parents outside of the EXISTS subquery."""
-    query = """
-        {
-            colors(filter: { name: { neq: "Red" }, fruits: { sweetness: { lte: 5 } } }) {
-                name
-                fruits { name }
-            }
-        }
-    """
-    result = await maybe_async(any_async_query(query))
-    assert not result.errors
-    assert result.data
-
-    assert _names_by_color(result.data["colors"]) == {
-        "Yellow": ["Banana", "Lemon", "Quince"],
-        "Green": ["Cantaloupe", "Strawberry"],
-    }
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
@@ -855,7 +357,7 @@ async def test_not_isnull_column(dto_filter: str, names: list[str], any_async_qu
 
 
 @pytest.mark.parametrize(
-    ("raw_users", "raw_user_departments"),
+    ("user_rows", "user_department_rows"),
     [
         pytest.param(
             [
@@ -879,8 +381,8 @@ async def test_not_isnull_column(dto_filter: str, names: list[str], any_async_qu
 )
 async def test_aggregate_under_one_of_two_to_many_paths(
     any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,  # noqa: ARG001
-    raw_user_departments: RawRecordData,  # noqa: ARG001
+    user_rows: RawRecordData,  # noqa: ARG001
+    user_department_rows: RawRecordData,  # noqa: ARG001
 ) -> None:
     """A user passes a count over its departments' users and a topic of its group when both hold for some rows."""
     dto_filter = (
@@ -896,7 +398,7 @@ async def test_aggregate_under_one_of_two_to_many_paths(
 
 
 @pytest.mark.parametrize(
-    ("raw_groups", "raw_users", "raw_departments"),
+    ("group_rows", "user_rows", "department_rows"),
     [
         pytest.param(
             [
@@ -943,9 +445,9 @@ async def test_not_isnull_relation(
     dto_filter: str,
     names: list[str],
     any_async_query: AnyQueryExecutor,
-    raw_groups: RawRecordData,  # noqa: ARG001
-    raw_users: RawRecordData,  # noqa: ARG001
-    raw_departments: RawRecordData,  # noqa: ARG001
+    group_rows: RawRecordData,  # noqa: ARG001
+    user_rows: RawRecordData,  # noqa: ARG001
+    department_rows: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test ``isNull`` on the columns of NULL-named related rows, directly and under ``_not``."""
     result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
@@ -1273,7 +775,7 @@ async def test_null_filter_variable_is_ignored(query: str, any_async_query: AnyQ
 
 
 @pytest.mark.parametrize(
-    ("raw_departments", "raw_user_departments"),
+    ("department_rows", "user_department_rows"),
     [
         pytest.param(
             [
@@ -1294,7 +796,7 @@ async def test_null_filter_variable_is_ignored(query: str, any_async_query: AnyQ
     ],
 )
 @pytest.mark.parametrize(
-    "raw_topics",
+    "topic_rows",
     [
         pytest.param(
             [
@@ -1444,9 +946,9 @@ async def test_not_complements_relation_filter(
     dto_filter: str,
     names: list[str],
     any_async_query: AnyQueryExecutor,
-    raw_departments: RawRecordData,  # noqa: ARG001
-    raw_user_departments: RawRecordData,  # noqa: ARG001
-    raw_topics: RawRecordData,  # noqa: ARG001
+    department_rows: RawRecordData,  # noqa: ARG001
+    user_department_rows: RawRecordData,  # noqa: ARG001
+    topic_rows: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ``_not`` over a filter matches exactly the rows the filter does not."""
     query = "{{ {field}(filter: {dto_filter}{arguments}) {{ name }} }}"
@@ -1738,285 +1240,6 @@ async def test_null_operator_is_ignored_in_filter(
 ) -> None:
     """Test that null operators are ignored beside other operators, in branches, relations and aggregations."""
     result = await maybe_async(any_async_query(query, variables))
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    ("dto_filter", "names"),
-    [
-        pytest.param('{ name: { regexp: "o", nregexp: "^B" } }', ["Tango"], id="regexp-and-nregexp"),
-        pytest.param('{ name: { iregexp: "a", inregexp: "^t" } }', ["Alice", "Charlie"], id="iregexp-and-inregexp"),
-        pytest.param('{ name: { regexp: "" } }', _ALL_USERS, id="regexp-empty"),
-        pytest.param('{ name: { nregexp: "" } }', [], id="nregexp-empty"),
-        pytest.param('{ name: { iregexp: "" } }', _ALL_USERS, id="iregexp-empty"),
-        pytest.param('{ name: { inregexp: "" } }', [], id="inregexp-empty"),
-        pytest.param('{ name: { regexp: null, nregexp: "^B" } }', ["Alice", "Charlie", "Tango"], id="regexp-null"),
-        pytest.param('{ name: { regexp: "^B", nregexp: null } }', ["Bob"], id="nregexp-null"),
-        pytest.param(
-            '{ _not: { name: { regexp: "o", nregexp: "^B" } } }',
-            ["Alice", "Bob", "Charlie"],
-            id="not-regexp-and-nregexp",
-        ),
-    ],
-)
-async def test_regexp_operators_are_independent(
-    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
-) -> None:
-    """Test that each regexp operator gets its own predicate, an empty pattern matching every string."""
-    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    ("dto_filter", "names"),
-    [
-        pytest.param('{ name: { iregexp: "^A" } }', ["Alice"], id="iregexp-uppercase"),
-        pytest.param('{ name: { iregexp: "^a" } }', ["Alice"], id="iregexp-lowercase"),
-        pytest.param('{ name: { iregexp: "lI" } }', ["Alice", "Charlie"], id="iregexp-mixed-case"),
-        pytest.param('{ name: { iregexp: "^[A-B]" } }', ["Alice", "Bob"], id="iregexp-uppercase-class"),
-        pytest.param('{ name: { iregexp: "^[a-b]" } }', ["Alice", "Bob"], id="iregexp-lowercase-class"),
-        pytest.param('{ name: { inregexp: "^A" } }', ["Bob", "Charlie", "Tango"], id="inregexp-uppercase"),
-        pytest.param('{ name: { inregexp: "^[B-C]" } }', ["Alice", "Tango"], id="inregexp-uppercase-class"),
-        pytest.param('{ _not: { name: { iregexp: "^A" } } }', ["Bob", "Charlie", "Tango"], id="not-iregexp"),
-        pytest.param('{ _not: { name: { inregexp: "^A" } } }', ["Alice"], id="not-inregexp"),
-        pytest.param('{ name: { iregexp: "E$", regexp: "^A" } }', ["Alice"], id="iregexp-and-regexp"),
-        pytest.param('{ name: { iregexp: "E$", nregexp: "^A" } }', ["Charlie"], id="iregexp-and-nregexp"),
-        pytest.param('{ name: { regexp: "^[a-z]" } }', [], id="regexp-stays-case-sensitive"),
-        pytest.param('{ name: { nregexp: "^[a-z]" } }', _ALL_USERS, id="nregexp-stays-case-sensitive"),
-    ],
-)
-async def test_case_insensitive_regexp_ignores_pattern_case(
-    dto_filter: str, names: list[str], any_async_query: AnyQueryExecutor
-) -> None:
-    """Test that iregexp and inregexp match regardless of the case of either the pattern or the value."""
-    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    "raw_users",
-    [
-        pytest.param(
-            [
-                {"id": 1, "name": "Émile", "group_id": None, "bio": None},
-                {"id": 2, "name": "émile", "group_id": None, "bio": "50%_off"},
-                {"id": 3, "name": "Bob", "group_id": None, "bio": "Line one\nline two\n"},
-                {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
-            ],
-            id="non-ascii-names",
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("dto_filter", "names"),
-    [
-        pytest.param('{ name: { ilike: "é%" } }', ["Émile", "émile"], id="ilike-lowercase"),
-        pytest.param('{ name: { ilike: "É%" } }', ["Émile", "émile"], id="ilike-uppercase"),
-        pytest.param('{ name: { ilike: "_MILE" } }', ["Émile", "émile"], id="ilike-underscore-wildcard"),
-        pytest.param('{ name: { ilike: "é" } }', [], id="ilike-matches-whole-value"),
-        pytest.param('{ name: { ilike: "" } }', [], id="ilike-empty"),
-        pytest.param('{ name: { nilike: "É%" } }', ["Bob", "Tango"], id="nilike"),
-        pytest.param('{ name: { istartswith: "é" } }', ["Émile", "émile"], id="istartswith-lowercase"),
-        pytest.param('{ name: { istartswith: "ÉM" } }', ["Émile", "émile"], id="istartswith-uppercase"),
-        pytest.param('{ name: { iendswith: "MILE" } }', ["Émile", "émile"], id="iendswith"),
-        pytest.param('{ name: { icontains: "É" } }', ["Émile", "émile"], id="icontains-uppercase"),
-        pytest.param('{ name: { icontains: "é" } }', ["Émile", "émile"], id="icontains-lowercase"),
-        pytest.param('{ name: { icontains: "" } }', ["Bob", "Tango", "Émile", "émile"], id="icontains-empty"),
-        pytest.param('{ _not: { name: { ilike: "é%" } } }', ["Bob", "Tango"], id="not-ilike"),
-        pytest.param('{ _not: { name: { icontains: "É" } } }', ["Bob", "Tango"], id="not-icontains"),
-        pytest.param('{ bio: { ilike: "50%" } }', ["émile"], id="ilike-percent-wildcard"),
-        pytest.param('{ bio: { ilike: "5_%_OFF" } }', ["émile"], id="ilike-wildcards-match-literals"),
-        pytest.param('{ bio: { ilike: "line%TWO%" } }', ["Bob"], id="ilike-wildcard-spans-newline"),
-        pytest.param('{ bio: { ilike: "%two" } }', [], id="ilike-no-match-before-trailing-newline"),
-        pytest.param('{ bio: { nilike: "%bio" } }', ["Bob", "émile"], id="nilike-skips-null"),
-        pytest.param('{ _not: { bio: { ilike: "%BIO" } } }', ["Bob", "Émile", "émile"], id="not-ilike-null"),
-        pytest.param('{ bio: { icontains: "%" } }', ["émile"], id="icontains-literal-percent"),
-        pytest.param('{ bio: { icontains: "_" } }', ["émile"], id="icontains-literal-underscore"),
-        pytest.param('{ bio: { icontains: "." } }', [], id="icontains-literal-dot"),
-        pytest.param('{ bio: { istartswith: "%" } }', [], id="istartswith-literal-percent"),
-        pytest.param('{ bio: { iendswith: "%_OFF" } }', ["émile"], id="iendswith-literal-wildcards"),
-        pytest.param('{ bio: { iendswith: "TWO" } }', [], id="iendswith-no-match-before-trailing-newline"),
-        pytest.param('{ bio: { icontains: "" } }', ["Bob", "Tango", "émile"], id="icontains-empty-skips-null"),
-        pytest.param('{ bio: { icontains: "", ilike: null } }', ["Bob", "Tango", "émile"], id="null-ignored"),
-    ],
-)
-async def test_case_insensitive_like_folds_non_ascii(
-    dto_filter: str,
-    names: list[str],
-    any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,  # noqa: ARG001
-) -> None:
-    """Test that the case-insensitive LIKE operators ignore the case of non-ASCII letters."""
-    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    "raw_users",
-    [
-        pytest.param(
-            [
-                {"id": 1, "name": "Alice", "group_id": None, "bio": "a.b (d) [e] +f ^g $h {2} |"},
-                {"id": 2, "name": "Bob", "group_id": None, "bio": "axb"},
-                {"id": 3, "name": "Charlie", "group_id": None, "bio": "a" * 2000 + "b"},
-                {"id": 4, "name": "Tango", "group_id": None, "bio": "a" * 2000},
-            ],
-            id="regexp-syntax-and-long-bios",
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("dto_filter", "names"),
-    [
-        pytest.param('{ bio: { ilike: "a.b" } }', [], id="ilike-literal-dot"),
-        pytest.param('{ bio: { ilike: "a_b" } }', ["Bob"], id="ilike-underscore"),
-        pytest.param('{ bio: { ilike: "A.B%" } }', ["Alice"], id="ilike-literal-dot-prefix"),
-        pytest.param('{ bio: { ilike: "%(D)%" } }', ["Alice"], id="ilike-literal-parentheses"),
-        pytest.param('{ bio: { ilike: "%[E]%" } }', ["Alice"], id="ilike-literal-brackets"),
-        pytest.param('{ bio: { ilike: "%[ab]%" } }', [], id="ilike-no-character-class"),
-        pytest.param('{ bio: { ilike: "%+F ^G $H%" } }', ["Alice"], id="ilike-literal-anchors"),
-        pytest.param('{ bio: { ilike: "%{2} |" } }', ["Alice"], id="ilike-literal-quantifier-and-bar"),
-        pytest.param('{ bio: { nilike: "%(d)%" } }', ["Bob", "Charlie", "Tango"], id="nilike-literal-parentheses"),
-        pytest.param('{ bio: { ilike: "%a%a%a%b" } }', ["Charlie"], id="ilike-wildcards-long-value"),
-        pytest.param('{ bio: { ilike: "%A%A%A%A%A%C" } }', [], id="ilike-wildcards-long-value-no-match"),
-        pytest.param('{ bio: { nilike: "%a%a%a%b" } }', ["Alice", "Bob", "Tango"], id="nilike-wildcards-long-value"),
-    ],
-)
-async def test_ilike_patterns_on_regexp_syntax_and_long_values(
-    dto_filter: str,
-    names: list[str],
-    any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,  # noqa: ARG001
-) -> None:
-    """Test that ilike and nilike read regular expression syntax literally and stay fast on long values."""
-    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    "raw_users",
-    [
-        pytest.param(
-            [
-                {"id": 1, "name": "Alice", "group_id": None, "bio": "50%"},
-                {"id": 2, "name": "Bob", "group_id": None, "bio": "50\\%"},
-                {"id": 3, "name": "Charlie", "group_id": None, "bio": "a_b"},
-                {"id": 4, "name": "Tango", "group_id": None, "bio": "axb"},
-            ],
-            id="escaped-wildcards",
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("operator", "value", "names"),
-    [
-        pytest.param("like", r"50\%", ["Alice"], id="like-escaped-percent"),
-        pytest.param("ilike", r"50\%", ["Alice"], id="ilike-escaped-percent"),
-        pytest.param("nlike", r"50\%", ["Bob", "Charlie", "Tango"], id="nlike-escaped-percent"),
-        pytest.param("nilike", r"50\%", ["Bob", "Charlie", "Tango"], id="nilike-escaped-percent"),
-        pytest.param("like", r"50\\%", ["Bob"], id="like-escaped-backslash"),
-        pytest.param("ilike", r"50\\%", ["Bob"], id="ilike-escaped-backslash"),
-        pytest.param("nlike", r"50\\%", ["Alice", "Charlie", "Tango"], id="nlike-escaped-backslash"),
-        pytest.param("nilike", r"50\\%", ["Alice", "Charlie", "Tango"], id="nilike-escaped-backslash"),
-        pytest.param("like", r"a\_b", ["Charlie"], id="like-escaped-underscore"),
-        pytest.param("ilike", r"A\_B", ["Charlie"], id="ilike-escaped-underscore"),
-        pytest.param("nlike", r"a\_b", ["Alice", "Bob", "Tango"], id="nlike-escaped-underscore"),
-        pytest.param("nilike", r"A\_B", ["Alice", "Bob", "Tango"], id="nilike-escaped-underscore"),
-        pytest.param("like", r"\a\x\b", ["Tango"], id="like-escaped-literal"),
-        pytest.param("ilike", r"\A_\B", ["Charlie", "Tango"], id="ilike-escaped-literal"),
-        pytest.param("like", r"%\\%", ["Bob"], id="like-escaped-backslash-inside"),
-        pytest.param("like", r"50\%%", ["Alice"], id="like-escaped-then-wildcard"),
-        pytest.param("startswith", "50%", ["Alice"], id="startswith-literal-percent"),
-        pytest.param("startswith", "50\\", ["Bob"], id="startswith-literal-backslash"),
-        pytest.param("endswith", r"\%", ["Bob"], id="endswith-literal-backslash"),
-        pytest.param("contains", "_", ["Charlie"], id="contains-literal-underscore"),
-        pytest.param("contains", "\\", ["Bob"], id="contains-literal-backslash"),
-        pytest.param("icontains", r"\%", ["Bob"], id="icontains-literal-backslash"),
-        pytest.param("istartswith", r"50\\", [], id="istartswith-literal-backslashes"),
-        pytest.param("iendswith", "_B", ["Charlie"], id="iendswith-literal-underscore"),
-    ],
-)
-async def test_like_backslash_escapes_next_character(
-    operator: str,
-    value: str,
-    names: list[str],
-    any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,  # noqa: ARG001
-) -> None:
-    """Test that a backslash escapes the next LIKE pattern character, and that the literal operators read it as is."""
-    result = await maybe_async(
-        any_async_query(f"{{ users(filter: {{ bio: {{ {operator}: {json.dumps(value)} }} }}) {{ name }} }}")
-    )
-    assert not result.errors
-    assert result.data is not None
-
-    assert sorted(user["name"] for user in result.data["users"]) == names
-
-
-@pytest.mark.parametrize(
-    "raw_users",
-    [
-        pytest.param(
-            [
-                {"id": 1, "name": "Émile", "group_id": None, "bio": "ABC"},
-                {"id": 2, "name": "émile", "group_id": None, "bio": "abc"},
-                {"id": 3, "name": "Bob", "group_id": None, "bio": "ABC "},
-                {"id": 4, "name": "Tango", "group_id": None, "bio": None},
-            ],
-            id="mixed-case",
-        )
-    ],
-)
-@pytest.mark.parametrize(
-    ("dto_filter", "names"),
-    [
-        pytest.param('{ bio: { like: "ABC" } }', ["Émile"], id="like"),
-        pytest.param('{ bio: { like: "abc" } }', ["émile"], id="like-lowercase"),
-        pytest.param('{ bio: { like: "a%c" } }', ["émile"], id="like-wildcard"),
-        pytest.param('{ bio: { like: "A_C" } }', ["Émile"], id="like-underscore"),
-        pytest.param('{ bio: { nlike: "abc" } }', ["Bob", "Émile"], id="nlike"),
-        pytest.param('{ bio: { startswith: "ab" } }', ["émile"], id="startswith"),
-        pytest.param('{ bio: { endswith: "bc" } }', ["émile"], id="endswith"),
-        pytest.param('{ bio: { contains: "b" } }', ["émile"], id="contains"),
-        pytest.param('{ bio: { contains: "B" } }', ["Bob", "Émile"], id="contains-uppercase"),
-        pytest.param('{ name: { like: "é%" } }', ["émile"], id="like-non-ascii"),
-        pytest.param('{ name: { startswith: "É" } }', ["Émile"], id="startswith-non-ascii"),
-        pytest.param('{ name: { like: "_mile" } }', ["Émile", "émile"], id="like-underscore-non-ascii"),
-        pytest.param('{ name: { like: "emile" } }', [], id="like-accent"),
-        pytest.param('{ bio: { ilike: "abc" } }', ["Émile", "émile"], id="ilike"),
-        pytest.param('{ bio: { nilike: "abc" } }', ["Bob"], id="nilike"),
-        pytest.param('{ bio: { istartswith: "AB" } }', ["Bob", "Émile", "émile"], id="istartswith"),
-        pytest.param('{ bio: { iendswith: "BC" } }', ["Émile", "émile"], id="iendswith"),
-        pytest.param('{ bio: { icontains: "B" } }', ["Bob", "Émile", "émile"], id="icontains"),
-        pytest.param('{ name: { ilike: "emile" } }', [], id="ilike-accent"),
-        pytest.param('{ name: { icontains: "EMI" } }', [], id="icontains-accent"),
-        pytest.param('{ bio: { like: "ABC " } }', ["Bob"], id="like-trailing-space"),
-        pytest.param('{ bio: { endswith: "C" } }', ["Émile"], id="endswith-trailing-space"),
-    ],
-)
-async def test_case_sensitive_like_operators(
-    dto_filter: str,
-    names: list[str],
-    any_async_query: AnyQueryExecutor,
-    raw_users: RawRecordData,  # noqa: ARG001
-) -> None:
-    """Test that like, nlike, startswith, endswith and contains compare letter case, and trailing spaces, exactly."""
-    result = await maybe_async(any_async_query(f"{{ users(filter: {dto_filter}) {{ name }} }}"))
     assert not result.errors
     assert result.data is not None
 
