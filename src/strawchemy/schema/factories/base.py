@@ -568,6 +568,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 directives=directives,
                 override=override,
                 user_defined=user_defined,
+                declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
             )
         return dto

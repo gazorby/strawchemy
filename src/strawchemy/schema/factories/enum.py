@@ -67,6 +67,7 @@ class EnumBackend(DTOBackend[EnumDTO]):
             EnumDTO(value=name, names=[(value.name, value.value) for value in dto]),
         )
         enum.__field_definitions__ = dto.__field_definitions__
+        enum.__dto_model__ = dto.__dto_model__
         return enum
 
 
@@ -201,5 +202,6 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
                 directives=kwargs.get("directives") or (),
                 override=kwargs.get("override", False),
                 user_defined=kwargs.get("user_defined", False),
+                declared=base is not None,
             )
         return dto

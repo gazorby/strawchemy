@@ -7,7 +7,8 @@ from uuid import UUID, uuid4
 
 import pytest
 import strawberry
-from sqlalchemy import Column, ForeignKey, Integer, Sequence, Table, func
+from graphql import GraphQLEnumType, GraphQLInputObjectType, build_schema, get_named_type
+from sqlalchemy import Column, ForeignKey, ForeignKeyConstraint, Integer, Sequence, Table, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryObjectDefinition, StrawberryOptional
@@ -121,6 +122,62 @@ class _Child(_GeneratedValuesBase):
     name: Mapped[str]
     a: Mapped[str]
     parent: Mapped[_Parent] = relationship(_Parent, back_populates="children")
+
+
+class _RelationNamesBase(DeclarativeBase):
+    pass
+
+
+class _Label(_RelationNamesBase):
+    __tablename__ = "label"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    label: Mapped[str]
+
+
+class _Country(_RelationNamesBase):
+    __tablename__ = "country"
+
+    code: Mapped[str] = mapped_column(primary_key=True)
+    region: Mapped[str] = mapped_column(primary_key=True)
+
+
+class _Foo(_RelationNamesBase):
+    __tablename__ = "foo"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    bar_baz_id: Mapped[int] = mapped_column(ForeignKey("label.id"))
+    bar_baz: Mapped[_Label] = relationship(_Label)
+
+
+class _FooBar(_RelationNamesBase):
+    __tablename__ = "foo_bar"
+    __table_args__ = (ForeignKeyConstraint(["baz_code", "baz_region"], ["country.code", "country.region"]),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    baz_code: Mapped[str]
+    baz_region: Mapped[str]
+    baz: Mapped[_Country] = relationship(_Country)
+
+
+class _Root(_RelationNamesBase):
+    __tablename__ = "root"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    owner_id: Mapped[int] = mapped_column(ForeignKey("label.id"))
+    owner: Mapped[_Label] = relationship(_Label)
+    leaves: Mapped[list[_Leaf]] = relationship("_Leaf")
+
+
+class _Leaf(_RelationNamesBase):
+    __tablename__ = "leaf"
+    __table_args__ = (ForeignKeyConstraint(["owner_code", "owner_region"], ["country.code", "country.region"]),)
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    root_id: Mapped[int] = mapped_column(ForeignKey("root.id"))
+    owner_code: Mapped[str]
+    owner_region: Mapped[str]
+    owner: Mapped[_Country] = relationship(_Country)
 
 
 def _input_field_names(decorator: str, model: type[DeclarativeBase], **kwargs: Any) -> set[str]:
@@ -402,3 +459,117 @@ def test_nested_create_input_of_include_all_root_follows_config_include() -> Non
     class ParentAll: ...
 
     assert _nested_child_input_fields(ParentAll).keys() == {"id", "name"}
+
+
+def _relation_types(root: type[Any], *path: str) -> tuple[GraphQLInputObjectType, GraphQLEnumType, GraphQLEnumType]:
+    def create(_data: object) -> int:
+        return 1
+
+    create.__annotations__ = {"_data": root, "return": int}
+
+    @strawberry.type
+    class Query:
+        create_root: int = strawberry.field(resolver=create)
+
+    schema = build_schema(str(strawberry.Schema(query=Query)))
+    relation_input = schema.get_type(get_object_definition(root, strict=True).name)
+    for index, relation in enumerate(path):
+        assert isinstance(relation_input, GraphQLInputObjectType)
+        if index:
+            relation_input = get_named_type(relation_input.fields["create"].type)
+            assert isinstance(relation_input, GraphQLInputObjectType)
+        relation_input = get_named_type(relation_input.fields[relation].type)
+    assert isinstance(relation_input, GraphQLInputObjectType)
+    set_input = get_named_type(relation_input.fields["set"].type)
+    upsert_input = get_named_type(relation_input.fields["upsert"].type)
+    assert isinstance(set_input, GraphQLInputObjectType)
+    assert isinstance(upsert_input, GraphQLInputObjectType)
+    update_fields = get_named_type(upsert_input.fields["updateFields"].type)
+    conflict_fields = get_named_type(upsert_input.fields["conflictFields"].type)
+    assert isinstance(update_fields, GraphQLEnumType)
+    assert isinstance(conflict_fields, GraphQLEnumType)
+    return set_input, update_fields, conflict_fields
+
+
+def _relation_input_shape(root: type[Any], *path: str) -> tuple[set[str], set[str], set[str]]:
+    set_input, update_fields, conflict_fields = _relation_types(root, *path)
+    return set(set_input.fields), set(update_fields.values), set(conflict_fields.values)
+
+
+def _relation_type_names(root: type[Any], *path: str) -> tuple[str, str, str]:
+    set_input, update_fields, conflict_fields = _relation_types(root, *path)
+    return set_input.name, update_fields.name, conflict_fields.name
+
+
+@pytest.mark.parametrize("foo_first", [True, False])
+def test_nested_relation_inputs_of_concatenating_names_keep_their_model(foo_first: bool) -> None:
+    """Test that relations whose root and relation names concatenate alike keep their own model's inputs and enums."""
+    strawchemy = Strawchemy("postgresql")
+
+    def foo_create() -> type[Any]:
+        @strawchemy.create_input(_Foo, include="all")
+        class FooCreate: ...
+
+        return FooCreate
+
+    def foo_bar_create() -> type[Any]:
+        @strawchemy.create_input(_FooBar, include="all")
+        class FooBarCreate: ...
+
+        return FooBarCreate
+
+    if foo_first:
+        foo, foo_bar = foo_create(), foo_bar_create()
+    else:
+        foo_bar, foo = foo_bar_create(), foo_create()
+
+    assert _relation_input_shape(foo, "barBaz") == ({"id"}, {"id", "label"}, {"id"})
+    assert _relation_input_shape(foo_bar, "baz") == ({"code", "region"}, {"code", "region"}, {"codeAndRegion"})
+
+
+def test_nested_relation_inputs_named_like_a_root_relation_keep_their_model() -> None:
+    """Test that a nested relation named like a relation of the root keeps its own model's inputs and enums."""
+    strawchemy = Strawchemy("postgresql")
+
+    @strawchemy.create_input(_Root, include="all")
+    class RootCreate: ...
+
+    assert _relation_input_shape(RootCreate, "owner") == ({"id"}, {"id", "label"}, {"id"})
+    assert _relation_input_shape(RootCreate, "leaves", "owner") == (
+        {"code", "region"},
+        {"code", "region"},
+        {"codeAndRegion"},
+    )
+
+
+@pytest.mark.parametrize("foo_first", [True, False])
+def test_nested_relation_types_of_concatenating_names_take_the_related_model_on_clash(foo_first: bool) -> None:
+    """Test that the relation declared second, whichever it is, names its types after its related model too."""
+    strawchemy = Strawchemy("postgresql")
+
+    def foo_create() -> type[Any]:
+        @strawchemy.create_input(_Foo, include="all")
+        class FooCreate: ...
+
+        return FooCreate
+
+    def foo_bar_create() -> type[Any]:
+        @strawchemy.create_input(_FooBar, include="all")
+        class FooBarCreate: ...
+
+        return FooBarCreate
+
+    if foo_first:
+        foo, foo_bar = foo_create(), foo_bar_create()
+    else:
+        foo_bar, foo = foo_bar_create(), foo_create()
+
+    plain = ("_FooBarBazIdFieldsInput", "_FooBarBazUpdateFields", "_FooBarBazConflictFields")
+    label = ("_FooBarBaz_LabelIdFieldsInput", "_FooBarBaz_LabelUpdateFields", "_FooBarBaz_LabelConflictFields")
+    country = (
+        "_FooBarBaz_CountryIdFieldsInput",
+        "_FooBarBaz_CountryUpdateFields",
+        "_FooBarBaz_CountryConflictFields",
+    )
+    assert _relation_type_names(foo, "barBaz") == (plain if foo_first else label)
+    assert _relation_type_names(foo_bar, "baz") == (country if foo_first else plain)

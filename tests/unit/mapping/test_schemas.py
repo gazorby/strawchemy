@@ -16,6 +16,7 @@ from graphql import (
     GraphQLEnumType,
     GraphQLInputField,
     GraphQLInputObjectType,
+    GraphQLNamedType,
     GraphQLObjectType,
     build_schema,
     get_named_type,
@@ -26,13 +27,14 @@ from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 
-from strawchemy import RELATIONSHIPS, SCALARS, Strawchemy
+from strawchemy import RELATIONSHIPS, SCALARS, Strawchemy, StrawchemyConfig
 from strawchemy.exceptions import (
     EmptyDTOError,
     QueryHookError,
     ReadOnlyModelError,
     StrawchemyError,
     StrawchemyFieldError,
+    TypeNameConflictError,
 )
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
@@ -220,6 +222,268 @@ def test_type_resolution_with_resolvers() -> None:
 def test_multiple_types_error(path: str) -> None:
     with pytest.raises(StrawchemyError, match=re.escape("Type `FruitType` is already registered")):
         import_module(path)
+
+
+def _declare(strawchemy: Strawchemy, decorator: str, model: type[Any], kwargs: dict[str, Any]) -> type[Any]:
+    @getattr(strawchemy, decorator)(model, **kwargs)
+    class Declared: ...
+
+    return Declared
+
+
+@pytest.mark.parametrize(
+    ("first", "second"),
+    [
+        pytest.param(
+            ("create_input", User, {"include": ["name"], "name": "UserInput"}),
+            ("pk_update_input", User, {"include": ["name"], "name": "UserInput"}),
+            id="create-and-pk-update-input-name",
+        ),
+        pytest.param(
+            ("create_input", User, {"include": ["name"]}),
+            ("pk_update_input", User, {"include": ["name"]}),
+            id="create-and-pk-update-input",
+        ),
+        pytest.param(
+            ("create_input", User, {"include": ["name"]}),
+            ("filter_update_input", User, {"include": ["name"]}),
+            id="create-and-filter-update-input",
+        ),
+        pytest.param(
+            ("create_input", User, {"include": ["name"]}),
+            ("create_input", User, {"include": ["id", "name"]}),
+            id="create-input",
+        ),
+        pytest.param(("filter", User, {"include": ["name"]}), ("filter", User, {"include": ["id"]}), id="filter"),
+        pytest.param(("order", User, {"include": ["name"]}), ("order", User, {"include": ["id"]}), id="order"),
+        pytest.param(
+            ("filter", User, {"include": ["name"]}), ("filter", Group, {"include": ["name"]}), id="filter-models"
+        ),
+        pytest.param(
+            ("order", User, {"include": ["name"]}), ("order", Group, {"include": ["name"]}), id="order-models"
+        ),
+        pytest.param(
+            ("distinct_on", User, {"include": ["name"]}), ("distinct_on", User, {"include": ["id"]}), id="distinct-on"
+        ),
+        pytest.param(
+            ("distinct_on", User, {"include": ["name"]}),
+            ("distinct_on", Group, {"include": ["name"]}),
+            id="distinct-on-models",
+        ),
+        pytest.param(
+            ("upsert_update_fields", User, {"include": ["name"]}),
+            ("upsert_update_fields", User, {"include": ["id"]}),
+            id="upsert-update-fields",
+        ),
+        pytest.param(
+            ("upsert_update_fields", User, {"include": ["name"]}),
+            ("upsert_update_fields", Group, {"include": ["name"]}),
+            id="upsert-update-fields-models",
+        ),
+        pytest.param(
+            ("upsert_conflict_fields", User, {}),
+            ("upsert_conflict_fields", Group, {}),
+            id="upsert-conflict-fields-models",
+        ),
+    ],
+)
+def test_same_named_declarations_error(
+    strawchemy: Strawchemy,
+    first: tuple[str, type[Any], dict[str, Any]],
+    second: tuple[str, type[Any], dict[str, Any]],
+) -> None:
+    """Test that a declaration registered under the name of a different one declared before raises, naming both."""
+    _declare(strawchemy, *first)
+    origins = rf"`[\w.]+` \(model `{first[1].__name__}`\) conflicts with `[\w.]+` \(model `{second[1].__name__}`\)"
+    with pytest.raises(TypeNameConflictError, match=rf"^Type `\w+` is already registered: {origins}$"):
+        _declare(strawchemy, *second)
+
+
+def _declaration_and_relation_argument_schema(
+    decorator: str, name: str, field_kwarg: str, *, declared_first: bool
+) -> str:
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", order_by="all", distinct_on="all"))
+
+    def declare() -> type[Any]:
+        return getattr(strawchemy, decorator)(Fruit, include=["name"])(type(name, (), {}))
+
+    declared = declare() if declared_first else None
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    if declared is None:
+        declared = declare()
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitNode: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+        fruits: list[FruitNode] = (
+            strawchemy.field(order_by_input=declared)
+            if field_kwarg == "order_by_input"
+            else strawchemy.field(distinct_on=declared)
+        )
+
+    return str(strawberry.Schema(query=Query))
+
+
+def _member_names(graphql_type: GraphQLNamedType | None) -> set[str]:
+    if isinstance(graphql_type, GraphQLEnumType):
+        return set(graphql_type.values)
+    assert isinstance(graphql_type, GraphQLInputObjectType)
+    return set(graphql_type.fields)
+
+
+@pytest.mark.parametrize(
+    ("decorator", "name", "argument", "field_kwarg", "generated_fields"),
+    [
+        pytest.param(
+            "order",
+            "FruitOrderBy",
+            "orderBy",
+            "order_by_input",
+            {"id", "name", "sweetness", "colorId", "color"},
+            id="order",
+        ),
+        pytest.param(
+            "distinct_on",
+            "FruitDistinctOnFields",
+            "distinctOn",
+            "distinct_on",
+            {"id", "name", "sweetness", "colorId"},
+            id="distinct-on",
+        ),
+    ],
+)
+@pytest.mark.parametrize("declared_first", [True, False])
+def test_declaration_keeps_its_name_over_generated_type(
+    decorator: str, name: str, argument: str, field_kwarg: str, generated_fields: set[str], declared_first: bool
+) -> None:
+    """Test that a declaration owns its name, the relation argument generated for its model taking another, in either order."""
+    sdl = _declaration_and_relation_argument_schema(decorator, name, field_kwarg, declared_first=declared_first)
+    schema = build_schema(sdl)
+    color_type = schema.get_type("ColorType")
+    assert isinstance(color_type, GraphQLObjectType)
+    generated = get_named_type(color_type.fields["fruits"].args[argument].type)
+
+    assert _member_names(schema.get_type(name)) == {"name"}
+    assert generated.name != name
+    assert _member_names(generated) == generated_fields
+
+
+@pytest.mark.parametrize(
+    ("decorator", "name", "argument", "field_kwarg", "declared_first", "generated_name"),
+    [
+        pytest.param("order", "FruitOrderBy", "orderBy", "order_by_input", True, "FruitOrderBy1", id="order-declared"),
+        pytest.param(
+            "order",
+            "FruitOrderBy",
+            "orderBy",
+            "order_by_input",
+            False,
+            "ColorOrderByFruitOrderBy",
+            id="order-generated",
+        ),
+        pytest.param(
+            "distinct_on",
+            "FruitDistinctOnFields",
+            "distinctOn",
+            "distinct_on",
+            True,
+            "FruitDistinctOnFields1",
+            id="distinct-on-declared",
+        ),
+        pytest.param(
+            "distinct_on",
+            "FruitDistinctOnFields",
+            "distinctOn",
+            "distinct_on",
+            False,
+            "FruitDistinctOnFields1",
+            id="distinct-on-generated",
+        ),
+    ],
+)
+def test_generated_type_name_displaced_by_declaration(
+    decorator: str, name: str, argument: str, field_kwarg: str, declared_first: bool, generated_name: str
+) -> None:
+    """Test that a generated type displaced by a declaration takes a name set by the declaration order alone.
+
+    A root-level generated type takes the next free numbered name; one first registered within a parent input
+    keeps that input's path name, so the name depends on whether the declaration comes first.
+    """
+    sdls = [
+        _declaration_and_relation_argument_schema(decorator, name, field_kwarg, declared_first=declared_first)
+        for _ in range(2)
+    ]
+    color_type = build_schema(sdls[0]).get_type("ColorType")
+    assert isinstance(color_type, GraphQLObjectType)
+
+    assert get_named_type(color_type.fields["fruits"].args[argument].type).name == generated_name
+    assert sdls[0] == sdls[1]
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize(
+    ("kwargs", "relation_input", "relation_fields"),
+    [
+        pytest.param({}, "FruitCreateFruitColorInput", {"id", "name"}, id="declared"),
+        pytest.param({"scope": "schema"}, "FruitColorInput", {"name"}, id="scope-schema"),
+        pytest.param({"override": True}, "FruitColorInput", {"name"}, id="override"),
+    ],
+)
+def test_nested_generated_input_displaced_by_declaration(
+    kwargs: dict[str, Any], relation_input: str, relation_fields: set[str], declared_first: bool
+) -> None:
+    """Test that a nested input generated under a declared name takes its path name, unless the declaration stands in."""
+    strawchemy = Strawchemy("postgresql")
+
+    def declare() -> type[Any]:
+        return strawchemy.create_input(Color, include=["name"], **kwargs)(type("FruitColorInput", (), {}))
+
+    declared = declare() if declared_first else None
+
+    @strawchemy.create_input(Fruit, include="all")
+    class FruitCreate: ...
+
+    if declared is None:
+        declared = declare()
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitNode: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorNode: ...
+
+    @strawberry.type
+    class Mutation:
+        create_fruit: FruitNode = strawchemy.create(FruitCreate)
+        create_color: ColorNode = strawchemy.create(declared)
+
+    schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=Mutation)))
+    fruit_create = schema.get_type("FruitCreate")
+    assert isinstance(fruit_create, GraphQLInputObjectType)
+    color_relation = get_named_type(fruit_create.fields["color"].type)
+    assert isinstance(color_relation, GraphQLInputObjectType)
+    nested = get_named_type(color_relation.fields["create"].type)
+
+    assert _member_names(schema.get_type("FruitColorInput")) == {"name"}
+    assert nested.name == relation_input
+    assert _member_names(nested) == relation_fields
+
+
+def test_declaration_named_like_a_builtin_type_error(strawchemy: Strawchemy) -> None:
+    """Test that a declaration taking the name of a built-in strawchemy enum raises, naming the built-in by origin."""
+    with pytest.raises(
+        TypeNameConflictError,
+        match=r"^Type `OrderByEnum` is already registered: `[\w.]+\.OrderByEnum` conflicts with `[\w.]+` \(model `User`\)$",
+    ):
+
+        @strawchemy.distinct_on(User, include=["name"])
+        class OrderByEnum: ...
 
 
 @pytest.mark.parametrize(

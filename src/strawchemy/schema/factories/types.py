@@ -43,7 +43,7 @@ from strawchemy.schema.mutation import (
     ToManyUpdateInput,
     ToOneInput,
 )
-from strawchemy.typing import AggregateDTOT, GraphQLDTOT, GraphQLPurpose
+from strawchemy.typing import AggregateDTOT, GraphQLDTOT, GraphQLPurpose, GraphQLType
 from strawchemy.utils.annotation import non_optional_type_hint
 from strawchemy.utils.text import snake_to_camel
 
@@ -348,6 +348,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 distinct_on=distinct_on,
                 paginate=paginate,
                 current_node=kwargs.get("current_node"),
+                declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
             )
         return dto
@@ -596,12 +597,27 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         self._upsert_update_fields_enum_factory = EnumFactory(self._mapper)
         self._upsert_conflict_fields_enum_factory = UpsertConflictEnumFactory(self._mapper)
 
+    def _relation_type_name(
+        self,
+        field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
+        node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
+        graphql_type: GraphQLType,
+        suffix: str,
+    ) -> str:
+        related_model = field.related_model
+        assert related_model
+        prefix = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}"
+        existing = self._mapper.registry.get(graphql_type, f"{prefix}{suffix}", None)
+        if existing is not None and existing.model is not related_model:
+            return f"{prefix}{related_model.__name__}{suffix}"
+        return f"{prefix}{suffix}"
+
     def _identifier_input(
         self,
         field: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]],
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
     ) -> type[MappedDTO[Any]]:
-        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}IdFieldsInput"
+        name = self._relation_type_name(field, node, "input", "IdFieldsInput")
         related_model = field.related_model
         assert related_model
         id_fields = list(self.inspector.id_field_definitions(related_model, write_all_config))
@@ -629,7 +645,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         dto_config: DTOConfig,
     ) -> type[EnumDTO]:
-        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}UpdateFields"
+        name = self._relation_type_name(field, node, "enum", "UpdateFields")
         related_model = field.related_model
         assert related_model
         return self._upsert_update_fields_enum_factory.factory(
@@ -645,7 +661,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         dto_config: DTOConfig,
     ) -> type[Enum]:
-        name = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}ConflictFields"
+        name = self._relation_type_name(field, node, "enum", "ConflictFields")
         related_model = field.related_model
         assert related_model
         return self._upsert_conflict_fields_enum_factory.factory(

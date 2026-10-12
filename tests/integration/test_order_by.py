@@ -617,7 +617,7 @@ async def test_empty_order_by_is_ignored(
         pytest.param("{ color: {} }", None, id="empty-relation"),
         pytest.param("{ color: { fruits: {} } }", None, id="empty-nested-relation"),
         pytest.param("{ color: { name: $d } }", {}, id="omitted-variable-in-relation"),
-        pytest.param("{ color: null, name: null }", None, id="null"),
+        pytest.param("{ color: null, sweetness: null }", None, id="null"),
         pytest.param("{ color: { name: $d } }", {"d": None}, id="null-variable-in-relation"),
     ],
 )
