@@ -159,6 +159,71 @@ def test_identical_type_relations_use_first_type(strawchemy: Strawchemy) -> None
     assert "type OtherFruitType {" in schema
 
 
+@pytest.mark.parametrize("declare_other_first", [False, True])
+def test_nested_back_reference_follows_its_root(strawchemy: Strawchemy, declare_other_first: bool) -> None:
+    """Test that a nested back-reference points to the root it is reached from, whatever was declared before it."""
+    if declare_other_first:
+
+        @strawchemy.type(Color, include="all")
+        class ColorSummary: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorDetail: ...
+
+    schema = _print_schema(color=ColorDetail)
+
+    assert "ColorSummary" not in schema
+    assert "  color: ColorDetail!" in schema
+
+
+def test_nested_back_reference_follows_include_all_root_after_narrow_one(strawchemy: Strawchemy) -> None:
+    """Test that a back-reference follows an include-all root declared after a narrower root of the same model."""
+
+    @strawchemy.type(Color, include=["name", "fruits"])
+    class ColorNarrow: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorAll: ...
+
+    schema = _print_schema(color=ColorAll)
+
+    assert "ColorNarrow" not in schema
+    assert "  color: ColorAll!" in schema
+
+
+def test_nested_back_reference_of_later_root_uses_path_name(strawchemy: Strawchemy) -> None:
+    """Test that the first root keeps the plain nested type name while a later one gets its path name."""
+
+    @strawchemy.type(Color, include="all")
+    class ColorSummary: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorDetail: ...
+
+    schema = _print_schema(summary=ColorSummary, detail=ColorDetail)
+
+    assert "fruits: [FruitType!]!" in schema
+    assert "fruits: [ColorDetailFruitType!]!" in schema
+    assert "type FruitType {\n  color: ColorSummary!" in schema
+    assert "type ColorDetailFruitType {\n  color: ColorDetail!" in schema
+
+
+def test_nested_filter_back_reference_keeps_plain_name(strawchemy: Strawchemy) -> None:
+    """Test that filters sharing a nested filter with a back-reference keep its plain name."""
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.filter(Color, include="all")
+    class OtherColorFilter: ...
+
+    fruits_field = get_object_definition(OtherColorFilter, strict=True).get_field("fruits")
+
+    assert fruits_field is not None
+    fruit_filter = strawberry_contained_user_type(fruits_field.type)
+    assert get_object_definition(fruit_filter, strict=True).name == "FruitBoolExp"
+
+
 @pytest.mark.parametrize("declare_include_all_first", [False, True])
 def test_include_all_type_not_reused_under_narrower_config_include(declare_include_all_first: bool) -> None:
     """Test that under a narrower config include, relations keep the nested default rather than an include-all type."""

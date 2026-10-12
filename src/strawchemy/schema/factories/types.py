@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import inspect
 import warnings
-from typing import TYPE_CHECKING, Any, Literal, Optional, TypedDict, TypeVar, Union
+from typing import TYPE_CHECKING, Any, ClassVar, Literal, Optional, TypedDict, TypeVar, Union
 
 from sqlalchemy import JSON
 from sqlalchemy.orm import MANYTOONE, DeclarativeBase, QueryableAttribute, RelationshipProperty
@@ -76,6 +76,8 @@ class _HasModeKwargs(TypedDict, total=False):
 
 
 class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
+    root_bound_relations: ClassVar[bool] = True
+
     def __init__(
         self,
         mapper: Strawchemy,
