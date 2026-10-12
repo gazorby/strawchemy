@@ -35,14 +35,9 @@ input FruitAggregateOrderBy {
   minString: FruitAggregateMinMaxStringFieldsOrderBy
   stddevPop: FruitAggregateNumericFieldsOrderBy
   stddevSamp: FruitAggregateNumericFieldsOrderBy
-  sum: FruitAggregateSumFieldsOrderBy
+  sum: FruitAggregateNumericFieldsOrderBy
   varPop: FruitAggregateNumericFieldsOrderBy
   varSamp: FruitAggregateNumericFieldsOrderBy
-}
-
-"""GraphQL type"""
-input FruitAggregateSumFieldsOrderBy {
-  sweetness: OrderByEnum
 }
 
 """Ordering input."""

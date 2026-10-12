@@ -110,7 +110,7 @@ input FruitAggregateBoolExpStddevsamp {
 
 """Boolean expression to compare sum aggregation."""
 input FruitAggregateBoolExpSum {
-  arguments: [FruitSumFieldsEnum!]!
+  arguments: [FruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
@@ -169,10 +169,6 @@ enum FruitMinMaxStringFieldsEnum {
 }
 
 enum FruitNumericFieldsEnum {
-  sweetness
-}
-
-enum FruitSumFieldsEnum {
   sweetness
 }
 

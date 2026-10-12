@@ -23,6 +23,8 @@ class DatabaseFeatures:
         supports_null_ordering: Whether the database supports NULLS FIRST/LAST ordering.
         dml_subquery_needs_derived_table: Whether an UPDATE or DELETE subquery may read its target table only
             through a derived table.
+        supports_native_interval: Whether the database stores intervals natively, rather than as a datetime relative
+            to the epoch, so that aggregating them yields a duration.
         aggregation_functions: A set of supported aggregation function names.
     """
 
@@ -32,6 +34,7 @@ class DatabaseFeatures:
     supports_json: bool = True
     supports_null_ordering: bool = False
     dml_subquery_needs_derived_table: bool = False
+    supports_native_interval: bool = False
     aggregation_functions: set[AggregationFunction] = field(
         default_factory=lambda: {
             "min",
@@ -77,6 +80,7 @@ class PostgresFeatures(DatabaseFeatures):
     supports_distinct_on: bool = True
     supports_lateral: bool = True
     supports_null_ordering: bool = True
+    supports_native_interval: bool = True
 
 
 @dataclass(frozen=True)

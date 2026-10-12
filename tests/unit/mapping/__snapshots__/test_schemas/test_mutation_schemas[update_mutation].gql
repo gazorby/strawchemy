@@ -208,7 +208,7 @@ input FruitAggregateBoolExpStddevsamp {
 
 """Boolean expression to compare sum aggregation."""
 input FruitAggregateBoolExpSum {
-  arguments: [FruitSumFieldsEnum!]!
+  arguments: [FruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
@@ -274,10 +274,6 @@ enum FruitNumericFieldsEnum {
 """GraphQL type"""
 type FruitSumFields {
   sweetness: Int
-}
-
-enum FruitSumFieldsEnum {
-  sweetness
 }
 
 """GraphQL type"""

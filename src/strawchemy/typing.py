@@ -111,11 +111,19 @@ AggregationFilterFunction: TypeAlias = Union[
         "max_string",
         "min_time",
         "max_time",
+        "sum_interval",
     ],
 ]
 """Name of a generated aggregation filter field, i.e. ``FilterFunctionInfo.field_name``."""
 AggregationType = Literal[
-    "sum", "numeric", "min_max_datetime", "min_max_date", "min_max_time", "min_max_string", "min_max_numeric"
+    "sum",
+    "sum_interval",
+    "numeric",
+    "min_max_datetime",
+    "min_max_date",
+    "min_max_time",
+    "min_max_string",
+    "min_max_numeric",
 ]
 
 # Operator vocabularies, one alias per comparison input, composed the way the comparison classes

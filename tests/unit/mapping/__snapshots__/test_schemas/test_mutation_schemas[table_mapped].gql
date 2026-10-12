@@ -157,7 +157,7 @@ input TableMappedFruitAggregateBoolExpStddevsamp {
 
 """Boolean expression to compare sum aggregation."""
 input TableMappedFruitAggregateBoolExpSum {
-  arguments: [TableMappedFruitSumFieldsEnum!]!
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
@@ -361,13 +361,6 @@ type TableMappedFruitSumFields {
   sweetness: Int
   colorId: Int
   requiredColorId: Int
-}
-
-enum TableMappedFruitSumFieldsEnum {
-  id
-  sweetness
-  colorId
-  requiredColorId
 }
 
 """Create input"""
