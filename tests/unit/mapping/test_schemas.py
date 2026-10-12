@@ -1598,7 +1598,7 @@ def test_aggregate_order_by_sum_interval_holds_interval_columns(strawchemy: Stra
         "TrackAggregateSumIntervalFieldsOrderBy",
     )
     assert set(_sdl_type_fields(schema, "TrackAggregateNumericFieldsOrderBy")) == {"rating"}
-    assert set(_sdl_type_fields(schema, "TrackAggregateSumIntervalFieldsOrderBy")) == {"duration"}
+    assert set(_sdl_type_fields(schema, "TrackAggregateSumIntervalFieldsOrderBy")) == {"duration", "wrappedDuration"}
     assert _sdl_type_fields(schema, "TrackAggregateBoolExp")["sumInterval"] == "TrackAggregateBoolExpSuminterval"
     assert _sdl_type_fields(schema, "TrackAggregateBoolExpSuminterval")["predicate"] == "IntervalComparison"
 
@@ -1606,7 +1606,7 @@ def test_aggregate_order_by_sum_interval_holds_interval_columns(strawchemy: Stra
 @pytest.mark.parametrize(
     ("dialect", "sum_fields", "sums_intervals"),
     [
-        pytest.param("postgresql", {"duration", "rating"}, True, id="postgresql"),
+        pytest.param("postgresql", {"duration", "wrappedDuration", "rating"}, True, id="postgresql"),
         pytest.param("mysql", {"rating"}, False, id="mysql"),
         pytest.param("sqlite", {"rating"}, False, id="sqlite"),
     ],

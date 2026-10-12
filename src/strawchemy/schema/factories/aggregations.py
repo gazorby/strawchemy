@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from functools import cached_property
@@ -179,7 +179,8 @@ class _TypeFilteredFunctionArgFactory(_FunctionArgFactory):
         return (
             super(_FunctionArgFactory, self).should_exclude_field(field, dto_config, node, has_override)
             or field.is_relation
-            or self.inspector.model_field_type(field) not in self._filter_types
+            or (field_type := self.inspector.model_field_type(field)) not in self._filter_types
+            or (field_type is timedelta and not self.inspector.is_native_interval(field))
         )
 
     @override
@@ -209,10 +210,8 @@ class AggregationInspector:
         self._inspector = mapper.config.inspector
         self._count_fields_factory = _CountFieldsFactory(mapper)
 
-        # Dialects emulating intervals as epoch datetimes aggregate those datetimes, not durations.
-        excluded_types = set() if self._inspector.db_features.supports_native_interval else {timedelta}
         self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgFactory] = {
-            key: _TypeFilteredFunctionArgFactory(mapper, replace(config, types=config.types - excluded_types))
+            key: _TypeFilteredFunctionArgFactory(mapper, config)
             for key, config in self._aggregation_type_filters.items()
         }
 

@@ -29,9 +29,19 @@ seconds_in_day = 60 * 60 * 24
 
 _PARENTS: RawRecordData = [{"id": 1}, {"id": 2}]
 _INTERVALS: RawRecordData = [
-    {"id": 1, "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59), "parent_id": 2},
-    {"id": 2, "time_delta_col": timedelta(weeks=1, days=3, hours=12), "parent_id": 1},
-    {"id": 3, "time_delta_col": timedelta(seconds=1), "parent_id": 2},
+    {
+        "id": 1,
+        "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59),
+        "emulated_time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59),
+        "parent_id": 2,
+    },
+    {
+        "id": 2,
+        "time_delta_col": timedelta(weeks=1, days=3, hours=12),
+        "emulated_time_delta_col": timedelta(weeks=1, days=3, hours=12),
+        "parent_id": 1,
+    },
+    {"id": 3, "time_delta_col": timedelta(seconds=1), "emulated_time_delta_col": timedelta(seconds=1), "parent_id": 2},
 ]
 
 
@@ -42,7 +52,7 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.type(IntervalModel, include=["id", "time_delta_col"])
     class IntervalType: ...
 
-    @strawchemy.aggregate(IntervalModel, include=["time_delta_col"])
+    @strawchemy.aggregate(IntervalModel, include=["time_delta_col", "emulated_time_delta_col"])
     class IntervalAggregation: ...
 
     @strawchemy.type(IntervalParentModel, include="all")
@@ -249,3 +259,26 @@ async def test_sum_interval_not_offered_without_native_interval(
     result = await maybe_async(any_async_query(query))
     assert result.errors
     assert result.data is None
+
+
+@pytest.mark.parametrize(
+    "query",
+    [
+        pytest.param("{ intervalAggregations { aggregations { sum { emulatedTimeDeltaCol } } } }", id="output"),
+        pytest.param(
+            "{ intervalParents(orderBy: { childrenAggregate: { sumInterval: { emulatedTimeDeltaCol: ASC } } }) { id } }",
+            id="order-by",
+        ),
+        pytest.param(
+            "{ intervalParents(filter: { childrenAggregate: { sumInterval: { arguments: [emulatedTimeDeltaCol], "
+            'predicate: { gt: "P5D" } } } }) { id } }',
+            id="filter",
+        ),
+    ],
+)
+async def test_sum_not_offered_for_emulated_interval(query: str, any_async_query: AnyQueryExecutor) -> None:
+    """Test that an interval column stored as a datetime is rejected by sums at validation on every dialect."""
+    result = await maybe_async(any_async_query(query))
+    assert result.data is None
+    assert result.errors
+    assert "emulatedTimeDeltaCol" in result.errors[0].message

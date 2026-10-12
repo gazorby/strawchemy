@@ -15,6 +15,7 @@ from sqlalchemy import (
     JSON,
     Column,
     ColumnDefault,
+    Interval,
     PrimaryKeyConstraint,
     Sequence,
     SQLColumnExpression,
@@ -767,3 +768,14 @@ class SQLAlchemyGraphQLInspector(SQLAlchemyInspector):
             if issubclass(type_, types):
                 return self._filter_type(type_, sqlalchemy_filter)
         return EqualityComparison[type_]  # ty: ignore[invalid-type-form]
+
+    def is_native_interval(
+        self, field_definition: DTOFieldDefinition[DeclarativeBase, QueryableAttribute[Any]]
+    ) -> bool:
+        type_engine = field_definition.model_field.type
+        while isinstance(type_engine, TypeDecorator) and not isinstance(type_engine, Interval):
+            type_engine = type_engine.impl_instance
+        native = (
+            type_engine.native if isinstance(type_engine, Interval) else isinstance(type_engine, postgresql.INTERVAL)
+        )
+        return self.db_features.supports_native_interval and native

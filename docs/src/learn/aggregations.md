@@ -210,6 +210,7 @@ aggregation type.") when the field is defined.
 the dialect this running example uses. The schema generates only the ones your dialect
 supports; requesting any other is a GraphQL validation error.
 
-Likewise, `sum` over `Interval` columns, and the `sumInterval` filter and order-by, exist on PostgreSQL only: SQLite
-and MySQL store intervals as datetimes, which cannot be summed into a duration.
+Likewise, `sum` over `Interval` columns, and the `sumInterval` filter and order-by, exist on PostgreSQL only, and not for
+`Interval(native=False)`: SQLite, MySQL and non-native intervals are stored as datetimes, which cannot be summed into a
+duration.
 :::
