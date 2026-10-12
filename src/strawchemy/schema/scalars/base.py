@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import date, datetime, time, timedelta, timezone
 from functools import partial
 
-from msgspec import json
+from msgspec import convert, to_builtins
 from strawberry import scalar
 from strawberry.schema.types.base_scalars import wrap_parser
 
@@ -23,18 +23,14 @@ def _serialize_date(value: date | datetime | str) -> str:
     return value.isoformat() if isinstance(value, (date, datetime)) else value
 
 
-def _serialize(value: timedelta) -> str:
-    return json.encode(value).decode()
-
-
 Interval = scalar(
     name="Interval",
     description=(
         "The `Interval` scalar type represents a duration of time as specified by "
         "[ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations)."
     ),
-    parse_value=partial(json.decode, type=timedelta),
-    serialize=_serialize,
+    parse_value=partial(convert, type=timedelta),
+    serialize=to_builtins,
     specified_by_url="https://en.wikipedia.org/wiki/ISO_8601#Durations",
 )
 
