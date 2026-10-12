@@ -453,8 +453,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             child = node.insert_child(relation_child)
             dto = self.factory(
                 model=relation_model,
-                # Annotation overrides target the root's own fields; related types are cached regardless of them.
-                dto_config=dto_config.copy_with(annotation_overrides={}),
+                # Annotation overrides and aliases target the root's own fields; related types are cached without them.
+                dto_config=dto_config.copy_with(annotation_overrides={}, aliases={}),
                 base=None,
                 name=dto_name,
                 parent_field_def=field,

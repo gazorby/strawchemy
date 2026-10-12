@@ -205,7 +205,6 @@ input GroupInput {
   users: GroupUsersIdFieldsInputGroupUserInputGroupUsersUpdateFieldsGroupUsersConflictFieldsToManyCreateInput
   color: GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsRequiredToOneInput!
   name: String!
-  id: UUID
 }
 
 """GraphQL type"""
