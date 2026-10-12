@@ -23,8 +23,8 @@ __all__ = ("UserStatement",)
 class UserStatement(PassBase):
     """Restricts the root rows to those of the user statement.
 
-    A statement that only adds WHERE clauses to ``select(model)`` has its WHERE copied, dropping its
-    ``execution_options``. Any other statement is joined on the primary key, or matched on it by DML.
+    A statement only adding WHERE clauses to ``select(model)`` has its WHERE copied, without its ``execution_options``,
+    except by DML on databases needing a derived table. Others are joined on the primary key, or matched on it by DML.
     """
 
     def rows(self, level: Level, rows: RowSet) -> RowSet:
@@ -37,6 +37,8 @@ class UserStatement(PassBase):
             return rows.with_join(_primary_key_join(statement, level))
         if statement.whereclause is None:
             return rows
+        if level.kind == "dml" and level.context.db_features.dml_subquery_needs_derived_table:
+            return rows.with_where(_primary_key_in(statement, level))
         return rows.with_where(ClauseAdapter(inspect(level.alias).selectable).traverse(statement.whereclause))
 
 

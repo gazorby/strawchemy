@@ -123,7 +123,7 @@ def _name_filter() -> BooleanFilterDTO:
 
 @_DIALECTS
 def test_filter_expressions_add_where_only_statement(dialect_name: str) -> None:
-    """A WHERE-only user statement adds its WHERE, on the real table, to the DML predicates of the filter."""
+    """A WHERE-only user statement adds its WHERE to the DML predicates, matched on the key through a derived table on MySQL."""
     dialect = SQLA_DIALECTS[dialect_name]
     transpiler = Transpiler(Color, dialect, statement=select(Color).where(Color.id == 2))
 
@@ -136,7 +136,19 @@ def test_filter_expressions_add_where_only_statement(dialect_name: str) -> None:
             {
                 "postgresql": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
                 "sqlite": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
-                "mysql": ["DELETE", "  FROM color", " WHERE color.id = 2", "   AND color.name != 'zzz'"],
+                "mysql": [
+                    "DELETE",
+                    "  FROM color",
+                    " WHERE color.id IN (",
+                    "        SELECT user_statement.id",
+                    "          FROM (",
+                    "                SELECT color.id AS id",
+                    "                  FROM color",
+                    "                 WHERE color.id = 2",
+                    "               ) AS user_statement",
+                    "       )",
+                    "   AND color.name != 'zzz'",
+                ],
             }
         )[dialect_name]
     )
