@@ -144,10 +144,10 @@ The generated GraphQL *field* is camelCased as usual (e.g. `min_datetime` become
 
 ::: warning
 The annotation on a declared function names either the value its predicate compares (`int` for `count`, `float` for
-`sum`, `avg` and the statistical functions, `datetime`/`date`/`time`/`str` for the typed `min`/`max` variants) or the
-comparison input itself (`OrderComparison`). Anything else — including `Any` — raises `StrawchemyFieldError` at
-import time, so an annotation always states something the factory has verified. A bare marker describes nothing, so it
-needs no annotation.
+`sum`, `avg` and the statistical functions, `timedelta` for `sum_interval`, `datetime`/`date`/`time`/`str` for the
+typed `min`/`max` variants) or the comparison input itself (`OrderComparison`). Anything else — including `Any` —
+raises `StrawchemyFieldError` at import time, so an annotation always states something the factory has verified. A bare
+marker describes nothing, so it needs no annotation.
 
 Custom `apply=` filters are column-only: putting one on a function inside a class decorated with
 `aggregate_filter` raises `StrawchemyFieldError`.
@@ -209,4 +209,7 @@ aggregation type.") when the field is defined.
 `stddevSamp`, `stddevPop`, `varSamp` and `varPop` exist on PostgreSQL and MySQL but not on SQLite —
 the dialect this running example uses. The schema generates only the ones your dialect
 supports; requesting any other is a GraphQL validation error.
+
+Likewise, `sum` over `Interval` columns, and the `sumInterval` filter and order-by, exist on PostgreSQL only: SQLite
+and MySQL store intervals as datetimes, which cannot be summed into a duration.
 :::
