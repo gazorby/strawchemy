@@ -39,16 +39,37 @@ input FloatOrderComparison {
 Boolean expression to compare aggregated fields. All fields are combined with logical 'AND'.
 """
 input FruitAggregateBoolExp {
+  avg: FruitAggregateBoolExpAvg
   count: FruitAggregateBoolExpCount
+  max: FruitAggregateBoolExpMax
   maxString: FruitAggregateBoolExpMaxstring
+  min: FruitAggregateBoolExpMin
   minString: FruitAggregateBoolExpMinstring
+  stddevPop: FruitAggregateBoolExpStddevpop
+  stddevSamp: FruitAggregateBoolExpStddevsamp
   sum: FruitAggregateBoolExpSum
+  varPop: FruitAggregateBoolExpVarpop
+  varSamp: FruitAggregateBoolExpVarsamp
+}
+
+"""Boolean expression to compare avg aggregation."""
+input FruitAggregateBoolExpAvg {
+  arguments: [FruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
 }
 
 """Boolean expression to compare count aggregation."""
 input FruitAggregateBoolExpCount {
   arguments: [FruitCountFields!] = []
   predicate: IntOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare max aggregation."""
+input FruitAggregateBoolExpMax {
+  arguments: [FruitMinMaxNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
@@ -60,15 +81,50 @@ input FruitAggregateBoolExpMaxstring {
 }
 
 """Boolean expression to compare min aggregation."""
+input FruitAggregateBoolExpMin {
+  arguments: [FruitMinMaxNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare min aggregation."""
 input FruitAggregateBoolExpMinstring {
   arguments: [FruitMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
 }
 
+"""Boolean expression to compare stddev_pop aggregation."""
+input FruitAggregateBoolExpStddevpop {
+  arguments: [FruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare stddev_samp aggregation."""
+input FruitAggregateBoolExpStddevsamp {
+  arguments: [FruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
 """Boolean expression to compare sum aggregation."""
 input FruitAggregateBoolExpSum {
   arguments: [FruitSumFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare var_pop aggregation."""
+input FruitAggregateBoolExpVarpop {
+  arguments: [FruitNumericFieldsEnum!]!
+  predicate: FloatOrderComparison!
+  distinct: Boolean = false
+}
+
+"""Boolean expression to compare var_samp aggregation."""
+input FruitAggregateBoolExpVarsamp {
+  arguments: [FruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
@@ -99,15 +155,26 @@ input FruitBoolExp1 {
 
 enum FruitCountFields {
   name
+  colorId
+  sweetness
   id
+}
+
+enum FruitMinMaxNumericFieldsEnum {
+  sweetness
 }
 
 enum FruitMinMaxStringFieldsEnum {
   name
 }
 
+enum FruitNumericFieldsEnum {
+  sweetness
+}
+
 enum FruitSumFieldsEnum {
   name
+  sweetness
 }
 
 """GraphQL type"""

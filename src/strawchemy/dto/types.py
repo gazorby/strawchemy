@@ -380,6 +380,15 @@ class DTOConfig:
             tags=self.tags if tags is DTOUnset else tags,
         )
 
+    def for_related_model(self) -> DTOConfig:
+        """Create a copy including every field, without the settings keyed by this DTO's own field names."""
+        return self.copy_with(
+            include="all",
+            annotation_overrides={},
+            aliases={},
+            type_overrides={key: value for key, value in self.type_overrides.items() if not isinstance(key, str)},
+        )
+
     def with_base_annotations(self, base: type[Any]) -> DTOConfig:
         """Merge type annotations from a base class into this DTOConfig.
 

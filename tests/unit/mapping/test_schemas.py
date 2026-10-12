@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses as dc
 import re
 import textwrap
+import warnings
 from datetime import timedelta
 from importlib import import_module
 from importlib.util import find_spec
@@ -11,6 +12,7 @@ from uuid import UUID
 
 import pytest
 import strawberry
+from graphql import GraphQLEnumType, GraphQLInputObjectType, build_schema, get_named_type
 from strawberry import auto, relay
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
@@ -39,6 +41,7 @@ if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
     from typing_extensions import Self
 
+    from strawchemy.dto.types import FieldSpec
     from strawchemy.mapper import Strawchemy
     from strawchemy.schema.factories.base import TypeScope
 
@@ -1382,6 +1385,132 @@ def test_relay_node_id_annotation_does_not_leak_into_related_types(strawchemy: S
 
     assert _schema_field_type(schema, "FruitType", "name") is None
     assert _schema_field_type(schema, "ColorType", "name") is str
+
+
+def _sdl_type_fields(schema: strawberry.Schema, type_name: str) -> dict[str, str]:
+    graphql_type = build_schema(str(schema)).get_type(type_name)
+    assert isinstance(graphql_type, (GraphQLInputObjectType, GraphQLEnumType))
+    if isinstance(graphql_type, GraphQLEnumType):
+        return dict.fromkeys(graphql_type.values, "")
+    return {name: str(get_named_type(field.type)) for name, field in graphql_type.fields.items()}
+
+
+def _assert_fruit_aggregate_order_by(schema: strawberry.Schema) -> None:
+    assert _sdl_type_fields(schema, "FruitAggregateOrderBy") == {
+        "avg": "FruitAggregateNumericFieldsOrderBy",
+        "count": "OrderByEnum",
+        "max": "FruitAggregateNumericFieldsOrderBy",
+        "maxString": "FruitAggregateMinMaxStringFieldsOrderBy",
+        "min": "FruitAggregateNumericFieldsOrderBy",
+        "minString": "FruitAggregateMinMaxStringFieldsOrderBy",
+        "stddevPop": "FruitAggregateNumericFieldsOrderBy",
+        "stddevSamp": "FruitAggregateNumericFieldsOrderBy",
+        "sum": "FruitAggregateNumericFieldsOrderBy",
+        "varPop": "FruitAggregateNumericFieldsOrderBy",
+        "varSamp": "FruitAggregateNumericFieldsOrderBy",
+    }
+    assert set(_sdl_type_fields(schema, "FruitAggregateNumericFieldsOrderBy")) == {"sweetness"}
+    assert set(_sdl_type_fields(schema, "FruitAggregateMinMaxStringFieldsOrderBy")) == {"name"}
+
+
+@pytest.mark.parametrize(
+    "order",
+    [
+        pytest.param(["fruits"], id="relation_only"),
+        pytest.param(["fruits", "name"], id="relation_and_string_column"),
+        pytest.param(["fruits", "id"], id="relation_and_id"),
+        pytest.param("all", id="all"),
+    ],
+)
+def test_relation_aggregate_order_by_ignores_parent_order_list(strawchemy: Strawchemy, order: FieldSpec) -> None:
+    """Test that a relation's aggregate order-by is built from the related model, whatever the parent orders by (#480)."""
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
+
+        @strawchemy.type(Color, include="all", order=order)
+        class ColorType: ...
+
+        @strawberry.type
+        class Query:
+            colors: list[ColorType] = strawchemy.field()
+
+        schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    _assert_fruit_aggregate_order_by(schema)
+
+
+_PARENT_FIELD_SETTINGS = [
+    pytest.param({"exclude": ["name"]}, id="exclude_shared_column"),
+    pytest.param({"exclude": ["id", "name"]}, id="exclude_shared_columns"),
+    pytest.param(
+        {"include": "all", "aliases": {"name": "label"}},
+        id="aliases",
+        marks=pytest.mark.filterwarnings("ignore::DeprecationWarning"),
+    ),
+    pytest.param({"include": "all", "type_map": {"name": int}}, id="type_map_by_name"),
+]
+
+
+@pytest.mark.parametrize("settings", _PARENT_FIELD_SETTINGS)
+def test_relation_aggregate_order_by_ignores_parent_field_settings(
+    strawchemy: Strawchemy, settings: dict[str, Any]
+) -> None:
+    """Test that a parent order-by's field-name-keyed settings do not apply to its relation aggregate (#480)."""
+
+    @strawchemy.order(Color, **settings)
+    class ColorOrderBy: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(order_by_input=ColorOrderBy)
+
+    _assert_fruit_aggregate_order_by(strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES))
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        pytest.param({"include": ["fruits"]}, id="relation_only"),
+        pytest.param({"include": ["fruits", "name"]}, id="relation_and_string_column"),
+        pytest.param({"include": "all"}, id="all"),
+        *_PARENT_FIELD_SETTINGS,
+    ],
+)
+def test_relation_aggregate_filter_ignores_parent_field_settings(
+    strawchemy: Strawchemy, settings: dict[str, Any]
+) -> None:
+    """Test that a relation's aggregate filter is built from the related model, whatever the parent's settings (#480)."""
+
+    @strawchemy.filter(Color, **settings)
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all", filter_input=ColorFilter)
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    assert set(_sdl_type_fields(schema, "FruitAggregateBoolExp")) == {
+        "avg",
+        "count",
+        "max",
+        "maxString",
+        "min",
+        "minString",
+        "stddevPop",
+        "stddevSamp",
+        "sum",
+        "varPop",
+        "varSamp",
+    }
+    assert set(_sdl_type_fields(schema, "FruitCountFields")) == {"id", "name", "colorId", "sweetness"}
+    assert set(_sdl_type_fields(schema, "FruitMinMaxStringFieldsEnum")) == {"name"}
 
 
 def test_default_order_by_on_non_list_field_raises() -> None:

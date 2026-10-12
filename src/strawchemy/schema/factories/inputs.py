@@ -433,7 +433,7 @@ class _FilterFactory(_BaseFilterFactory[GraphQLFilterDTOT]):
                 if aggregate_filters and field.uselist:
                     yield self._relation_aggregate_field(
                         field,
-                        dto_config.copy_with(partial_default=UNSET, partial=True),
+                        dto_config.for_related_model().copy_with(partial_default=UNSET, partial=True),
                         declared_aggregates,
                         matched_aggregates,
                     )

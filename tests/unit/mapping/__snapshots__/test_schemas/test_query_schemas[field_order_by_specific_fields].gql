@@ -159,8 +159,23 @@ type VegetableAggregate {
 }
 
 """GraphQL type"""
+input VegetableAggregateMinMaxStringFieldsOrderBy {
+  name: OrderByEnum
+  description: OrderByEnum
+}
+
+"""GraphQL type"""
+input VegetableAggregateNumericFieldsOrderBy {
+  name: OrderByEnum
+  description: OrderByEnum
+}
+
+"""GraphQL type"""
 input VegetableAggregateOrderBy {
   count: OrderByEnum
+  maxString: VegetableAggregateMinMaxStringFieldsOrderBy
+  minString: VegetableAggregateMinMaxStringFieldsOrderBy
+  sum: VegetableAggregateNumericFieldsOrderBy
 }
 
 enum VegetableFamily {
