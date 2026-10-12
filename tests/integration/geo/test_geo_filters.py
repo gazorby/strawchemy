@@ -7,12 +7,12 @@ pytest.importorskip("geoalchemy2", reason="geoalchemy2 is not installed")
 
 from typing import TYPE_CHECKING, Any
 
+import strawberry
 from sqlalchemy import Executable, Insert, MetaData, insert, text
 
-from tests.integration.fixtures import QueryTracker
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
 from tests.integration.geo.models import GeoModel, geo_metadata
-from tests.integration.geo.types import mysql as mysql_types
-from tests.integration.geo.types import postgres as postgres_types
+from tests.integration.geo.utils import GEO_DATA, invert_wkt_coordinates
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -21,11 +21,42 @@ if TYPE_CHECKING:
     from pytest_databases.docker.postgres import PostgresService
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
     from tests.integration.typing import RawRecordData
 
 
 pytestmark = [pytest.mark.integration, pytest.mark.geo, pytest.mark.extras]
+
+_GEO_FIELDS = ["point", "line_string", "polygon", "multi_point", "multi_polygon", "geometry"]
+
+_GEO_ROWS: RawRecordData = GEO_DATA
+# MySQL stores coordinates as (latitude, longitude), so its rows carry the flipped axes.
+_GEO_ROWS_FLIPPED: RawRecordData = [
+    {key: value if key == "id" or value is None else invert_wkt_coordinates(str(value)) for key, value in row.items()}
+    for row in _GEO_ROWS
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(GeoModel, include=["id", *_GEO_FIELDS])
+    class GeoFieldsType: ...
+
+    @strawchemy.filter(GeoModel, include=[*_GEO_FIELDS])
+    class GeoFieldsFilter: ...
+
+    @strawberry.type
+    class Query:
+        geo_field: list[GeoFieldsType] = strawchemy.field(filter_input=GeoFieldsFilter)
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    if dialect not in {"postgresql", "mysql"}:
+        pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -46,32 +77,19 @@ def before_create_all_statements(dialect: SupportedDialect) -> list[Executable]:
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.AsyncGeoQuery
-    if dialect == "mysql":
-        return mysql_types.AsyncGeoQuery
-    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
+def geo_rows(dialect: SupportedDialect) -> RawRecordData:
+    return _GEO_ROWS_FLIPPED if dialect == "mysql" else _GEO_ROWS
 
 
 @pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.SyncGeoQuery
-    if dialect == "mysql":
-        return mysql_types.SyncGeoQuery
-    pytest.skip(f"Geo tests can't be run on this dialect: {dialect}")
-
-
-@pytest.fixture
-def seed_insert_statements(raw_geo: RawRecordData) -> list[Insert]:
-    return [insert(GeoModel).values(raw_geo)]
+def seed_insert_statements(geo_rows: RawRecordData) -> list[Insert]:
+    return [insert(GeoModel).values(geo_rows)]
 
 
 @pytest.mark.snapshot
 async def test_no_filtering(
     any_async_query: AnyQueryExecutor,
-    raw_geo: RawRecordData,
+    geo_rows: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -79,7 +97,7 @@ async def test_no_filtering(
     result = await maybe_async(any_async_query("{ geoField { id } }"))
     assert not result.errors
     assert result.data
-    assert len(result.data["geoField"]) == len(raw_geo)
+    assert len(result.data["geoField"]) == len(geo_rows)
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -99,7 +117,7 @@ async def test_contains_geometry(
     geometry: dict[str, Any],
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_geo: RawRecordData,
+    geo_rows: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -121,7 +139,7 @@ async def test_contains_geometry(
     assert result.data
     assert len(result.data["geoField"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["geoField"][i]["id"] == raw_geo[expected_id]["id"]
+        assert result.data["geoField"][i]["id"] == geo_rows[expected_id]["id"]
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -167,7 +185,7 @@ async def test_within_geometry(
     geometry: dict[str, Any],
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_geo: RawRecordData,
+    geo_rows: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -189,7 +207,7 @@ async def test_within_geometry(
     assert result.data
     assert len(result.data["geoField"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["geoField"][i]["id"] == raw_geo[expected_id]["id"]
+        assert result.data["geoField"][i]["id"] == geo_rows[expected_id]["id"]
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -198,7 +216,7 @@ async def test_within_geometry(
 @pytest.mark.snapshot
 async def test_is_null(
     any_async_query: AnyQueryExecutor,
-    raw_geo: RawRecordData,
+    geo_rows: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -215,27 +233,27 @@ async def test_is_null(
     assert not result.errors
     assert result.data
     assert len(result.data["geoField"]) == 1
-    assert result.data["geoField"][0]["id"] == raw_geo[1]["id"]
+    assert result.data["geoField"][0]["id"] == geo_rows[1]["id"]
     assert result.data["geoField"][0]["point"] is None
     # Verify SQL query
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_not_is_null(any_async_query: AnyQueryExecutor, raw_geo: RawRecordData) -> None:
+async def test_not_is_null(any_async_query: AnyQueryExecutor, geo_rows: RawRecordData) -> None:
     result = await maybe_async(any_async_query("{ geoField(filter: { _not: { point: { isNull: true } } }) { id } }"))
     assert not result.errors
     assert result.data
 
     assert sorted(row["id"] for row in result.data["geoField"]) == sorted(
-        to_graphql_representation(row["id"], "output") for row in raw_geo if row["point"] is not None
+        to_graphql_representation(row["id"], "output") for row in geo_rows if row["point"] is not None
     )
 
 
 @pytest.mark.parametrize("operator", ["isNull", "containsGeometry", "withinGeometry"])
 @pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
 async def test_null_operator_is_ignored(
-    operator: str, negated: bool, any_async_query: AnyQueryExecutor, raw_geo: RawRecordData
+    operator: str, negated: bool, any_async_query: AnyQueryExecutor, geo_rows: RawRecordData
 ) -> None:
     """Test that a geo operator set to null is ignored, directly and under ``_not``."""
     dto_filter = f"{{ point: {{ {operator}: null }} }}"
@@ -246,5 +264,5 @@ async def test_null_operator_is_ignored(
     assert result.data
 
     assert sorted(row["id"] for row in result.data["geoField"]) == sorted(
-        to_graphql_representation(row["id"], "output") for row in raw_geo
+        to_graphql_representation(row["id"], "output") for row in geo_rows
     )
