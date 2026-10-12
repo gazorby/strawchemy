@@ -141,6 +141,16 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         update_users_restricted: list[UserType] = strawchemy.update(
             UserPartial, UserFilter, filter_statement=lambda _: select(User).where(User.id == 2)
         )
+        update_users_restricted_join: list[UserType] = strawchemy.update(
+            UserPartial,
+            UserFilter,
+            filter_statement=lambda _: select(User).join(User.departments).where(Department.name == "Sales"),
+        )
+        update_users_restricted_limit: list[UserType] = strawchemy.update(
+            UserPartial,
+            UserFilter,
+            filter_statement=lambda _: select(User).where(User.id > 1).order_by(User.id).limit(1),
+        )
         delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)
 
     return Operations(query=Query, mutation=Mutation)
@@ -1262,18 +1272,34 @@ async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
     assert result.data["updateUsersFilter"] == [{"id": to_graphql_representation(4, "output")}]
 
 
-async def test_update_restricted_by_repository_statement(any_async_query: AnyQueryExecutor) -> None:
-    """An update whose repository statement keeps only Bob updates Bob alone, whatever rows the filter matches."""
+@pytest.mark.parametrize(
+    ("field", "dto_filter", "updated_names"),
+    [
+        pytest.param("updateUsersRestricted", ', filter: { name: { neq: "zzz" } }', ["Bob"], id="where"),
+        pytest.param("updateUsersRestricted", "", ["Bob"], id="where-no-filter"),
+        pytest.param("updateUsersRestricted", ", filter: {}", ["Bob"], id="where-empty-filter"),
+        pytest.param("updateUsersRestricted", ', filter: { name: { eq: "Alice" } }', [], id="where-disjoint-filter"),
+        pytest.param("updateUsersRestrictedJoin", ', filter: { name: { neq: "zzz" } }', ["Bob"], id="join"),
+        pytest.param("updateUsersRestrictedJoin", "", ["Bob"], id="join-no-filter"),
+        pytest.param("updateUsersRestrictedJoin", ', filter: { name: { eq: "Alice" } }', [], id="join-disjoint-filter"),
+        pytest.param("updateUsersRestrictedLimit", ', filter: { name: { neq: "zzz" } }', ["Bob"], id="limit"),
+        pytest.param("updateUsersRestrictedLimit", "", ["Bob"], id="limit-no-filter"),
+    ],
+)
+async def test_update_restricted_by_repository_statement(
+    field: str, dto_filter: str, updated_names: list[str], any_async_query: AnyQueryExecutor
+) -> None:
+    """An update whose repository statement keeps only Bob updates at most Bob, whatever the statement and filter."""
     result = await maybe_async(
-        any_async_query(
-            'mutation { updateUsersRestricted(data: { name: "Updated" }, filter: { name: { neq: "zzz" } }) { name } }'
-        )
+        any_async_query(f'mutation {{ {field}(data: {{ name: "Updated" }}{dto_filter}) {{ name }} }}')
     )
     assert not result.errors
     assert result.data
-    assert result.data["updateUsersRestricted"] == [{"name": "Updated"}]
+    assert result.data[field] == [{"name": "Updated"} for _ in updated_names]
 
     result = await maybe_async(any_async_query("{ users { name } }"))
     assert not result.errors
     assert result.data
-    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango", "Updated"]
+    assert sorted(user["name"] for user in result.data["users"]) == sorted(
+        "Updated" if user["name"] in updated_names else user["name"] for user in _USERS
+    )
