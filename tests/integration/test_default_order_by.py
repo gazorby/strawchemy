@@ -1,25 +1,88 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from sqlalchemy import Insert, insert
 
-from tests.integration.fixtures import QueryTracker
-from tests.integration.typing import RawRecordData
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, Fruit, FruitFarm
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
-    from strawchemy import StrawchemyConfig
+    from strawchemy import Strawchemy, StrawchemyConfig
+    from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 
+_COLORS: list[dict[str, Any]] = [{"id": 1, "name": "Red"}, {"id": 2, "name": "Yellow"}]
+# Ids do not follow name order, and Lemon/Banana tie on sweetness, so name ordering, the primary key tiebreaker and
+# the secondary default column each give a different result.
+_FRUITS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 9, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Lemon", "sweetness": 2, "water_percent": 0.88, "color_id": 2},
+    {"id": 4, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+]
+_FRUIT_FARMS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple farm", "fruit_id": 1},
+    {"id": 2, "name": "Apple farm 2", "fruit_id": 1},
+    {"id": 3, "name": "Apple farm 3", "fruit_id": 1},
+    {"id": 4, "name": "Cherry farm", "fruit_id": 2},
+]
 
-async def test_default_order_by_applied_when_no_client_order(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
-) -> None:
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(Fruit, include=["id", "name", "farms"], paginate="all")
+    class FruitWithFarmsType: ...
+
+    @strawchemy.type(Color, include=["id", "name", "fruits"], paginate="all")
+    class ColorWithFruitsType: ...
+
+    @strawchemy.order(Fruit, include=["name"])
+    class FruitOrderBy: ...
+
+    @strawchemy.distinct_on(Fruit, include=["name"])
+    class FruitDistinctOn: ...
+
+    @strawberry.type
+    class Query:
+        fruits_default_order: list[FruitType] = strawchemy.field(default_order_by=Fruit.name.asc(), pagination=True)
+        fruits_default_order_no_pagination: list[FruitType] = strawchemy.field(
+            default_order_by=Fruit.name.asc(), order_by_input=FruitOrderBy
+        )
+        fruits_default_order_multi: list[FruitType] = strawchemy.field(
+            default_order_by=[Fruit.sweetness.desc(), Fruit.name.asc()]
+        )
+        fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+            default_order_by=Fruit.name.asc(), distinct_on=FruitDistinctOn
+        )
+        fruits_default_order_sweetness: list[FruitWithFarmsType] = strawchemy.field(
+            default_order_by=Fruit.sweetness.desc()
+        )
+        colors_default_order: list[ColorWithFruitsType] = strawchemy.field(default_order_by=Color.name.desc())
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS), insert(FruitFarm).values(_FRUIT_FARMS)]
+
+
+async def test_default_order_by_applied_when_no_client_order(any_async_query: AnyQueryExecutor) -> None:
     """Default ordering by name ASC is applied when the client sends no orderBy.
 
     The default-ordered result is compared against an explicit ``orderBy: { name: ASC }``
@@ -35,12 +98,12 @@ async def test_default_order_by_applied_when_no_client_order(
     assert not explicit.errors
     assert default.data
     assert explicit.data
-    assert len(default.data["fruitsDefaultOrderNoPagination"]) == len(raw_fruits)
+    assert len(default.data["fruitsDefaultOrderNoPagination"]) == len(_FRUITS)
     # No client order falls back to default_order_by (name ASC), matching explicit name ASC.
     assert default.data["fruitsDefaultOrderNoPagination"] == explicit.data["fruitsDefaultOrderNoPagination"]
 
 
-async def test_client_order_overrides_default(any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData) -> None:
+async def test_client_order_overrides_default(any_async_query: AnyQueryExecutor) -> None:
     """A client orderBy fully overrides default_order_by.
 
     Compares the descending result against the reverse of the ascending result (names are
@@ -52,7 +115,7 @@ async def test_client_order_overrides_default(any_async_query: AnyQueryExecutor,
     assert not desc.errors
     assert asc.data
     assert desc.data
-    assert len(desc.data["fruitsDefaultOrderNoPagination"]) == len(raw_fruits)
+    assert len(desc.data["fruitsDefaultOrderNoPagination"]) == len(_FRUITS)
     asc_names = [row["name"] for row in asc.data["fruitsDefaultOrderNoPagination"]]
     desc_names = [row["name"] for row in desc.data["fruitsDefaultOrderNoPagination"]]
     # Client DESC ordering is honored over the default ASC, producing the reverse order.
@@ -108,7 +171,6 @@ async def test_default_order_under_pagination(
 @pytest.mark.snapshot
 async def test_default_order_multi_column(
     any_async_query: AnyQueryExecutor,
-    raw_fruits: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -116,8 +178,8 @@ async def test_default_order_multi_column(
     result = await maybe_async(any_async_query("{ fruitsDefaultOrderMulti { id name sweetness } }"))
     assert not result.errors
     assert result.data
-    assert len(result.data["fruitsDefaultOrderMulti"]) == len(raw_fruits)
-    expected_names = [row["name"] for row in sorted(raw_fruits, key=lambda r: (-r["sweetness"], r["name"]))]
+    assert len(result.data["fruitsDefaultOrderMulti"]) == len(_FRUITS)
+    expected_names = [row["name"] for row in sorted(_FRUITS, key=lambda r: (-r["sweetness"], r["name"]))]
     assert [row["name"] for row in result.data["fruitsDefaultOrderMulti"]] == expected_names
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot

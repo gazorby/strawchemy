@@ -1,19 +1,93 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from datetime import time
+from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from sqlalchemy import Insert, insert
 
-from tests.integration.fixtures import QueryTracker
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, Fruit
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
+
+_COLORS: list[dict[str, Any]] = [{"id": 1, "name": "Red"}, {"id": 2, "name": "Green"}]
+_FRUITS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "best_time_to_pick": time(hour=9), "color_id": 1},
+    {
+        "id": 2,
+        "name": "Cherry",
+        "sweetness": 9,
+        "water_percent": 0.93,
+        "best_time_to_pick": time(hour=10, minute=30),
+        "color_id": 1,
+    },
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "water_percent", "color"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    class ColorType: ...
+
+    # Generated primary keys are optional on create inputs, nested ones included, only under include="all".
+    @strawchemy.create_input(Fruit, include="all")
+    class FruitCreateInput: ...
+
+    @strawchemy.pk_update_input(Fruit, include=["id", "name", "sweetness", "water_percent", "color"])
+    class FruitUpdateInput: ...
+
+    # Unused by root fields; declared so the nested `ColorFruitInput` gets an optional PK before
+    # `ColorUpdateInput` builds it.
+    @strawchemy.create_input(Color, include="all")
+    class ColorCreateInput: ...
+
+    @strawchemy.pk_update_input(Color, include=["id", "name", "fruits"])
+    class ColorUpdateInput: ...
+
+    @strawchemy.upsert_update_fields(Fruit, include=["name", "sweetness", "water_percent", "best_time_to_pick"])
+    class FruitUpsertFields: ...
+
+    @strawchemy.upsert_conflict_fields(Fruit, include=["id", "name", "sweetness", "water_percent"])
+    class FruitUpsertConflictFields: ...
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+
+    @strawberry.type
+    class Mutation:
+        update_fruit: FruitType = strawchemy.update_by_ids(FruitUpdateInput)
+        update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput)
+        upsert_fruit: FruitType = strawchemy.upsert(
+            FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
+        )
+        upsert_fruits: list[FruitType] = strawchemy.upsert(
+            FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
+        )
+
+    return Operations(query=Query, mutation=Mutation)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS)]
 
 
 @pytest.mark.snapshot

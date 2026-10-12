@@ -3,13 +3,12 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, cast
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, event, insert, inspect
 from sqlalchemy.sql.util import find_tables
 
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.integration.models import Bike, Car, Driver, Garage, Vehicle, polymorphic_metadata
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
@@ -18,6 +17,7 @@ if TYPE_CHECKING:
     from sqlalchemy.sql import ClauseElement
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
     from tests.typing import AnyQueryExecutor
@@ -56,22 +56,44 @@ def seed_insert_statements() -> list[Insert]:
     ]
 
 
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.PolymorphicAsyncQuery
-    if dialect == "mysql":
-        return mysql_types.PolymorphicAsyncQuery
-    return sqlite_types.PolymorphicAsyncQuery
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Vehicle, include=["id", "name"], override=True)
+    class VehicleType: ...
+
+    @strawchemy.type(Car, include=["id", "name", "doors"], override=True)
+    class CarType: ...
+
+    @strawchemy.type(Bike, include=["id", "name", "gears", "garage"], override=True)
+    class BikeType: ...
+
+    @strawchemy.type(
+        Garage,
+        include=["id", "vehicles", "cars", "bikes"],
+        paginate=["vehicles", "cars", "bikes"],
+        # `id` keeps the bike count fields of `bikesAggregate` from being empty.
+        order=["id", "bikes"],
+        override=True,
+    )
+    class GarageType: ...
+
+    @strawchemy.type(Driver, include=["id", "vehicle"], override=True)
+    class DriverType: ...
+
+    @strawberry.type
+    class Query:
+        vehicles: list[VehicleType] = strawchemy.field(pagination=True)
+        cars: list[CarType] = strawchemy.field(pagination=True)
+        bikes: list[BikeType] = strawchemy.field(pagination=True)
+        garages: list[GarageType] = strawchemy.field(pagination=True)
+        all_vehicles: list[VehicleType] = strawchemy.field()
+        drivers: list[DriverType] = strawchemy.field()
+
+    return Operations(query=Query)
 
 
 @pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.PolymorphicSyncQuery
-    if dialect == "mysql":
-        return mysql_types.PolymorphicSyncQuery
-    return sqlite_types.PolymorphicSyncQuery
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture

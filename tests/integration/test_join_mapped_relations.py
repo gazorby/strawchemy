@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from functools import cache
 from typing import TYPE_CHECKING, Any
 
 import pytest
@@ -10,10 +9,11 @@ import strawberry
 from sqlalchemy import Column, ForeignKey, Insert, Integer, MetaData, String, Table, insert, join
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
 
-from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
     from tests.typing import AnyQueryExecutor
@@ -63,26 +63,24 @@ _ITEMS = [
 ]
 
 
-@cache
-def _queries(dialect: SupportedDialect) -> tuple[type[Any], type[Any]]:
-    """Builds the sync and async queries of ``dialect``, which sets whether relations join LATERAL or a CTE."""
-    strawchemy = Strawchemy(dialect)
-
-    @strawchemy.type(_Item, include="all")
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(_Item, include=["id", "b_id", "name"])
     class ItemType: ...
 
-    @strawchemy.type(_Owner, include="all", paginate="all")
+    @strawchemy.type(_Owner, include=["id", "items"], paginate="all")
     class OwnerType: ...
 
     @strawberry.type
-    class SyncQuery:
-        owners: list[OwnerType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    class Query:
+        owners: list[OwnerType] = strawchemy.field()
 
-    @strawberry.type
-    class AsyncQuery:
-        owners: list[OwnerType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    return Operations(query=Query)
 
-    return SyncQuery, AsyncQuery
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    """Builds the schema of ``dialect``, which sets whether relations join LATERAL or a CTE."""
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -99,28 +97,6 @@ def seed_insert_statements() -> list[Insert]:
         insert(_a).values([{"id": item["id"], "name": item["name"], "owner_id": item["owner_id"]} for item in _ITEMS]),
         insert(_b).values([{"id": item["b_id"], "a_id": item["id"]} for item in _ITEMS]),
     ]
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    """Returns the sync query of ``dialect``."""
-    return _queries(dialect)[0]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    """Returns the async query of ``dialect``."""
-    return _queries(dialect)[1]
-
-
-@pytest.fixture
-def sync_mutation() -> None:
-    """Leaves the schema without mutations."""
-
-
-@pytest.fixture
-def async_mutation() -> None:
-    """Leaves the schema without mutations."""
 
 
 def _items_of(owner_id: int) -> list[dict[str, Any]]:

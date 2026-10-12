@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from functools import cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 import strawberry
 from sqlalchemy import ForeignKey, Insert, MetaData, Text, insert, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
     from strawchemy.repository.typing import AnySession
     from strawchemy.typing import SupportedDialect
     from tests.typing import AnyQueryExecutor
@@ -39,42 +39,27 @@ class FruitLabel(_Base):
     name: Mapped[str] = mapped_column(Text)
 
 
-@cache
-def _schema_types(dialect: SupportedDialect) -> dict[str, type[Any]]:
-    strawchemy = Strawchemy(dialect)
-
-    @strawchemy.type(FruitLabel, include="all")
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(FruitLabel, include=["id", "fruit_id", "name"])
     class FruitLabelType: ...
 
-    @strawchemy.create_input(FruitLabel, include="all")
+    @strawchemy.create_input(FruitLabel, include=["id", "fruit_id", "name"])
     class FruitLabelCreate: ...
 
     @strawberry.type
-    class AsyncQuery:
-        fruit_labels: list[FruitLabelType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    class Query:
+        fruit_labels: list[FruitLabelType] = strawchemy.field()
 
     @strawberry.type
-    class SyncQuery:
-        fruit_labels: list[FruitLabelType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    class Mutation:
+        create_fruit_label: FruitLabelType = strawchemy.create(FruitLabelCreate)
 
-    @strawberry.type
-    class AsyncMutation:
-        create_fruit_label: FruitLabelType = strawchemy.create(
-            FruitLabelCreate, repository_type=StrawchemyAsyncRepository
-        )
+    return Operations(query=Query, mutation=Mutation)
 
-    @strawberry.type
-    class SyncMutation:
-        create_fruit_label: FruitLabelType = strawchemy.create(
-            FruitLabelCreate, repository_type=StrawchemySyncRepository
-        )
 
-    return {
-        "async_query": AsyncQuery,
-        "sync_query": SyncQuery,
-        "async_mutation": AsyncMutation,
-        "sync_mutation": SyncMutation,
-    }
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -85,26 +70,6 @@ def metadata() -> MetaData:
 @pytest.fixture
 def seed_insert_statements() -> list[Insert]:
     return [insert(Fruit).values([{"id": 1}, {"id": 2}])]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["async_query"]
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["sync_query"]
-
-
-@pytest.fixture
-def async_mutation(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["async_mutation"]
-
-
-@pytest.fixture
-def sync_mutation(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["sync_mutation"]
 
 
 async def test_create_sets_foreign_key_without_relationship(

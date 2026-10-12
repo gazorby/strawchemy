@@ -9,10 +9,12 @@ import strawberry
 from sqlalchemy import Column, ForeignKey, Insert, Integer, MetaData, String, Table, insert
 from sqlalchemy.orm import DeclarativeBase, Mapped, relationship
 
-from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
+    from strawchemy.typing import SupportedDialect
     from tests.typing import AnyQueryExecutor
 
 pytestmark = [pytest.mark.integration]
@@ -47,53 +49,43 @@ class _Book(_Base):
     author: Mapped[_Author] = relationship(_Author, back_populates="books")
 
 
-_strawchemy = Strawchemy("postgresql")
+_AUTHORS = [{"id": 1, "name": "Ursula"}]
+_BOOKS = [{"id": 1, "title": "Earthsea", "author_id": 1}, {"id": 2, "title": "The Dispossessed", "author_id": 1}]
 
 
-@_strawchemy.type(_Author, include="all")
-class AuthorType: ...
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(_Author, include=["name", "books"])
+    class AuthorType: ...
+
+    @strawchemy.type(_Book, include=["id", "title", "author"])
+    class BookType: ...
+
+    @strawchemy.create_input(_Book, include=["id", "title", "author"])
+    class BookCreateInput: ...
+
+    @strawchemy.pk_update_input(_Book, include=["id", "title"])
+    class BookUpdateInput: ...
+
+    @strawchemy.filter(_Book, include=["id"])
+    class BookFilter: ...
+
+    @strawberry.type
+    class Query:
+        books: list[BookType] = strawchemy.field()
+        books_paginated: list[BookType] = strawchemy.field(pagination=True)
+
+    @strawberry.type
+    class Mutation:
+        create_book: BookType = strawchemy.create(BookCreateInput)
+        update_book: BookType = strawchemy.update_by_ids(BookUpdateInput)
+        delete_books: list[BookType] = strawchemy.delete(BookFilter)
+
+    return Operations(query=Query, mutation=Mutation)
 
 
-@_strawchemy.type(_Book, include="all")
-class BookType: ...
-
-
-@_strawchemy.create_input(_Book, include="all")
-class BookCreateInput: ...
-
-
-@_strawchemy.pk_update_input(_Book, include="all")
-class BookUpdateInput: ...
-
-
-@_strawchemy.filter(_Book, include="all")
-class BookFilter: ...
-
-
-@strawberry.type
-class AsyncQuery:
-    books: list[BookType] = _strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    books_paginated: list[BookType] = _strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    books: list[BookType] = _strawchemy.field(repository_type=StrawchemySyncRepository)
-    books_paginated: list[BookType] = _strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
-
-
-@strawberry.type
-class AsyncMutation:
-    create_book: BookType = _strawchemy.create(BookCreateInput, repository_type=StrawchemyAsyncRepository)
-    update_book: BookType = _strawchemy.update_by_ids(BookUpdateInput, repository_type=StrawchemyAsyncRepository)
-    delete_books: list[BookType] = _strawchemy.delete(BookFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncMutation:
-    create_book: BookType = _strawchemy.create(BookCreateInput, repository_type=StrawchemySyncRepository)
-    update_book: BookType = _strawchemy.update_by_ids(BookUpdateInput, repository_type=StrawchemySyncRepository)
-    delete_books: list[BookType] = _strawchemy.delete(BookFilter, repository_type=StrawchemySyncRepository)
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -103,32 +95,7 @@ def metadata() -> MetaData:
 
 @pytest.fixture
 def seed_insert_statements() -> list[Insert]:
-    return [
-        insert(_Author).values([{"id": 1, "name": "Ursula"}]),
-        insert(_Book).values(
-            [{"id": 1, "title": "Earthsea", "author_id": 1}, {"id": 2, "title": "The Dispossessed", "author_id": 1}]
-        ),
-    ]
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_mutation() -> type[AsyncMutation]:
-    return AsyncMutation
-
-
-@pytest.fixture
-def sync_mutation() -> type[SyncMutation]:
-    return SyncMutation
+    return [insert(_Author).values(_AUTHORS), insert(_Book).values(_BOOKS)]
 
 
 async def test_query(any_query: AnyQueryExecutor) -> None:
