@@ -143,15 +143,58 @@ def test_filter_expressions_add_where_only_statement(dialect_name: str) -> None:
 
 
 @_DIALECTS
-def test_filter_expressions_ignore_statement_with_join(dialect_name: str) -> None:
-    """A user statement with a join adds nothing to the DML predicates, which join no table."""
+def test_filter_expressions_match_statement_with_join_on_primary_key(dialect_name: str) -> None:
+    """A user statement with a join adds a primary-key IN on its keys, read through a derived table on MySQL."""
     dialect = SQLA_DIALECTS[dialect_name]
     statement = select(Color).join(Color.fruits).where(Color.id == 2)
     transpiler = Transpiler(Color, dialect, statement=statement)
 
-    expressions = transpiler.filter_expressions(_name_filter())
+    statement = delete(Color).where(*transpiler.filter_expressions(None))
 
-    assert len(expressions) == 1
+    sql = format_sql(str(statement.compile(dialect=dialect, compile_kwargs={"literal_binds": True})))
+    assert (
+        sql.splitlines()
+        == snapshot(
+            {
+                "postgresql": [
+                    "DELETE",
+                    "  FROM color",
+                    " WHERE color.id IN (",
+                    "        SELECT color.id",
+                    "          FROM color",
+                    "          JOIN fruit",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE color.id = 2",
+                    "       )",
+                ],
+                "sqlite": [
+                    "DELETE",
+                    "  FROM color",
+                    " WHERE color.id IN (",
+                    "        SELECT color.id",
+                    "          FROM color",
+                    "          JOIN fruit",
+                    "            ON color.id = fruit.color_id",
+                    "         WHERE color.id = 2",
+                    "       )",
+                ],
+                "mysql": [
+                    "DELETE",
+                    "  FROM color",
+                    " WHERE color.id IN (",
+                    "        SELECT user_statement.id",
+                    "          FROM (",
+                    "                SELECT color.id AS id",
+                    "                  FROM color",
+                    "                 INNER JOIN fruit",
+                    "                    ON color.id = fruit.color_id",
+                    "                 WHERE color.id = 2",
+                    "               ) AS user_statement",
+                    "       )",
+                ],
+            }
+        )[dialect_name]
+    )
 
 
 @_DIALECTS

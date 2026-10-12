@@ -251,7 +251,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             return [AsRow(*[instance[name] for name in pks]) for instance in values]
 
         transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
-        where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
+        where_expressions = transpiler.filter_expressions(data.dto_filter)
         return await self._update_where(values[0], where_expressions)
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
@@ -511,7 +511,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     ) -> QueryResult[DeclarativeT]:
         async with self.session.begin_nested() as transaction:
             transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
-            where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
+            where_expressions = transpiler.filter_expressions(dto_filter)
             to_be_deleted = await self.list(selection, dto_filter=dto_filter)
             affected_rows = await self._delete_where(where_expressions, execution_options)
             await transaction.commit()
