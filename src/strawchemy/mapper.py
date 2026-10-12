@@ -536,7 +536,7 @@ class Strawchemy:
                 provided, Strawchemy will use a default resolver.
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
-            filter_statement: Restricts the rows the mutation can update.
+            filter_statement: Statement the returned rows are selected from.
             execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
@@ -627,7 +627,7 @@ class Strawchemy:
                 record based on an ID passed directly (implementation dependent).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
-            filter_statement: Restricts the rows the mutation can delete.
+            filter_statement: Statement the returned rows are selected from.
             execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
