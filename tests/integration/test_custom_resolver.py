@@ -205,3 +205,24 @@ async def test_mutation_returns_rows_written_outside_filter_statement(
     assert not result.errors
     assert result.data
     assert sorted(color["name"] for color in result.data["colors"]) == names_after
+
+
+@pytest.mark.parametrize(
+    "mutation",
+    [
+        pytest.param('updateLoadedColorRestricted(data: { id: 2, name: "Hacked" })', id="one"),
+        pytest.param('updateColorsRestricted(data: [{ id: 2, name: "Hacked" }])', id="many"),
+        pytest.param(
+            'updateColorsRestricted(data: [{ id: 1, name: "Crimson" }, { id: 2, name: "Hacked" }])', id="mixed"
+        ),
+    ],
+)
+async def test_update_by_id_outside_filter_statement(mutation: str, any_query: AnyQueryExecutor) -> None:
+    """A repository update by id naming a row outside its filter statement fails and writes no row."""
+    result = await maybe_async(any_query(f"mutation {{ {mutation} {{ name }} }}"))
+    assert result.errors
+
+    result = await maybe_async(any_query("{ colors { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(color["name"] for color in result.data["colors"]) == ["Pink", "Red", "Yellow"]
