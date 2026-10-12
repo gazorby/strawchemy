@@ -20,6 +20,7 @@ __all__ = (
     "StrawchemyError",
     "StrawchemyFieldError",
     "TranspilingError",
+    "UnknownKeywordError",
 )
 
 
@@ -77,6 +78,10 @@ class FilterValueError(StrawchemyError):
 
 class ModelInspectorError(DTOError):
     """Raised when a model field cannot be inspected as requested."""
+
+
+class UnknownKeywordError(StrawchemyError, TypeError):
+    """Raised when a strawchemy decorator or field helper is called with a keyword it does not take."""
 
 
 class ReadOnlyModelError(StrawchemyError):

@@ -24,6 +24,7 @@ from strawchemy.exceptions import (
     ReadOnlyModelError,
     StrawchemyError,
     StrawchemyFieldError,
+    UnknownKeywordError,
 )
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
@@ -182,6 +183,73 @@ def test_enum_decorator_name(strawchemy: Strawchemy, decorator: str) -> None:
     class FruitEnum: ...
 
     assert FruitEnum.__strawberry_definition__.name == "CustomFruitEnum"
+
+
+@pytest.mark.parametrize(
+    "decorator",
+    [
+        "type",
+        "aggregate",
+        "filter",
+        "order",
+        "aggregate_filter",
+        "create_input",
+        "pk_update_input",
+        "filter_update_input",
+        "distinct_on",
+        "upsert_update_fields",
+        "upsert_conflict_fields",
+    ],
+)
+def test_model_decorator_unknown_keyword_fail(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that declaring a class with an unknown decorator keyword fails, naming the keyword, class and model."""
+    with pytest.raises(
+        UnknownKeywordError,
+        match=re.escape("Unexpected keyword argument 'bogus' when declaring FruitDeclared (Fruit)"),
+    ) as exc_info:
+
+        @getattr(strawchemy, decorator)(Fruit, include="all", bogus=1)
+        class FruitDeclared: ...
+
+    assert isinstance(exc_info.value, StrawchemyError)
+    assert isinstance(exc_info.value, TypeError)
+
+
+@pytest.mark.parametrize("decorator", ["create", "pk_update", "filter_update"])
+@pytest.mark.skipif(not find_spec("pydantic"), reason="pydantic is not installed")
+def test_pydantic_decorator_unknown_keyword_fail(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that declaring a pydantic input with an unknown decorator keyword fails, naming the keyword and class."""
+    with pytest.raises(
+        UnknownKeywordError,
+        match=re.escape("Unexpected keyword argument 'bogus' when declaring FruitDeclared (Fruit)"),
+    ):
+
+        @getattr(strawchemy.pydantic, decorator)(Fruit, include="all", bogus=1)
+        class FruitDeclared: ...
+
+
+@pytest.mark.parametrize(
+    ("method", "args"),
+    [
+        pytest.param("field", (), id="field"),
+        pytest.param("field", (lambda: None,), id="field_resolver"),
+        pytest.param("filter_field", (), id="filter_field"),
+        pytest.param("create", (object,), id="create"),
+        pytest.param("upsert", (object, object, object), id="upsert"),
+        pytest.param("update", (object, object), id="update"),
+        pytest.param("update_by_ids", (object,), id="update_by_ids"),
+        pytest.param("delete", (), id="delete"),
+    ],
+)
+def test_field_unknown_keyword_fail(strawchemy: Strawchemy, method: str, args: tuple[Any, ...]) -> None:
+    """Test that a field helper called with an unknown keyword fails at declaration, naming itself and the keyword."""
+    with pytest.raises(
+        UnknownKeywordError, match=re.escape(f"{method}() got an unexpected keyword argument 'bogus'")
+    ) as exc_info:
+        getattr(strawchemy, method)(*args, bogus=1)
+
+    assert isinstance(exc_info.value, StrawchemyError)
+    assert isinstance(exc_info.value, TypeError)
 
 
 def test_field_metadata_default(strawchemy: Strawchemy) -> None:

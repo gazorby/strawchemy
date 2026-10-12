@@ -50,6 +50,7 @@ from strawchemy.schema.mutation.fields import (
     StrawchemyUpsertMutationField,
 )
 from strawchemy.schema.mutation.input import EventRegistry
+from strawchemy.utils.kwargs import reject_unknown_kwargs
 from strawchemy.utils.registry import StrawberryRegistry
 
 if TYPE_CHECKING:
@@ -319,6 +320,7 @@ class Strawchemy:
         Returns:
             A StrawchemyField instance, which is a specialized StrawberryField.
         """
+        reject_unknown_kwargs("field", field_kwargs, OutputFieldKwargs)
         graphql_type = field_kwargs.get("graphql_type")
         type_annotation = RegistryAnnotation.from_registry(graphql_type, self._annotation_namespace)
 
@@ -395,6 +397,7 @@ class Strawchemy:
             StrawchemyFieldError: If ``ops`` and ``apply`` are both given, if ``arguments`` and
                 ``apply`` are both given, or if ``join`` is unsupported.
         """
+        reject_unknown_kwargs("filter_field", field_kwargs, StrawberryFieldKwargs)
         if ops is not None and apply is not None:
             msg = "filter_field() arguments 'ops' and 'apply' are mutually exclusive"
             raise StrawchemyFieldError(msg)
@@ -442,6 +445,7 @@ class Strawchemy:
             A `StrawchemyCreateMutationField` instance, which is a specialized
             StrawberryField configured for create mutations.
         """
+        reject_unknown_kwargs("create", field_kwargs, MutationFieldKwargs)
         return self._mutation_builder.build(
             StrawchemyCreateMutationField,
             resolver,
@@ -487,6 +491,7 @@ class Strawchemy:
             A `StrawchemyUpsertMutationField` instance, which is a specialized
             StrawberryField configured for upsert mutations.
         """
+        reject_unknown_kwargs("upsert", field_kwargs, MutationFieldKwargs)
         return self._mutation_builder.build(
             StrawchemyUpsertMutationField,
             resolver,
@@ -504,6 +509,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,
+        filter_statement: FilterStatementCallable | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for updating model instances.
@@ -523,6 +529,7 @@ class Strawchemy:
                 provided, Strawchemy will use a default resolver.
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
+            filter_statement: Restricts the rows the mutation can update.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -531,12 +538,14 @@ class Strawchemy:
             A `StrawchemyUpdateMutationField` instance, which is a specialized
             StrawberryField configured for update mutations.
         """
+        reject_unknown_kwargs("update", field_kwargs, MutationFieldKwargs)
         return self._mutation_builder.build(
             StrawchemyUpdateMutationField,
             resolver,
             input_type=input_type,
             filter_type=filter_input,
             validation=validation,
+            filter_statement=filter_statement,
             **field_kwargs,
         )
 
@@ -572,6 +581,7 @@ class Strawchemy:
             A `StrawchemyUpdateMutationField` instance, specialized for updates
             by ID.
         """
+        reject_unknown_kwargs("update_by_ids", field_kwargs, MutationFieldKwargs)
         return self._mutation_builder.build(
             StrawchemyUpdateMutationField,
             resolver,
@@ -584,6 +594,8 @@ class Strawchemy:
         self,
         filter_input: type[BooleanFilterDTO] | None = None,
         resolver: Any | None = None,
+        *,
+        filter_statement: FilterStatementCallable | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for deleting model instances.
@@ -602,6 +614,7 @@ class Strawchemy:
                 record based on an ID passed directly (implementation dependent).
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
+            filter_statement: Restricts the rows the mutation can delete.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -610,9 +623,11 @@ class Strawchemy:
             A `StrawchemyDeleteMutationField` instance, which is a specialized
             StrawberryField configured for delete mutations.
         """
+        reject_unknown_kwargs("delete", field_kwargs, MutationFieldKwargs)
         return self._mutation_builder.build(
             StrawchemyDeleteMutationField,
             resolver,
             input_type=filter_input,
+            filter_statement=filter_statement,
             **field_kwargs,
         )

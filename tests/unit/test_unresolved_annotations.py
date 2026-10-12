@@ -74,7 +74,7 @@ def test_late_declared_annotation_resolves_in_schema() -> None:
 
     @strawberry.type
     class Query:
-        colors: list[_ColorType] = _sc.field(filter_input=_ColorFilter, order_by=_ColorOrder)
+        colors: list[_ColorType] = _sc.field(filter_input=_ColorFilter, order_by_input=_ColorOrder)
 
     strawberry.Schema(query=Query)
 
