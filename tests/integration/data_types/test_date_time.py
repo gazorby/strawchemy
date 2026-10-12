@@ -1,16 +1,14 @@
 from __future__ import annotations
 
 from datetime import date, datetime, time, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert
 
-from tests.integration.fixtures import QueryTracker
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
 from tests.integration.models import DateTimeModel, date_time_metadata
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
 from tests.integration.typing import RawRecordData
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -18,6 +16,7 @@ from tests.utils import maybe_async
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
@@ -37,36 +36,60 @@ def _iso_boundary_records() -> RawRecordData:
     ]
 
 
+_DATE_TIMES: RawRecordData = [
+    {
+        "id": 1,
+        "date_col": date(2023, 1, 15),
+        "time_col": time(14, 30, 45),
+        "datetime_col": datetime(2023, 1, 15, 14, 30, 45),  # noqa: DTZ001
+    },
+    {
+        "id": 2,
+        "date_col": date(2022, 12, 31),
+        "time_col": time(8, 15, 0),
+        "datetime_col": datetime(2022, 12, 31, 23, 59, 59),  # noqa: DTZ001
+    },
+    {
+        "id": 3,
+        "date_col": date(2024, 2, 29),  # leap year
+        "time_col": time(0, 0, 0),
+        "datetime_col": datetime(2024, 2, 29, 0, 0, 0),  # noqa: DTZ001
+    },
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.filter(DateTimeModel, include=["date_col", "time_col", "datetime_col"])
+    class DateTimeFilter: ...
+
+    @strawchemy.type(DateTimeModel, include=["id", "date_col", "time_col", "datetime_col"])
+    class DateTimeType: ...
+
+    @strawberry.type
+    class Query:
+        date_times: list[DateTimeType] = strawchemy.field(filter_input=DateTimeFilter)
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
 @pytest.fixture
 def metadata() -> MetaData:
     return date_time_metadata
 
 
 @pytest.fixture
-def seed_insert_statements(raw_date_times: RawRecordData) -> list[Insert]:
-    return [insert(DateTimeModel).values(raw_date_times)]
+def seed_rows() -> RawRecordData:
+    return _DATE_TIMES
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.DateTimeAsyncQuery
-    if dialect == "mysql":
-        return mysql_types.DateTimeAsyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.DateTimeAsyncQuery
-    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.DateTimeSyncQuery
-    if dialect == "mysql":
-        return mysql_types.DateTimeSyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.DateTimeSyncQuery
-    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
+def seed_insert_statements(seed_rows: RawRecordData) -> list[Insert]:
+    return [insert(DateTimeModel).values(seed_rows)]
 
 
 # Tests for date/time component filters
@@ -89,7 +112,6 @@ async def test_date_components(
     value: int,
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -106,7 +128,7 @@ async def test_date_components(
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["dateTimes"][i]["id"] == raw_date_times[expected_id]["id"]
+        assert result.data["dateTimes"][i]["id"] == _DATE_TIMES[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
@@ -125,7 +147,6 @@ async def test_time_components(
     value: int,
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -142,7 +163,7 @@ async def test_time_components(
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["dateTimes"][i]["id"] == raw_date_times[expected_id]["id"]
+        assert result.data["dateTimes"][i]["id"] == _DATE_TIMES[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
@@ -169,7 +190,6 @@ async def test_datetime_components(
     value: int,
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_date_times: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -186,12 +206,12 @@ async def test_datetime_components(
     assert result.data
     assert len(result.data["dateTimes"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["dateTimes"][i]["id"] == raw_date_times[expected_id]["id"]
+        assert result.data["dateTimes"][i]["id"] == _DATE_TIMES[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-@pytest.mark.parametrize("raw_date_times", [_iso_boundary_records()], ids=["iso-boundaries"])
+@pytest.mark.parametrize("seed_rows", [_iso_boundary_records()], ids=["iso-boundaries"])
 @pytest.mark.parametrize(
     ("component", "attribute", "value"),
     [
@@ -202,7 +222,7 @@ async def test_datetime_components(
     ],
 )
 async def test_iso_components_match_isocalendar(
-    component: str, attribute: str, value: int, any_async_query: AnyQueryExecutor, raw_date_times: RawRecordData
+    component: str, attribute: str, value: int, any_async_query: AnyQueryExecutor, seed_rows: RawRecordData
 ) -> None:
     """Test that an ISO component filter selects exactly the rows isocalendar() agrees with."""
     query = f"""
@@ -213,7 +233,7 @@ async def test_iso_components_match_isocalendar(
         }}
     """
     result = await maybe_async(any_async_query(query))
-    expected = [row["id"] for row in raw_date_times if getattr(row["date_col"].isocalendar(), attribute) == value]
+    expected = [row["id"] for row in seed_rows if getattr(row["date_col"].isocalendar(), attribute) == value]
 
     assert not result.errors
     assert result.data
@@ -232,11 +252,9 @@ async def test_iso_components_match_isocalendar(
         pytest.param("{ _not: { datetimeCol: { minute: { eq: null } } } }", id="not-datetime-part-operator"),
     ],
 )
-async def test_null_part_operator_is_ignored(
-    dto_filter: str, any_async_query: AnyQueryExecutor, raw_date_times: RawRecordData
-) -> None:
+async def test_null_part_operator_is_ignored(dto_filter: str, any_async_query: AnyQueryExecutor) -> None:
     """Test that a date or time part, or one of its operators, set to null is ignored."""
     result = await maybe_async(any_async_query(f"{{ dateTimes(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data
-    assert sorted(row["id"] for row in result.data["dateTimes"]) == sorted(row["id"] for row in raw_date_times)
+    assert sorted(row["id"] for row in result.data["dateTimes"]) == sorted(row["id"] for row in _DATE_TIMES)

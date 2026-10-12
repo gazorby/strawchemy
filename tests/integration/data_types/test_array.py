@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert
 
-from tests.integration.fixtures import QueryTracker
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
 from tests.integration.models import ArrayModel, array_metadata
-from tests.integration.types import postgres as postgres_types
 from tests.integration.typing import RawRecordData
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
@@ -16,9 +16,38 @@ from tests.utils import maybe_async
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
+
+
+_ARRAYS: RawRecordData = [
+    {"id": 1, "array_str_col": ["one", "two", "three"]},
+    {"id": 2, "array_str_col": ["apple", "banana", "cherry", "date"]},
+    {"id": 3, "array_str_col": []},
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.filter(ArrayModel, include=["array_str_col"])
+    class ArrayFilter: ...
+
+    @strawchemy.type(ArrayModel, include=["id", "array_str_col"])
+    class ArrayType: ...
+
+    @strawberry.type
+    class Query:
+        array: list[ArrayType] = strawchemy.field(filter_input=ArrayFilter)
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    if dialect != "postgresql":
+        pytest.skip(f"Array tests can't be run on this dialect: {dialect}")
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture(name="metadata")
@@ -27,22 +56,8 @@ def fx_metadata() -> MetaData:
 
 
 @pytest.fixture
-def seed_insert_statements(raw_arrays: RawRecordData) -> list[Insert]:
-    return [insert(ArrayModel).values(raw_arrays)]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.ArrayAsyncQuery
-    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.ArraySyncQuery
-    pytest.skip(f"Date/Time tests can't be run on this dialect: {dialect}")
+def seed_insert_statements() -> list[Insert]:
+    return [insert(ArrayModel).values(_ARRAYS)]
 
 
 # Tests for array-specific filters
@@ -60,7 +75,6 @@ async def test_postgres_array_filters(
     value: list[str],
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_arrays: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -78,7 +92,7 @@ async def test_postgres_array_filters(
     assert result.data
     assert len(result.data["array"]) == len(expected_ids)
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["array"][i]["id"] == raw_arrays[expected_id]["id"]
+        assert result.data["array"][i]["id"] == _ARRAYS[expected_id]["id"]
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
@@ -107,7 +121,7 @@ async def test_postgres_array_filters_empty_list(
 @pytest.mark.parametrize("operator", ["contains", "containedIn", "overlap"])
 @pytest.mark.parametrize("negated", [pytest.param(False, id="plain"), pytest.param(True, id="not")])
 async def test_postgres_array_null_operator_is_ignored(
-    operator: str, negated: bool, any_async_query: AnyQueryExecutor, raw_arrays: RawRecordData
+    operator: str, negated: bool, any_async_query: AnyQueryExecutor
 ) -> None:
     """Test that an array operator set to null is ignored, directly and under ``_not``."""
     dto_filter = f"{{ arrayStrCol: {{ {operator}: null }} }}"
@@ -116,4 +130,4 @@ async def test_postgres_array_null_operator_is_ignored(
     result = await maybe_async(any_async_query(f"{{ array(filter: {dto_filter}) {{ id }} }}"))
     assert not result.errors
     assert result.data is not None
-    assert sorted(row["id"] for row in result.data["array"]) == sorted(row["id"] for row in raw_arrays)
+    assert sorted(row["id"] for row in result.data["array"]) == sorted(row["id"] for row in _ARRAYS)
