@@ -699,7 +699,7 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
             if (
                 optional_generated
                 and not field.is_relation
-                and field.model_field_name not in dto_config.annotation_overrides
+                and dto_config.annotation_overrides.get(field.model_field_name, DTOAuto) is DTOAuto
                 and self._generated_on_insert(field)
             ):
                 field.type_ = Optional[field.type_]

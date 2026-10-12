@@ -321,6 +321,22 @@ def test_create_input_makes_database_generated_values_optional(include: FieldSpe
     }
 
 
+@pytest.mark.parametrize("include", ["all", ["id", "name", "created_at"]])
+@pytest.mark.parametrize("auto_field", ["id", "created_at"])
+def test_create_input_makes_generated_values_declared_auto_optional(include: FieldSpec, auto_field: str) -> None:
+    """Test that a generated value declared with `strawberry.auto` stays optional in create inputs."""
+    strawchemy = Strawchemy("postgresql")
+    item_create = strawchemy.create_input(_Item, include=include)(
+        type("ItemCreate", (), {"__annotations__": {auto_field: strawberry.auto}})
+    )
+
+    assert _optional_fields(get_object_definition(item_create, strict=True)) == {
+        "id": True,
+        "name": False,
+        "created_at": True,
+    }
+
+
 @pytest.mark.parametrize("include", ["all", ["name", "children"], ["id", "name", "children"]])
 def test_nested_create_input_makes_database_generated_values_optional(include: FieldSpec) -> None:
     """Test that nested create inputs make generated primary keys optional whatever the root includes."""
