@@ -667,6 +667,23 @@ def test_arguments_narrows_the_function_enum() -> None:
     assert enum_type.__name__ == "TicketAggregateFilterCountFieldsEnum"
 
 
+def test_multi_word_function_type_names_are_camel_cased() -> None:
+    """Test that a function named with several words keeps each word capitalized in its generated type names."""
+    sc = Strawchemy("sqlite")
+
+    @sc.aggregate_filter(_Ticket, include="all", functions=["max"])
+    class TicketAggregateFilter:
+        max_datetime: datetime = sc.filter_field(arguments=["published_at"])
+
+    function_field = get_object_definition(TicketAggregateFilter, strict=True).get_field("max_datetime")
+    assert function_field is not None
+    function_type = getattr(function_field.type, "of_type", function_field.type)
+    assert get_object_definition(function_type, strict=True).name == "TicketAggregateFilterMaxDatetime"
+    assert (
+        _argument_enum(TicketAggregateFilter, "max_datetime").__name__ == "TicketAggregateFilterMaxDatetimeFieldsEnum"
+    )
+
+
 def test_unnarrowed_function_keeps_every_column() -> None:
     """A function without arguments= keeps the inspector's full column set."""
     sc = Strawchemy("sqlite")

@@ -434,7 +434,7 @@ class AggregationInspector:
         """
         self._validate_columns_in_scope(scope_config, model, aggregation, columns)
         narrowed = dto_config.copy_with(include=set(columns))
-        name = f"{dto_name}{snake_to_camel(aggregation.field_name).capitalize()}FieldsEnum"
+        name = f"{dto_name}{snake_to_camel(aggregation.field_name)}FieldsEnum"
         if aggregation.function == "count":
             # `_count_fields_factory.factory` goes through the shared DTO cache, whose cache key
             # conflates `include`/`exclude` (see `DTOFactory._root_cache_key`); `no_cache=True`

@@ -1599,8 +1599,8 @@ def test_aggregate_order_by_sum_interval_holds_interval_columns(strawchemy: Stra
     )
     assert set(_sdl_type_fields(schema, "TrackAggregateNumericFieldsOrderBy")) == {"rating"}
     assert set(_sdl_type_fields(schema, "TrackAggregateSumIntervalFieldsOrderBy")) == {"duration", "wrappedDuration"}
-    assert _sdl_type_fields(schema, "TrackAggregateBoolExp")["sumInterval"] == "TrackAggregateBoolExpSuminterval"
-    assert _sdl_type_fields(schema, "TrackAggregateBoolExpSuminterval")["predicate"] == "IntervalComparison"
+    assert _sdl_type_fields(schema, "TrackAggregateBoolExp")["sumInterval"] == "TrackAggregateBoolExpSumInterval"
+    assert _sdl_type_fields(schema, "TrackAggregateBoolExpSumInterval")["predicate"] == "IntervalComparison"
 
 
 @pytest.mark.parametrize(
