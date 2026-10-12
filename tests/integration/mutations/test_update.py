@@ -151,6 +151,11 @@ def _schema(strawchemy: Strawchemy) -> Operations:
             UserFilter,
             filter_statement=lambda _: select(User).where(User.id > 1).order_by(User.id).limit(1),
         )
+        update_users_restricted_subquery: list[UserType] = strawchemy.update(
+            UserPartial,
+            UserFilter,
+            filter_statement=lambda _: select(User).where(User.id.in_(select(User.id).where(User.id == 2))),
+        )
         delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)
 
     return Operations(query=Query, mutation=Mutation)
@@ -1284,6 +1289,8 @@ async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
         pytest.param("updateUsersRestrictedJoin", ', filter: { name: { eq: "Alice" } }', [], id="join-disjoint-filter"),
         pytest.param("updateUsersRestrictedLimit", ', filter: { name: { neq: "zzz" } }', ["Bob"], id="limit"),
         pytest.param("updateUsersRestrictedLimit", "", ["Bob"], id="limit-no-filter"),
+        pytest.param("updateUsersRestrictedSubquery", ', filter: { name: { neq: "zzz" } }', ["Bob"], id="subquery"),
+        pytest.param("updateUsersRestrictedSubquery", ", filter: {}", ["Bob"], id="subquery-empty-filter"),
     ],
 )
 async def test_update_restricted_by_repository_statement(

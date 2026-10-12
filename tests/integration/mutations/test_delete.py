@@ -75,6 +75,10 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         delete_users_restricted_limit: list[UserType] = strawchemy.delete(
             UserFilter, filter_statement=lambda _: select(User).where(User.id > 1).order_by(User.id).limit(1)
         )
+        delete_users_restricted_subquery: list[UserType] = strawchemy.delete(
+            UserFilter,
+            filter_statement=lambda _: select(User).where(User.id.in_(select(User.id).where(User.name == "Bob"))),
+        )
         delete_users_restricted_without_filter: list[UserType] = strawchemy.delete(
             filter_statement=lambda _: select(User).where(User.id == 2)
         )
@@ -207,6 +211,8 @@ async def test_delete_filter_on_unselected_column(
         pytest.param("deleteUsersRestrictedJoin", '(filter: { name: { eq: "Alice" } })', [], id="join-disjoint-filter"),
         pytest.param("deleteUsersRestrictedLimit", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="limit"),
         pytest.param("deleteUsersRestrictedLimit", "", ["Bob"], id="limit-no-filter"),
+        pytest.param("deleteUsersRestrictedSubquery", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="subquery"),
+        pytest.param("deleteUsersRestrictedSubquery", "(filter: {})", ["Bob"], id="subquery-empty-filter"),
         pytest.param("deleteUsersRestrictedWithoutFilter", "", ["Bob"], id="no-filter-input"),
     ],
 )
