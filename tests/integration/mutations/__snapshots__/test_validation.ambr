@@ -1,0 +1,376 @@
+# serializer version: 1
+# name: test_create[session-async-tracked-createColor-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-async-tracked-createColor-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createColor-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_create[session-async-tracked-createColor-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createColor-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-async-tracked-createColor-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-manual-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColor-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-manual-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_create[session-async-tracked-createValidatedColorAllFragments-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-asyncmy_engine]
+  '''
+  UPDATE color
+     SET name = %s,
+         updated_at = %s
+   WHERE color.id = %s
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-psycopg_async_engine]
+  '''
+  UPDATE color
+     SET name = %(name)s::VARCHAR,
+         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
+    ZONE
+   WHERE color.id = %(color_id)s::INTEGER
+  '''
+# ---
+# name: test_update[session-async-tracked-no-validation-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-asyncmy_engine]
+  '''
+  UPDATE color
+     SET name = %s,
+         updated_at = %s
+   WHERE color.id = %s
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-psycopg_async_engine]
+  '''
+  UPDATE color
+     SET name = %(name)s::VARCHAR,
+         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
+    ZONE
+   WHERE color.id = %(color_id)s::INTEGER
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-fragment-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-aiosqlite_engine]
+  '''
+  UPDATE color
+     SET name = ?,
+         updated_at = ?
+   WHERE color.id = ?
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-asyncmy_engine]
+  '''
+  UPDATE color
+     SET name = %s,
+         updated_at = %s
+   WHERE color.id = %s
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-psycopg_async_engine]
+  '''
+  UPDATE color
+     SET name = %(name)s::VARCHAR,
+         updated_at = %(updated_at)s::TIMESTAMP WITHOUT TIME
+    ZONE
+   WHERE color.id = %(color_id)s::INTEGER
+  '''
+# ---
+# name: test_update[session-async-tracked-validation-no-fragment-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+   ORDER BY color.id ASC
+  '''
+# ---
