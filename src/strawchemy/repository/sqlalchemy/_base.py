@@ -176,12 +176,13 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         allow_null: bool = False,
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
+        restricted: bool = True,
     ) -> QueryExecutorT:
         transpiler = Transpiler(
             self.model,
             self._dialect,
             query_hooks=query_hooks,
-            statement=self.statement,
+            statement=self.statement if restricted else None,
             deterministic_ordering=self.deterministic_ordering,
             default_order_by=self.default_order_by,
         )

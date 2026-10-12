@@ -268,7 +268,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         return instance_ids
 
     async def _list_by_ids(
-        self, id_rows: Sequence[RowLike], selection: QueryNodeType | None = None
+        self, id_rows: Sequence[RowLike], selection: QueryNodeType | None = None, *, restricted: bool = False
     ) -> QueryResult[DeclarativeT]:
         """Retrieves multiple records by their primary keys with optional selection.
 
@@ -280,12 +280,13 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 key values for one record to retrieve.
             selection: An optional QueryNodeType representing the GraphQL
                 selection set to apply to the query.
+            restricted: Reads the records through the repository statement too.
 
         Returns:
             A QueryResult containing the list of fetched records matching the
             provided IDs, structured according to the selection.
         """
-        executor = self._get_query_executor(AsyncQueryExecutor, selection=selection)
+        executor = self._get_query_executor(AsyncQueryExecutor, selection=selection, restricted=restricted)
         id_fields = executor.id_field_definitions
         executor.add_where(
             *[field.model_field.in_([getattr(row, field.model_field_name) for row in id_rows]) for field in id_fields]
@@ -471,7 +472,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
                 upsert_conflict_fields=conflict_fields,
             )
         )
-        return await self._list_by_ids(created_ids, selection)
+        return await self._list_by_ids(created_ids, selection, restricted=True)
 
     async def update_by_ids(
         self, data: Input[DeclarativeT], selection: QueryNodeType | None = None
