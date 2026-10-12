@@ -8,13 +8,53 @@ from geoalchemy2 import WKTElement
 from geoalchemy2.shape import to_shape
 from shapely import to_geojson
 
-from tests.integration.fixtures import GEO_DATA
-
 if TYPE_CHECKING:
     from geoalchemy2 import WKBElement
 
 
-__all__ = ("_element_to_geojson_io_url", "geo_data_visualization_urls")
+__all__ = ("GEO_DATA", "_element_to_geojson_io_url", "geo_data_visualization_urls")
+
+GEO_DATA = [
+    # Complete record with all geometry types
+    {
+        "id": 1,
+        "point_required": "POINT(0 0)",  # Origin point
+        "point": "POINT(1 1)",  # Simple point
+        "line_string": "LINESTRING(0 0, 1 1, 2 2)",  # Simple line with 3 points
+        "polygon": "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))",  # Simple square
+        "multi_point": "MULTIPOINT((0 0), (1 1), (2 2))",  # 3 points
+        "multi_line_string": "MULTILINESTRING((0 0, 1 1), (2 2, 3 3))",  # 2 lines
+        "multi_polygon": "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",  # 2 squares
+        "geometry": "POINT(5 5)",  # Using point as generic geometry
+    },
+    # Record with only required fields
+    {
+        "id": 2,
+        "point_required": "POINT(10 20)",  # Required point
+        "point": None,
+        "line_string": None,
+        "polygon": None,
+        "multi_point": None,
+        "multi_line_string": None,
+        "multi_polygon": None,
+        "geometry": None,
+    },
+    # Record with complex geometries
+    {
+        "id": 3,
+        "point_required": "POINT(-122.6 45.5)",  # Real-world coordinates (Portland, OR)
+        "point": "POINT(-74.0060 40.7128)",  # New York City
+        "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
+        "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",
+        # Area in SF
+        "multi_point": "MULTIPOINT((-122.4194 37.7749), (-118.2437 34.0522), (-74.0060 40.7128))",  # Major US cities
+        "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",
+        # Route segments
+        "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",
+        # Areas in SF and LA
+        "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
+    },
+]
 
 
 def _element_to_geojson_io_url(element: WKBElement | WKTElement | str) -> str:

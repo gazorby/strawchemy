@@ -5,13 +5,13 @@ import re
 from datetime import date, datetime, time, timedelta
 from decimal import Decimal
 from statistics import mean, pstdev, pvariance, stdev, variance
-from typing import TYPE_CHECKING, Any, Literal, TypeAlias
+from typing import TYPE_CHECKING, Any, Literal
 from uuid import UUID
 
 from pydantic import TypeAdapter
 from sqlalchemy import inspect
-
-from tests.integration.types import postgres as pg_types
+from strawberry.annotation import StrawberryAnnotation
+from strawberry.types.arguments import StrawberryArgument
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -19,11 +19,16 @@ if TYPE_CHECKING:
     from sqlalchemy.orm import DeclarativeBase
 
 
-__all__ = ("from_graphql_representation", "graphql_input", "python_type", "to_graphql_representation")
+__all__ = (
+    "data_argument",
+    "from_graphql_representation",
+    "graphql_input",
+    "python_type",
+    "to_graphql_representation",
+)
 
 
 _TimeDeltaType = TypeAdapter(timedelta)
-AnyTypesModule: TypeAlias = pg_types  # ty: ignore[invalid-type-form]
 
 
 def to_graphql_representation(value: Any, mode: Literal["input", "output"]) -> Any:
@@ -94,6 +99,11 @@ def from_graphql_representation(value: Any, type_: type[Any]) -> Any:
     if type_ is Decimal:
         return Decimal(value)
     return value
+
+
+def data_argument(input_type: type[Any]) -> list[StrawberryArgument]:
+    """Declare the `data` argument of a custom resolver whose input type its module cannot resolve by name."""
+    return [StrawberryArgument("data", None, StrawberryAnnotation(input_type))]
 
 
 def python_type(model: type[DeclarativeBase], col_name: str) -> type[Any]:
