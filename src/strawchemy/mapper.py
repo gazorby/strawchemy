@@ -421,6 +421,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,
+        execution_options: dict[str, Any] | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for creating new model instances.
@@ -437,6 +438,7 @@ class Strawchemy:
                 provided, Strawchemy will use a default resolver.
             validation: An optional validation protocol instance to validate
                 the input data before creation.
+            execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -451,6 +453,7 @@ class Strawchemy:
             resolver,
             input_type=input_type,
             validation=validation,
+            execution_options=execution_options,
             **field_kwargs,
         )
 
@@ -462,6 +465,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,
+        execution_options: dict[str, Any] | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for upserting model instances.
@@ -483,6 +487,7 @@ class Strawchemy:
                 provided, Strawchemy will use a default resolver.
             validation: An optional validation protocol instance to validate
                 the input data before the upsert operation.
+            execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -499,6 +504,7 @@ class Strawchemy:
             update_fields_enum=update_fields,
             conflict_fields_enum=conflict_fields,
             validation=validation,
+            execution_options=execution_options,
             **field_kwargs,
         )
 
@@ -510,6 +516,7 @@ class Strawchemy:
         *,
         validation: ValidationProtocol[T] | None = None,
         filter_statement: FilterStatementCallable | None = None,
+        execution_options: dict[str, Any] | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for updating model instances.
@@ -530,6 +537,7 @@ class Strawchemy:
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
             filter_statement: Restricts the rows the mutation can update.
+            execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -546,6 +554,7 @@ class Strawchemy:
             filter_type=filter_input,
             validation=validation,
             filter_statement=filter_statement,
+            execution_options=execution_options,
             **field_kwargs,
         )
 
@@ -555,6 +564,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         validation: ValidationProtocol[T] | None = None,
+        execution_options: dict[str, Any] | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for updating model instances by IDs.
@@ -573,6 +583,7 @@ class Strawchemy:
                 provided, Strawchemy will use a default resolver.
             validation: An optional validation protocol instance to validate
                 the input data before the update operation.
+            execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -587,6 +598,7 @@ class Strawchemy:
             resolver,
             input_type=input_type,
             validation=validation,
+            execution_options=execution_options,
             **field_kwargs,
         )
 
@@ -596,6 +608,7 @@ class Strawchemy:
         resolver: Any | None = None,
         *,
         filter_statement: FilterStatementCallable | None = None,
+        execution_options: dict[str, Any] | None = None,
         **field_kwargs: Unpack[MutationFieldKwargs],
     ) -> Any:
         """Creates a Strawberry GraphQL mutation field for deleting model instances.
@@ -615,6 +628,7 @@ class Strawchemy:
             resolver: An optional custom resolver function for the mutation. If not
                 provided, Strawchemy will use a default resolver.
             filter_statement: Restricts the rows the mutation can delete.
+            execution_options: SQLAlchemy execution options for the query returning the mutated rows.
             **field_kwargs: Common ``strawberry.field`` / repository arguments
                 (see ``MutationFieldKwargs``); ``graphql_type`` sets the mutation
                 return type.
@@ -629,5 +643,6 @@ class Strawchemy:
             resolver,
             input_type=filter_input,
             filter_statement=filter_statement,
+            execution_options=execution_options,
             **field_kwargs,
         )

@@ -621,6 +621,7 @@ class QueryInspector:
     dialect: Dialect
     multiparams: list[dict[str, Any]] = dataclasses.field(default_factory=list)
     params: dict[str, Any] = dataclasses.field(default_factory=dict)
+    execution_options: dict[str, Any] = dataclasses.field(default_factory=dict)
 
     @property
     def statement_str(self) -> str:
@@ -658,7 +659,9 @@ class QueryTracker:
     ) -> None:
         if isinstance(clauseelement, Select):
             assert_no_duplicate_reads(clauseelement, conn.dialect)
-        self.executions.append(QueryInspector(clauseelement, conn.dialect, multiparams, params))
+        self.executions.append(
+            QueryInspector(clauseelement, conn.dialect, multiparams, params, dict(execution_options))
+        )
 
     def filter(self, statement: FilterableStatement) -> Self:
         return dataclasses.replace(
