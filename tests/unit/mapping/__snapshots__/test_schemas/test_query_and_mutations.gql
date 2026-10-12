@@ -127,7 +127,6 @@ type FruitNumericFields {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 

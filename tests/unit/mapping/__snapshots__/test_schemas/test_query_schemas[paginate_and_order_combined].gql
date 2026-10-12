@@ -4,7 +4,6 @@ type ColorAggregate {
   count: Int
   max: ColorMinMaxFields!
   min: ColorMinMaxFields!
-  sum: ColorSumFields!
 }
 
 """GraphQL type"""
@@ -18,11 +17,6 @@ input ColorOrderBy {
   fruits: FruitOrderBy
   name: OrderByEnum
   id: OrderByEnum
-}
-
-"""GraphQL type"""
-type ColorSumFields {
-  name: String
 }
 
 """GraphQL type"""
@@ -140,9 +134,14 @@ input FruitAggregateOrderBy {
   minString: FruitAggregateMinMaxStringFieldsOrderBy
   stddevPop: FruitAggregateNumericFieldsOrderBy
   stddevSamp: FruitAggregateNumericFieldsOrderBy
-  sum: FruitAggregateNumericFieldsOrderBy
+  sum: FruitAggregateSumFieldsOrderBy
   varPop: FruitAggregateNumericFieldsOrderBy
   varSamp: FruitAggregateNumericFieldsOrderBy
+}
+
+"""GraphQL type"""
+input FruitAggregateSumFieldsOrderBy {
+  sweetness: OrderByEnum
 }
 
 """GraphQL type"""
@@ -167,7 +166,6 @@ input FruitOrderBy {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 
@@ -207,7 +205,6 @@ type VegetableAggregate {
   count: Int
   max: VegetableMinMaxFields!
   min: VegetableMinMaxFields!
-  sum: VegetableSumFields!
 }
 
 """GraphQL type"""
@@ -217,17 +214,10 @@ input VegetableAggregateMinMaxStringFieldsOrderBy {
 }
 
 """GraphQL type"""
-input VegetableAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-  description: OrderByEnum
-}
-
-"""GraphQL type"""
 input VegetableAggregateOrderBy {
   count: OrderByEnum
   maxString: VegetableAggregateMinMaxStringFieldsOrderBy
   minString: VegetableAggregateMinMaxStringFieldsOrderBy
-  sum: VegetableAggregateNumericFieldsOrderBy
 }
 
 enum VegetableFamily {
@@ -250,12 +240,6 @@ input VegetableOrderBy {
   id: OrderByEnum
   name: OrderByEnum
   description: OrderByEnum
-}
-
-"""GraphQL type"""
-type VegetableSumFields {
-  name: String
-  description: String
 }
 
 """GraphQL type"""

@@ -39,7 +39,6 @@ input FruitOrderBy1 {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 

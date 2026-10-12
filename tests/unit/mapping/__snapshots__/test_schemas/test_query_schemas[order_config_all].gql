@@ -50,9 +50,14 @@ input FruitAggregateOrderBy {
   minString: FruitAggregateMinMaxStringFieldsOrderBy
   stddevPop: FruitAggregateNumericFieldsOrderBy
   stddevSamp: FruitAggregateNumericFieldsOrderBy
-  sum: FruitAggregateNumericFieldsOrderBy
+  sum: FruitAggregateSumFieldsOrderBy
   varPop: FruitAggregateNumericFieldsOrderBy
   varSamp: FruitAggregateNumericFieldsOrderBy
+}
+
+"""GraphQL type"""
+input FruitAggregateSumFieldsOrderBy {
+  sweetness: OrderByEnum
 }
 
 """GraphQL type"""
@@ -86,7 +91,6 @@ input FruitOrderBy2 {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 

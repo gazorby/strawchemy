@@ -4,7 +4,6 @@ type CustomerAggregate {
   count: Int
   max: CustomerMinMaxFields!
   min: CustomerMinMaxFields!
-  sum: CustomerSumFields!
 }
 
 """
@@ -16,7 +15,6 @@ input CustomerAggregateBoolExp {
   maxString: CustomerAggregateBoolExpMaxstring
   minDatetime: CustomerAggregateBoolExpMindatetime
   minString: CustomerAggregateBoolExpMinstring
-  sum: CustomerAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -54,13 +52,6 @@ input CustomerAggregateBoolExpMinstring {
   distinct: Boolean = false
 }
 
-"""Boolean expression to compare sum aggregation."""
-input CustomerAggregateBoolExpSum {
-  arguments: [CustomerSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
 """GraphQL type"""
 input CustomerAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
@@ -73,18 +64,12 @@ input CustomerAggregateMinMaxStringFieldsOrderBy {
 }
 
 """GraphQL type"""
-input CustomerAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
 input CustomerAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
   maxString: CustomerAggregateMinMaxStringFieldsOrderBy
   minDatetime: CustomerAggregateMinMaxDatetimeFieldsOrderBy
   minString: CustomerAggregateMinMaxStringFieldsOrderBy
-  sum: CustomerAggregateNumericFieldsOrderBy
 }
 
 """
@@ -165,15 +150,6 @@ enum CustomerProjectsUpdateFields {
 }
 
 """GraphQL type"""
-type CustomerSumFields {
-  name: String
-}
-
-enum CustomerSumFieldsEnum {
-  name
-}
-
-"""GraphQL type"""
 type CustomerType {
   projectsAggregate: ProjectAggregate!
 
@@ -222,21 +198,6 @@ interface ErrorType {
 """
 Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
 """
-input FloatOrderComparison {
-  eq: Float
-  neq: Float
-  isNull: Boolean
-  in: [Float!]
-  nin: [Float!]
-  gt: Float
-  gte: Float
-  lt: Float
-  lte: Float
-}
-
-"""
-Boolean expression to compare fields supporting order comparisons. All fields are combined with logical 'AND'
-"""
 input IntOrderComparison {
   eq: Int
   neq: Int
@@ -262,7 +223,6 @@ type MilestoneAggregate {
   count: Int
   max: MilestoneMinMaxFields!
   min: MilestoneMinMaxFields!
-  sum: MilestoneSumFields!
 }
 
 """
@@ -274,7 +234,6 @@ input MilestoneAggregateBoolExp {
   maxString: MilestoneAggregateBoolExpMaxstring
   minDatetime: MilestoneAggregateBoolExpMindatetime
   minString: MilestoneAggregateBoolExpMinstring
-  sum: MilestoneAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -312,13 +271,6 @@ input MilestoneAggregateBoolExpMinstring {
   distinct: Boolean = false
 }
 
-"""Boolean expression to compare sum aggregation."""
-input MilestoneAggregateBoolExpSum {
-  arguments: [MilestoneSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
 """GraphQL type"""
 input MilestoneAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
@@ -331,18 +283,12 @@ input MilestoneAggregateMinMaxStringFieldsOrderBy {
 }
 
 """GraphQL type"""
-input MilestoneAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
 input MilestoneAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: MilestoneAggregateMinMaxDatetimeFieldsOrderBy
   maxString: MilestoneAggregateMinMaxStringFieldsOrderBy
   minDatetime: MilestoneAggregateMinMaxDatetimeFieldsOrderBy
   minString: MilestoneAggregateMinMaxStringFieldsOrderBy
-  sum: MilestoneAggregateNumericFieldsOrderBy
 }
 
 """
@@ -423,15 +369,6 @@ enum MilestoneProjectUpdateFields {
 }
 
 """GraphQL type"""
-type MilestoneSumFields {
-  name: String
-}
-
-enum MilestoneSumFieldsEnum {
-  name
-}
-
-"""GraphQL type"""
 type MilestoneType {
   name: String!
 }
@@ -482,7 +419,6 @@ type ProjectAggregate {
   count: Int
   max: ProjectMinMaxFields!
   min: ProjectMinMaxFields!
-  sum: ProjectSumFields!
 }
 
 """
@@ -547,11 +483,6 @@ input ProjectOrder {
 """Ordering input."""
 input ProjectOrderBy {
   name: OrderByEnum
-}
-
-"""GraphQL type"""
-type ProjectSumFields {
-  name: String
 }
 
 """GraphQL type"""
@@ -647,7 +578,6 @@ type TicketAggregate {
   count: Int
   max: TicketMinMaxFields!
   min: TicketMinMaxFields!
-  sum: TicketSumFields!
 }
 
 """
@@ -659,7 +589,6 @@ input TicketAggregateBoolExp {
   maxString: TicketAggregateBoolExpMaxstring
   minDatetime: TicketAggregateBoolExpMindatetime
   minString: TicketAggregateBoolExpMinstring
-  sum: TicketAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -697,13 +626,6 @@ input TicketAggregateBoolExpMinstring {
   distinct: Boolean = false
 }
 
-"""Boolean expression to compare sum aggregation."""
-input TicketAggregateBoolExpSum {
-  arguments: [TicketSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
-  distinct: Boolean = false
-}
-
 """GraphQL type"""
 input TicketAggregateMinMaxDatetimeFieldsOrderBy {
   createdAt: OrderByEnum
@@ -716,18 +638,12 @@ input TicketAggregateMinMaxStringFieldsOrderBy {
 }
 
 """GraphQL type"""
-input TicketAggregateNumericFieldsOrderBy {
-  name: OrderByEnum
-}
-
-"""GraphQL type"""
 input TicketAggregateOrderBy {
   count: OrderByEnum
   maxDatetime: TicketAggregateMinMaxDatetimeFieldsOrderBy
   maxString: TicketAggregateMinMaxStringFieldsOrderBy
   minDatetime: TicketAggregateMinMaxDatetimeFieldsOrderBy
   minString: TicketAggregateMinMaxStringFieldsOrderBy
-  sum: TicketAggregateNumericFieldsOrderBy
 }
 
 """
@@ -837,15 +753,6 @@ enum TicketProjectUpdateFields {
   tagId
   name
   id
-}
-
-"""GraphQL type"""
-type TicketSumFields {
-  name: String
-}
-
-enum TicketSumFieldsEnum {
-  name
 }
 
 """GraphQL type"""

@@ -12,7 +12,7 @@ from uuid import UUID
 
 import pytest
 import strawberry
-from graphql import GraphQLEnumType, GraphQLInputObjectType, build_schema, get_named_type
+from graphql import GraphQLEnumType, GraphQLInputField, GraphQLInputObjectType, build_schema, get_named_type
 from strawberry import auto, relay
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
@@ -30,8 +30,8 @@ from strawchemy.exceptions import (
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
+from tests.unit.models import Album, Color, Container, Department, Fruit, Group, Tag, User
 from tests.unit.models import Book as BookModel
-from tests.unit.models import Color, Container, Department, Fruit, Group, Tag, User
 from tests.unit.schemas.join_mapped import JoinedAB, JoinOwner
 from tests.unit.schemas.join_mapped_columns import ColumnJoinOwner
 from tests.unit.utils import MockContext
@@ -1405,11 +1405,12 @@ def _assert_fruit_aggregate_order_by(schema: strawberry.Schema) -> None:
         "minString": "FruitAggregateMinMaxStringFieldsOrderBy",
         "stddevPop": "FruitAggregateNumericFieldsOrderBy",
         "stddevSamp": "FruitAggregateNumericFieldsOrderBy",
-        "sum": "FruitAggregateNumericFieldsOrderBy",
+        "sum": "FruitAggregateSumFieldsOrderBy",
         "varPop": "FruitAggregateNumericFieldsOrderBy",
         "varSamp": "FruitAggregateNumericFieldsOrderBy",
     }
     assert set(_sdl_type_fields(schema, "FruitAggregateNumericFieldsOrderBy")) == {"sweetness"}
+    assert set(_sdl_type_fields(schema, "FruitAggregateSumFieldsOrderBy")) == {"sweetness"}
     assert set(_sdl_type_fields(schema, "FruitAggregateMinMaxStringFieldsOrderBy")) == {"name"}
 
 
@@ -1511,6 +1512,80 @@ def test_relation_aggregate_filter_ignores_parent_field_settings(
     }
     assert set(_sdl_type_fields(schema, "FruitCountFields")) == {"id", "name", "colorId", "sweetness"}
     assert set(_sdl_type_fields(schema, "FruitMinMaxStringFieldsEnum")) == {"name"}
+
+
+@pytest.fixture
+def container_aggregates_schema(strawchemy: Strawchemy) -> strawberry.Schema:
+    @strawchemy.filter(Container, include="all")
+    class ContainerFilter: ...
+
+    @strawchemy.order(Container, include="all")
+    class ContainerOrderBy: ...
+
+    @strawchemy.type(Container, include="all")
+    class ContainerType: ...
+
+    @strawberry.type
+    class Query:
+        containers: list[ContainerType] = strawchemy.field(
+            filter_input=ContainerFilter, order_by_input=ContainerOrderBy
+        )
+
+    return strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+
+@pytest.mark.parametrize("model", ["Fruit", "Vegetable"])
+def test_aggregate_order_by_functions_match_aggregate_filter_arguments(
+    container_aggregates_schema: strawberry.Schema, model: str
+) -> None:
+    """Test that each aggregate order-by function orders by the columns its aggregate filter accepts (#483)."""
+    schema = build_schema(str(container_aggregates_schema))
+    order_by = schema.get_type(f"{model}AggregateOrderBy")
+    bool_exp = schema.get_type(f"{model}AggregateBoolExp")
+    assert isinstance(order_by, GraphQLInputObjectType)
+    assert isinstance(bool_exp, GraphQLInputObjectType)
+
+    def order_by_columns(field: GraphQLInputField) -> set[str]:
+        field_type = get_named_type(field.type)
+        assert isinstance(field_type, GraphQLInputObjectType)
+        return set(field_type.fields)
+
+    def filter_columns(field: GraphQLInputField) -> set[str]:
+        function_type = get_named_type(field.type)
+        assert isinstance(function_type, GraphQLInputObjectType)
+        arguments_type = get_named_type(function_type.fields["arguments"].type)
+        assert isinstance(arguments_type, GraphQLEnumType)
+        return set(arguments_type.values)
+
+    assert {name: order_by_columns(field) for name, field in order_by.fields.items() if name != "count"} == {
+        name: filter_columns(field) for name, field in bool_exp.fields.items() if name != "count"
+    }
+
+
+def test_aggregate_numeric_order_by_holds_numeric_columns_only(container_aggregates_schema: strawberry.Schema) -> None:
+    """Test that a model without numeric columns gets no numeric aggregate order-by type (#483)."""
+    assert build_schema(str(container_aggregates_schema)).get_type("VegetableAggregateNumericFieldsOrderBy") is None
+
+
+def test_aggregate_order_by_sum_keeps_columns_other_functions_reject(strawchemy: Strawchemy) -> None:
+    """Test that sum orders by interval and numeric columns while avg orders by numeric columns only (#483)."""
+
+    @strawchemy.type(Album, include="all", order=["tracks"])
+    class AlbumType: ...
+
+    @strawberry.type
+    class Query:
+        albums: list[AlbumType] = strawchemy.field()
+
+    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+    order_by = _sdl_type_fields(schema, "TrackAggregateOrderBy")
+    assert (order_by["sum"], order_by["avg"]) == (
+        "TrackAggregateSumFieldsOrderBy",
+        "TrackAggregateNumericFieldsOrderBy",
+    )
+    assert set(_sdl_type_fields(schema, "TrackAggregateSumFieldsOrderBy")) == {"duration", "rating"}
+    assert set(_sdl_type_fields(schema, "TrackAggregateNumericFieldsOrderBy")) == {"rating"}
 
 
 def test_default_order_by_on_non_list_field_raises() -> None:

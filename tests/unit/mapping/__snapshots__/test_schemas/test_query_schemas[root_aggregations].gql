@@ -63,7 +63,6 @@ type SQLDataTypesNumericFields {
 """GraphQL type"""
 type SQLDataTypesSumFields {
   timeDeltaCol: Interval
-  strCol: String
   intCol: Int
   floatCol: Float
   decimalCol: Decimal

@@ -4,16 +4,10 @@ type ColorAggregate {
   count: Int
   max: ColorMinMaxFields!
   min: ColorMinMaxFields!
-  sum: ColorSumFields!
 }
 
 """GraphQL type"""
 type ColorMinMaxFields {
-  name: String
-}
-
-"""GraphQL type"""
-type ColorSumFields {
   name: String
 }
 
@@ -71,7 +65,6 @@ type FruitNumericFields {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 
@@ -96,7 +89,6 @@ type VegetableAggregate {
   count: Int
   max: VegetableMinMaxFields!
   min: VegetableMinMaxFields!
-  sum: VegetableSumFields!
 }
 
 enum VegetableFamily {
@@ -109,12 +101,6 @@ enum VegetableFamily {
 
 """GraphQL type"""
 type VegetableMinMaxFields {
-  name: String
-  description: String
-}
-
-"""GraphQL type"""
-type VegetableSumFields {
   name: String
   description: String
 }

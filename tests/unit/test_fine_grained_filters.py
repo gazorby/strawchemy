@@ -725,6 +725,16 @@ def test_arguments_with_type_incompatible_column_raises() -> None:
             max_datetime: datetime = sc.filter_field(arguments=["name"])
 
 
+def test_sum_arguments_with_string_column_raises() -> None:
+    """Test that narrowing sum to a string column raises, since sum does not aggregate strings."""
+    sc = Strawchemy("sqlite")
+    with pytest.raises(StrawchemyFieldError, match=r"\['name'\] cannot be aggregated by 'sum'"):
+
+        @sc.aggregate_filter(_Ticket, include="all", functions=["sum"])
+        class TicketAggregateFilter:
+            sum: float = sc.filter_field(arguments=["name"])
+
+
 def test_arguments_outside_enclosing_include_raises() -> None:
     """arguments= cannot re-expose a column the enclosing decorator's include already left out."""
     sc = Strawchemy("sqlite")

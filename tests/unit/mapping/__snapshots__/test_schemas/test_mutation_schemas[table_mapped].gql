@@ -358,7 +358,6 @@ enum TableMappedFruitRequiredFruitUpdateFields {
 """GraphQL type"""
 type TableMappedFruitSumFields {
   id: Int
-  name: String
   sweetness: Int
   colorId: Int
   requiredColorId: Int
@@ -366,7 +365,6 @@ type TableMappedFruitSumFields {
 
 enum TableMappedFruitSumFieldsEnum {
   id
-  name
   sweetness
   colorId
   requiredColorId

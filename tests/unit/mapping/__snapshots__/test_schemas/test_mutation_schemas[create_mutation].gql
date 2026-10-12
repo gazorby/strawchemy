@@ -23,16 +23,10 @@ type DepartmentAggregate {
   count: Int
   max: DepartmentMinMaxFields!
   min: DepartmentMinMaxFields!
-  sum: DepartmentSumFields!
 }
 
 """GraphQL type"""
 type DepartmentMinMaxFields {
-  name: String
-}
-
-"""GraphQL type"""
-type DepartmentSumFields {
   name: String
 }
 
@@ -72,7 +66,6 @@ type FruitNumericFields {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 
@@ -90,7 +83,6 @@ type GroupAggregate {
   count: Int
   max: GroupMinMaxFields!
   min: GroupMinMaxFields!
-  sum: GroupSumFields!
 }
 
 """Conflict fields enum"""
@@ -219,11 +211,6 @@ input GroupInput {
 
 """GraphQL type"""
 type GroupMinMaxFields {
-  name: String
-}
-
-"""GraphQL type"""
-type GroupSumFields {
   name: String
 }
 
@@ -407,16 +394,10 @@ type UserAggregate {
   count: Int
   max: UserMinMaxFields!
   min: UserMinMaxFields!
-  sum: UserSumFields!
 }
 
 """GraphQL type"""
 type UserMinMaxFields {
-  name: String
-}
-
-"""GraphQL type"""
-type UserSumFields {
   name: String
 }
 
