@@ -89,6 +89,13 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         conn.execute(delete_statement, execution_options=execution_options or {})
         return affected_rows
 
+    def _expire_keys(self, keys: set[tuple[Any, ...]]) -> None:
+        """Expires the session's instances of the model whose primary key is among ``keys``."""
+        for key in keys:
+            instance = self.session.identity_map.get(self.model.__mapper__.identity_key_from_primary_key(key))
+            if instance is not None:
+                self.session.expire(instance)
+
     def _update_where(
         self,
         values: dict[str, Any],
@@ -248,11 +255,21 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
         AsRow = namedtuple("AsRow", pks)  # noqa: PYI024
 
+        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         if data.mode == "update_by_pks":
-            self.session.execute(update(self.model), values)
+            if self.statement is None:
+                self.session.execute(update(self.model), values)
+            else:
+                where = transpiler.filter_expressions(None)
+                keys = self._primary_keys(values)
+                in_scope = (self.session.execute(self._keys_in_scope_statement(keys, where))).all()
+                self._check_keys_in_scope(keys, in_scope)
+                self.session.execute(
+                    update(self.model).where(*where), values, execution_options={"synchronize_session": None}
+                )
+                self._expire_keys(keys)
             return [AsRow(*[instance[name] for name in pks]) for instance in values]
 
-        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         where_expressions = transpiler.filter_expressions(data.dto_filter)
         return self._update_where(values[0], where_expressions)
 

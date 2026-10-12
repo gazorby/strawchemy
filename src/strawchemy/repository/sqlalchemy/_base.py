@@ -7,12 +7,12 @@ from inspect import isclass
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
-from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
+from sqlalchemy import Column, Function, Insert, Row, Table, and_, func, insert, inspect, or_, select
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.exceptions import StrawchemyError
+from strawchemy.exceptions import MutationScopeError, StrawchemyError
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT, SessionT
 from strawchemy.schema.mutation.types import RelationType
 from strawchemy.transpiler import Transpiler
@@ -20,6 +20,7 @@ from strawchemy.transpiler import Transpiler
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from sqlalchemy import ColumnElement, Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
@@ -245,6 +246,26 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 state = inspect(instance)
                 if state.session is not None:
                     state.session.expire(instance, [prop.back_populates])
+
+    def _primary_keys(self, values: Sequence[dict[str, Any]]) -> set[tuple[Any, ...]]:
+        pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
+        return {tuple(value[pk] for pk in pks) for value in values}
+
+    def _keys_in_scope_statement(self, keys: set[tuple[Any, ...]], where: list[ColumnElement[bool]]) -> Select[Any]:
+        """Selects, among the primary ``keys``, those of rows passing the ``where`` of the repository statement."""
+        pks = [getattr(self.model, column.key) for column in self.model.__mapper__.primary_key if column.key]
+        matched = or_(*[and_(*[pk == value for pk, value in zip(pks, key, strict=True)]) for key in keys])
+        return select(*pks).where(*where, matched)
+
+    def _check_keys_in_scope(self, keys: set[tuple[Any, ...]], rows: Sequence[Row[Any]]) -> None:
+        """Checks that every primary key of ``keys`` is among ``rows``.
+
+        Raises:
+            MutationScopeError: If a key is missing, whether its row does not exist or the statement excludes it.
+        """
+        if keys - {tuple(row) for row in rows}:
+            msg = "Some rows to update do not exist or are not selected by the filter statement"
+            raise MutationScopeError(msg)
 
     def _rows_to_filter_dict(self, rows: Sequence[Row[Any]]) -> dict[str, list[Any]]:
         filter_dict = defaultdict(list)
