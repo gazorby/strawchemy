@@ -397,10 +397,11 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
         self._unresolved_refs: defaultdict[str, list[type[DTOBaseT]]] = defaultdict(list)
         self._scoped_dto_names: dict[Hashable, str] = {}
-        # Roots, as (model, name), that the forward refs of a DTO and its relations point to outside of it.
+        # Ancestors, as (model, name), that the forward refs of a DTO and its relations point to outside of it.
         self._external_refs: dict[type[DTOBaseT], frozenset[tuple[type[Any], str]]] = {}
         self._root_names: set[str] = set()
         self._self_referencing: set[type[DTOBaseT]] = set()
+        self._rebuilt_names: set[str] = set()
         self._path_variants: defaultdict[Hashable, list[type[DTOBaseT]]] = defaultdict(list)
 
     def should_exclude_field(
@@ -597,16 +598,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         refs: set[tuple[type[Any], str]] = set()
         for field_def in dto.__dto_field_definitions__.values():
             related = field_def.related_dto
-            if (
-                isinstance(related, ForwardRef)
-                and field_def.related_model is not None
-                and related.__forward_arg__ in self._root_names
-            ):
+            if isinstance(related, ForwardRef) and field_def.related_model is not None:
                 refs.add((field_def.related_model, related.__forward_arg__))
             elif related is not None:
                 refs |= self._external_refs.get(related, frozenset())
         closed = {ref for ref in refs if ref[1] == name}
-        if closed:
+        if any(ref_name in self._root_names for _, ref_name in closed):
             self._self_referencing.add(dto)
         self._external_refs[dto] = frozenset(refs - closed)
 
@@ -614,7 +611,10 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         """Whether the back-references of ``dto`` point to the ancestors of ``node`` that share their model."""
         for model, name in self._external_refs.get(dto, frozenset()):
             ancestor = node.find_parent(lambda parent, model=model: parent.value.model is model)
-            if ancestor is not None and ancestor.value.name != name:
+            if ancestor is None or ancestor.value.name == name:
+                continue
+            # A nested ancestor of another name is a mismatch only when one of them was rebuilt for a later root.
+            if name in self._root_names or {name, ancestor.value.name} & self._rebuilt_names:
                 return False
         return True
 
@@ -628,12 +628,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             return None if cached in self._self_referencing and cached.__name__ != name else cached
         return next((dto for dto in (cached, *self._path_variants[cache_key]) if self._fits_path(dto, node)), None)
 
-    @staticmethod
-    def _name_for_build(node: Node[Relation[Any, DTOBaseT], None], name: str, *, rebuilt: bool) -> str:
+    def _name_for_build(self, node: Node[Relation[Any, DTOBaseT], None], name: str, *, rebuilt: bool) -> str:
         """Prefix with the root name a related DTO rebuilt next to a cached one, so both keep their own name."""
         if not rebuilt or node.is_root:
             return name
         node.value.name = f"{node.root.value.name}{name}"
+        self._rebuilt_names.add(node.value.name)
         return node.value.name
 
     def _cache_built(
