@@ -179,9 +179,9 @@ def test_include_all_type_not_reused_under_narrower_config_include(declare_inclu
     assert {field.name for field in get_object_definition(color_type, strict=True).fields} == {"id", "name"}
 
 
-def test_nested_order_by_ignores_config_include_but_keeps_config_exclude() -> None:
-    """Test that a nested order-by input orders on every field but the config's excluded ones."""
-    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["name"], exclude=["sweetness"]))
+def test_nested_order_by_follows_config_include_and_exclude() -> None:
+    """Test that a nested order-by input orders on the config's included fields minus its excluded ones."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", include=["id", "name", "sweetness"], exclude=["sweetness"]))
 
     @strawchemy.order(Color, include="all")
     class ColorOrder: ...
@@ -190,8 +190,7 @@ def test_nested_order_by_ignores_config_include_but_keeps_config_exclude() -> No
 
     assert fruits_field is not None
     fruit_order = strawberry_contained_user_type(fruits_field.type)
-    assert {field.name for field in get_object_definition(fruit_order, strict=True).fields} >= {"id", "name"}
-    assert get_object_definition(fruit_order, strict=True).get_field("sweetness") is None
+    assert {field.name for field in get_object_definition(fruit_order, strict=True).fields} == {"id", "name"}
 
 
 def test_identical_order_keeps_resolved_relations(strawchemy: Strawchemy) -> None:
