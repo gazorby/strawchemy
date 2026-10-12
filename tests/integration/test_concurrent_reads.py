@@ -3,20 +3,19 @@
 from __future__ import annotations
 
 import asyncio
+import functools
+from dataclasses import dataclass
 from types import SimpleNamespace
 from typing import TYPE_CHECKING, Any, NoReturn
 
 import pytest
 import strawberry
-from sqlalchemy import func, select, update
+from sqlalchemy import Insert, func, insert, select, update
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
 from strawchemy import Input, StrawchemyAsyncRepository, StrawchemyExecutionContext
-from tests.integration.fixtures import StatementCounter, scalar_overrides
-from tests.integration.models import Color
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
+from tests.integration.fixtures import Operations, SchemaTypes, StatementCounter, scalar_overrides
+from tests.integration.models import Color, Fruit, User
 from tests.utils import StrawberryContext
 
 if TYPE_CHECKING:
@@ -33,6 +32,65 @@ if TYPE_CHECKING:
     from tests.integration.typing import RawRecordData
 
 pytestmark = [pytest.mark.integration]
+
+_COLORS: RawRecordData = [{"id": 1, "name": "Red"}, {"id": 2, "name": "Yellow"}, {"id": 3, "name": "Green"}]
+# The first color owns two fruits and another color one, so relation reads and updates discriminate.
+_FRUITS: RawRecordData = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 9, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+]
+_USERS: RawRecordData = [{"id": 1, "name": "Alice"}, {"id": 2, "name": "Bob"}]
+
+
+@dataclass(frozen=True)
+class _Types:
+    color: type[Any]
+    fruit: type[Any]
+    user: type[Any]
+    color_create_input: type[Any]
+    query: type[Any]
+    mutation: type[Any]
+
+
+@functools.cache
+def _types(strawchemy: Strawchemy) -> _Types:
+    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    class ColorType: ...
+
+    @strawchemy.type(Fruit, include=["id", "name", "color"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(User, include=["name"])
+    class UserType: ...
+
+    @strawchemy.create_input(Color, include=["name"])
+    class ColorCreateInput: ...
+
+    @strawchemy.pk_update_input(Color, include=["id", "name"])
+    class ColorUpdateInput: ...
+
+    @strawchemy.pk_update_input(Fruit, include=["id", "name"])
+    class FruitUpdateInput: ...
+
+    @strawberry.type
+    class Query:
+        users: list[UserType] = strawchemy.field()
+        colors: list[ColorType] = strawchemy.field()
+        fruits: list[FruitType] = strawchemy.field()
+
+    @strawberry.type
+    class Mutation:
+        update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput)
+        update_colors: list[ColorType] = strawchemy.update_by_ids(ColorUpdateInput)
+        update_fruits: list[FruitType] = strawchemy.update_by_ids(FruitUpdateInput)
+
+    return _Types(ColorType, FruitType, UserType, ColorCreateInput, Query, Mutation)
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    types = _types(strawchemy)
+    return Operations(query=types.query, mutation=types.mutation)
 
 
 class _RecordingSession(AsyncSession):
@@ -73,6 +131,16 @@ class ReadSessions:
         if self.peak >= peak:
             reached.set()
         await asyncio.wait_for(reached.wait(), timeout=5)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS), insert(User).values(_USERS)]
 
 
 @pytest.fixture
@@ -125,9 +193,6 @@ async def test_query_roots_use_read_sessions(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     read_sessions: ReadSessions,
     request_statements: StatementCounter,
-    raw_users: RawRecordData,
-    raw_colors: RawRecordData,
-    raw_fruits: RawRecordData,
 ) -> None:
     """Test that each strawchemy root of a query runs on its own read session."""
     result = await run()("{ users { name } colors { name } fruits { name } }")
@@ -137,9 +202,9 @@ async def test_query_roots_use_read_sessions(
     assert sorted(read_sessions.opened) == sorted(read_sessions.closed)
     assert request_statements.count == 0
     assert result.data
-    assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
-    assert result.data["colors"] == [{"name": color["name"]} for color in raw_colors]
-    assert result.data["fruits"] == [{"name": fruit["name"]} for fruit in raw_fruits]
+    assert result.data["users"] == [{"name": user["name"]} for user in _USERS]
+    assert result.data["colors"] == [{"name": color["name"]} for color in _COLORS]
+    assert result.data["fruits"] == [{"name": fruit["name"]} for fruit in _FRUITS]
 
 
 async def test_query_roots_without_getter_share_request_session(
@@ -147,9 +212,6 @@ async def test_query_roots_without_getter_share_request_session(
     config: StrawchemyConfig,
     read_sessions: ReadSessions,
     request_statements: StatementCounter,
-    raw_users: RawRecordData,
-    raw_colors: RawRecordData,
-    raw_fruits: RawRecordData,
 ) -> None:
     """Test that without a read getter, roots run on the request session as before."""
     config.read_session_getter = None
@@ -160,9 +222,9 @@ async def test_query_roots_without_getter_share_request_session(
     assert read_sessions.opened == []
     assert request_statements.count == 3
     assert result.data
-    assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
-    assert result.data["colors"] == [{"name": color["name"]} for color in raw_colors]
-    assert result.data["fruits"] == [{"name": fruit["name"]} for fruit in raw_fruits]
+    assert result.data["users"] == [{"name": user["name"]} for user in _USERS]
+    assert result.data["colors"] == [{"name": color["name"]} for color in _COLORS]
+    assert result.data["fruits"] == [{"name": fruit["name"]} for fruit in _FRUITS]
 
 
 async def test_pending_add_keeps_reads_on_request_session(
@@ -184,13 +246,12 @@ async def test_pending_add_keeps_reads_on_request_session(
 async def test_explicit_session_is_used_as_given(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     async_engine: AsyncEngine,
-    dialect: SupportedDialect,
+    mapper: Strawchemy,
     read_sessions: ReadSessions,
     request_statements: StatementCounter,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that a repository built with an explicit session never opens a read session."""
-    color_type = {"postgresql": postgres_types, "mysql": mysql_types, "sqlite": sqlite_types}[dialect].ColorType
+    color_type = _types(mapper).color
     explicit_session = async_sessionmaker(bind=async_engine)()
     explicit_statements = StatementCounter(explicit_session)
 
@@ -213,7 +274,7 @@ async def test_explicit_session_is_used_as_given(
     assert explicit_statements.count == 1
     assert result.data
     assert sorted(color["name"] for color in result.data["explicitColors"]) == sorted(
-        color["name"] for color in raw_colors
+        color["name"] for color in _COLORS
     )
 
 
@@ -236,7 +297,6 @@ async def test_read_session_in_custom_resolver(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     mapper: Strawchemy,
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that a custom resolver reading through read_session gets a read session."""
     query_type, mutation_type = _session_scope_types(mapper)
@@ -244,7 +304,7 @@ async def test_read_session_in_custom_resolver(
     result = await run(query_type=query_type, mutation_type=mutation_type)("{ colorCount }")
 
     assert not result.errors
-    assert result.data == {"colorCount": len(raw_colors)}
+    assert result.data == {"colorCount": len(_COLORS)}
     assert read_sessions.opened == ["colorCount"]
 
 
@@ -252,7 +312,6 @@ async def test_write_session_moves_later_reads_to_request_session(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     mapper: Strawchemy,
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that a read after write_session runs on the request session."""
     query_type, mutation_type = _session_scope_types(mapper)
@@ -263,7 +322,7 @@ async def test_write_session_moves_later_reads_to_request_session(
 
     assert not written.errors
     assert not result.errors
-    assert result.data == {"colorCount": len(raw_colors)}
+    assert result.data == {"colorCount": len(_COLORS)}
     assert read_sessions.opened == []
 
 
@@ -292,13 +351,13 @@ def test_sync_read_session_yields_request_session(any_session: Session, mapper: 
         assert yielded is any_session
 
 
-def _concurrent_mutation_type(mapper: Strawchemy, dialect: SupportedDialect, read_sessions: ReadSessions) -> type[Any]:
-    types = {"postgresql": postgres_types, "mysql": mysql_types, "sqlite": sqlite_types}[dialect]
+def _concurrent_mutation_type(mapper: Strawchemy, read_sessions: ReadSessions) -> type[Any]:
+    types = _types(mapper)
 
     async def gated_colors(info: strawberry.Info) -> list[Any]:
         async with mapper.read_session(info) as session:
             await read_sessions.wait_for_peak(2)
-            return (await StrawchemyAsyncRepository(types.ColorType, info, session=session).list()).graphql_list()
+            return (await StrawchemyAsyncRepository(types.color, info, session=session).list()).graphql_list()
 
     async def plain_count(info: strawberry.Info) -> int:
         async with mapper.read_session(info) as session:
@@ -313,16 +372,16 @@ def _concurrent_mutation_type(mapper: Strawchemy, dialect: SupportedDialect, rea
         raise ValueError(msg)
 
     async def create_explicit_color(info: strawberry.Info, data: object) -> object:
-        repository = StrawchemyAsyncRepository(types.ColorType, info, session=info.context.session)
+        repository = StrawchemyAsyncRepository(types.color, info, session=info.context.session)
         return (await repository.create(Input(data))).graphql_type()
 
-    gated_colors.__annotations__["return"] = list[types.ColorType]
-    create_explicit_color.__annotations__.update({"data": types.ColorCreateInput, "return": types.ColorType})
-    broken.__annotations__["return"] = types.ColorType | None
-    broken_required.__annotations__["return"] = types.ColorType
+    gated_colors.__annotations__["return"] = list[types.color]
+    create_explicit_color.__annotations__.update({"data": types.color_create_input, "return": types.color})
+    broken.__annotations__["return"] = types.color | None
+    broken_required.__annotations__["return"] = types.color
 
     namespace = {
-        "__annotations__": {"colors": list[types.ColorType], "fruits": list[types.FruitType]},
+        "__annotations__": {"colors": list[types.color], "fruits": list[types.fruit]},
         "colors": mapper.field(repository_type=StrawchemyAsyncRepository),
         "fruits": mapper.field(repository_type=StrawchemyAsyncRepository),
         "gated_colors": mapper.field(gated_colors, read_only=True),
@@ -331,19 +390,18 @@ def _concurrent_mutation_type(mapper: Strawchemy, dialect: SupportedDialect, rea
         "broken_required": mapper.field(broken_required, read_only=True),
         "create_explicit_color": strawberry.mutation(resolver=create_explicit_color),
     }
-    return strawberry.type(type("Mutation", (types.AsyncMutation,), namespace))
+    return strawberry.type(type("Mutation", (types.mutation,), namespace))
 
 
 @pytest.fixture
 def run_mutation(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     mapper: Strawchemy,
-    dialect: SupportedDialect,
     read_sessions: ReadSessions,
 ) -> Callable[[str], Awaitable[ExecutionResult]]:
     """Provide an executor for the mixed read, write and custom resolver mutation."""
     return run(
-        mutation_type=_concurrent_mutation_type(mapper, dialect, read_sessions),
+        mutation_type=_concurrent_mutation_type(mapper, read_sessions),
         execution_context_class=StrawchemyExecutionContext,
     )
 
@@ -355,14 +413,12 @@ async def _color_name(session: AsyncSession, color_id: int) -> str:
 async def test_mutation_reads_before_write_run_concurrently(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
-    raw_fruits: RawRecordData,
 ) -> None:
     """Test that reads before the first write gather, and reads after it see the write on the request session."""
     result = await run_mutation(f"""mutation {{
         gatedColors {{ name }}
         colors {{ name fruits {{ name }} }}
-        updateColors(data: [{{ id: {raw_colors[0]["id"]}, name: "Updated" }}]) {{ id }}
+        updateColors(data: [{{ id: {_COLORS[0]["id"]}, name: "Updated" }}]) {{ id }}
         fruits {{ color {{ name }} }}
     }}""")
 
@@ -372,10 +428,10 @@ async def test_mutation_reads_before_write_run_concurrently(
     assert read_sessions.peak == 2
     assert result.data
     assert list(result.data) == ["gatedColors", "colors", "updateColors", "fruits"]
-    assert sorted(color["name"] for color in result.data["gatedColors"]) == sorted(c["name"] for c in raw_colors)
-    first_color = next(color for color in result.data["colors"] if color["name"] == raw_colors[0]["name"])
+    assert sorted(color["name"] for color in result.data["gatedColors"]) == sorted(c["name"] for c in _COLORS)
+    first_color = next(color for color in result.data["colors"] if color["name"] == _COLORS[0]["name"])
     assert sorted(fruit["name"] for fruit in first_color["fruits"]) == sorted(
-        fruit["name"] for fruit in raw_fruits if fruit["color_id"] == raw_colors[0]["id"]
+        fruit["name"] for fruit in _FRUITS if fruit["color_id"] == _COLORS[0]["id"]
     )
     assert "Updated" in {fruit["color"]["name"] for fruit in result.data["fruits"]}
 
@@ -383,15 +439,13 @@ async def test_mutation_reads_before_write_run_concurrently(
 async def test_reads_after_write_stay_on_request_session(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
-    raw_fruits: RawRecordData,
 ) -> None:
     """Test that `{write read read write}` runs every root on the request session in order."""
     result = await run_mutation(f"""mutation {{
-        updateFruits(data: [{{ id: {raw_fruits[0]["id"]}, name: "Updated fruit" }}]) {{ id }}
+        updateFruits(data: [{{ id: {_FRUITS[0]["id"]}, name: "Updated fruit" }}]) {{ id }}
         fruits {{ name }}
         colors {{ name }}
-        updateColor(data: {{ id: {raw_colors[0]["id"]}, name: "Updated" }}) {{ name }}
+        updateColor(data: {{ id: {_COLORS[0]["id"]}, name: "Updated" }}) {{ name }}
     }}""")
 
     assert not result.errors
@@ -424,16 +478,14 @@ async def test_write_through_explicit_request_session_keeps_later_reads_on_it(
 async def test_mutation_without_execution_context_is_serial(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     mapper: Strawchemy,
-    dialect: SupportedDialect,
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that without StrawchemyExecutionContext, mutation roots run serially and correctly."""
-    execute = run(mutation_type=_concurrent_mutation_type(mapper, dialect, read_sessions))
+    execute = run(mutation_type=_concurrent_mutation_type(mapper, read_sessions))
 
     result = await execute(f"""mutation {{
         colors {{ name }}
-        updateColors(data: [{{ id: {raw_colors[0]["id"]}, name: "Updated" }}]) {{ id }}
+        updateColors(data: [{{ id: {_COLORS[0]["id"]}, name: "Updated" }}]) {{ id }}
         fruits {{ color {{ name }} }}
     }}""")
 
@@ -442,14 +494,13 @@ async def test_mutation_without_execution_context_is_serial(
     assert read_sessions.peak <= 1
     assert result.data
     assert list(result.data) == ["colors", "updateColors", "fruits"]
-    assert sorted(color["name"] for color in result.data["colors"]) == sorted(c["name"] for c in raw_colors)
+    assert sorted(color["name"] for color in result.data["colors"]) == sorted(c["name"] for c in _COLORS)
     assert "Updated" in {fruit["color"]["name"] for fruit in result.data["fruits"]}
 
 
 async def test_unmarked_resolver_splits_group(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that an unmarked custom resolver between reads acts as a barrier."""
     result = await run_mutation("mutation { colors { name } plainCount fruits { name } }")
@@ -459,13 +510,12 @@ async def test_unmarked_resolver_splits_group(
     assert read_sessions.peak == 1
     assert result.data
     assert list(result.data) == ["colors", "plainCount", "fruits"]
-    assert result.data["plainCount"] == len(raw_colors)
+    assert result.data["plainCount"] == len(_COLORS)
 
 
 async def test_aliased_reads_join_group(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that one root selected under two aliases joins the same concurrent group."""
     result = await run_mutation("mutation { gatedColors { name } a: colors { id } b: colors { name } }")
@@ -475,20 +525,19 @@ async def test_aliased_reads_join_group(
     assert read_sessions.peak >= 2
     assert result.data
     assert list(result.data) == ["gatedColors", "a", "b"]
-    assert len(result.data["a"]) == len(raw_colors)
-    assert sorted(color["name"] for color in result.data["b"]) == sorted(c["name"] for c in raw_colors)
+    assert len(result.data["a"]) == len(_COLORS)
+    assert sorted(color["name"] for color in result.data["b"]) == sorted(c["name"] for c in _COLORS)
 
 
 async def test_nullable_read_error_continues(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     any_async_session: AsyncSession,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that a failing nullable read yields null and later mutations still run."""
     result = await run_mutation(f"""mutation {{
         broken {{ name }}
         colors {{ name }}
-        updateColor(data: {{ id: {raw_colors[0]["id"]}, name: "Updated" }}) {{ name }}
+        updateColor(data: {{ id: {_COLORS[0]["id"]}, name: "Updated" }}) {{ name }}
     }}""")
 
     assert result.errors
@@ -496,40 +545,37 @@ async def test_nullable_read_error_continues(
     assert result.data
     assert result.data["broken"] is None
     assert result.data["updateColor"] == {"name": "Updated"}
-    assert await _color_name(any_async_session, raw_colors[0]["id"]) == "Updated"
+    assert await _color_name(any_async_session, _COLORS[0]["id"]) == "Updated"
 
 
 async def test_non_null_read_error_stops_later_groups(
     run_mutation: Callable[[str], Awaitable[ExecutionResult]],
     any_async_session: AsyncSession,
     read_sessions: ReadSessions,
-    raw_colors: RawRecordData,
 ) -> None:
     """Test that a failing non-null read nulls data and skips later mutations."""
     result = await run_mutation(f"""mutation {{
         brokenRequired {{ name }}
         colors {{ name }}
-        updateColor(data: {{ id: {raw_colors[0]["id"]}, name: "Updated" }}) {{ name }}
+        updateColor(data: {{ id: {_COLORS[0]["id"]}, name: "Updated" }}) {{ name }}
     }}""")
 
     assert result.errors
     assert result.data is None
-    assert await _color_name(any_async_session, raw_colors[0]["id"]) == raw_colors[0]["name"]
+    assert await _color_name(any_async_session, _COLORS[0]["id"]) == _COLORS[0]["name"]
     assert sorted(read_sessions.opened) == sorted(read_sessions.closed)
 
 
 async def test_read_getter_error_is_field_error(
     run: Callable[..., Callable[[str], Awaitable[ExecutionResult]]],
     mapper: Strawchemy,
-    dialect: SupportedDialect,
     config: StrawchemyConfig,
     read_sessions: ReadSessions,
-    raw_users: RawRecordData,
 ) -> None:
     """Test that a read getter raising gives a field error while other fields resolve."""
-    types = {"postgresql": postgres_types, "mysql": mysql_types, "sqlite": sqlite_types}[dialect]
+    types = _types(mapper)
     namespace = {
-        "__annotations__": {"colors": list[types.ColorType] | None, "users": list[types.UserType]},
+        "__annotations__": {"colors": list[types.color] | None, "users": list[types.user]},
         "colors": mapper.field(repository_type=StrawchemyAsyncRepository),
         "users": mapper.field(repository_type=StrawchemyAsyncRepository),
     }
@@ -548,4 +594,4 @@ async def test_read_getter_error_is_field_error(
     assert result.errors
     assert [error.path for error in result.errors] == [["colors"]]
     assert result.data
-    assert result.data["users"] == [{"name": user["name"]} for user in raw_users]
+    assert result.data["users"] == [{"name": user["name"]} for user in _USERS]

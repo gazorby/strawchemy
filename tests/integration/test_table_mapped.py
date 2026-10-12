@@ -1,23 +1,37 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert
 
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.integration.models import TableMappedColor, TableMappedFruit, table_mapped_metadata
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
 
-_TYPES_MODULES = {"postgresql": postgres_types, "mysql": mysql_types, "sqlite": sqlite_types}
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(TableMappedFruit, include=["id", "name", "color_id", "color"])
+    class TableMappedFruitType: ...
+
+    @strawberry.type
+    class Query:
+        table_mapped_fruits: list[TableMappedFruitType] = strawchemy.field()
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -33,16 +47,6 @@ def seed_insert_statements() -> list[Insert]:
             [{"id": 1, "name": "Apple", "color_id": 1}, {"id": 2, "name": None, "color_id": None}]
         ),
     ]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    return _TYPES_MODULES[dialect].TableMappedAsyncQuery
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    return _TYPES_MODULES[dialect].TableMappedSyncQuery
 
 
 async def test_null_column_and_to_one_relation(any_query: AnyQueryExecutor) -> None:
