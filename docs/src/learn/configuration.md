@@ -17,13 +17,31 @@ Pass options as a `StrawchemyConfig` to the `Strawchemy` instance; they apply to
 | `deterministic_ordering`    | `bool`                                                         | `True`                     | Append the primary key, ascending, to any list query with no explicit `orderBy`, so paginated results return in a stable order across pages.                                              |
 | `strict`                    | `bool`                                                         | `True`                     | When `True`, a column whose Python type hint has no GraphQL mapping (arbitrary class, Pydantic model without a Strawberry wrapper, `TypedDict`, opaque JSONB type) fails the schema build. |
 | `auto_is_type_of`           | `bool`                                                          | `True`                     | Auto-generate `is_type_of` (an `isinstance` check against the model) on mapped types, so they work as GraphQL union/interface members with no extra code.                                  |
-| `include`                   | `FieldSpec`                                                    | `"all"`                    | Fields included by default across every mapped type, unless a decorator overrides it with its own `include`.                                                                              |
-| `exclude`                   | `FieldSpec \| None`                                            | `None`                     | Fields excluded by default across every mapped type, unless a decorator overrides it with its own `exclude`.                                                                               |
+| `include`                   | `FieldSpec`                                                    | `"all"`                    | Fields included in generated types and in decorated types that select none of their own. See [field selection](#field-selection).                                                         |
+| `exclude`                   | `FieldSpec \| None`                                            | `None`                     | Fields excluded from generated types and from decorated types that select none of their own. See [field selection](#field-selection).                                                      |
 | `pagination`                | `FieldSpec \| None`                                            | `None`                     | Enable/disable pagination on list resolvers by default. Set to `"all"` to enable pagination on all list fields.                                                                            |
 | `order_by`                  | `FieldSpec \| None`                                            | `None`                     | Enable/disable order by on list resolvers by default. Set to `"all"` to enable ordering on all list fields.                                                                                |
 | `distinct_on`               | `FieldSpec \| None`                                            | `None`                     | Enable/disable a `distinctOn` argument on list resolvers by default. Set to `"all"` to enable it on all list fields; native on PostgreSQL, emulated elsewhere.                             |
 | `pagination_default_limit`  | `int`                                                          | `100`                      | Default pagination limit when `pagination=True`.                                                                                                                                           |
 | `pagination_default_offset` | `int`                                                          | `0`                        | Default pagination offset when `pagination=True`.                                                                                                                                          |
+
+## Field selection
+
+`include` and `exclude` shape every type strawchemy generates: nested relation types, relation aggregates, and the inputs and enums built for them.
+
+A decorator that passes `include` or `exclude`, even `exclude=[]`, or whose class annotates fields, defines its own fields: the config's `include` and `exclude` don't apply to that type. A bare decorator takes its fields from the config.
+
+```python
+strawchemy = Strawchemy(StrawchemyConfig("postgresql", exclude=["password"]))
+
+
+@strawchemy.type(User)  # every field but `password`
+class UserType: ...
+
+
+@strawchemy.type(User, include="all")  # every field, `password` included
+class AdminUserType: ...
+```
 
 ## Session getter
 
