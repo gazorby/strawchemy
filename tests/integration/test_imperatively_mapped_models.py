@@ -9,10 +9,12 @@ import strawberry
 from sqlalchemy import Column, ForeignKey, Insert, Integer, MetaData, String, Table, insert
 from sqlalchemy.orm import registry, relationship
 
-from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
+    from strawchemy.typing import SupportedDialect
     from tests.typing import AnyQueryExecutor
 
 pytestmark = [pytest.mark.integration]
@@ -63,69 +65,55 @@ _registry.map_imperatively(
 _registry.map_imperatively(_Car, None, inherits=_Vehicle, polymorphic_identity="car")
 
 
-_strawchemy = Strawchemy("postgresql")
+_AUTHORS = [{"id": 1, "name": "Ursula"}]
+_BOOKS = [{"id": 1, "title": "Earthsea", "author_id": 1}, {"id": 2, "title": "The Dispossessed", "author_id": 1}]
+_VEHICLES = [{"id": 1, "name": "Cart", "kind": "vehicle"}, {"id": 2, "name": "Coupe", "kind": "car"}]
 
 
-@_strawchemy.type(_Author, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class AuthorType: ...
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(_Author, include=["name", "books"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class AuthorType: ...
+
+    @strawchemy.type(_Book, include=["id", "title", "author"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class BookType: ...
+
+    @strawchemy.create_input(_Book, include=["id", "title", "author"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class BookCreateInput: ...
+
+    @strawchemy.pk_update_input(_Book, include=["id", "title"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class BookUpdateInput: ...
+
+    @strawchemy.filter(_Book, include=["id"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class BookFilter: ...
+
+    @strawchemy.type(_Car, include=["id", "name"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class CarType: ...
+
+    @strawchemy.pk_update_input(_Car, include=["id", "name"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class CarUpdateInput: ...
+
+    @strawchemy.filter(_Car, include=["id"])  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
+    class CarFilter: ...
+
+    @strawberry.type
+    class Query:
+        books: list[BookType] = strawchemy.field()
+        books_paginated: list[BookType] = strawchemy.field(pagination=True)
+
+    @strawberry.type
+    class Mutation:
+        create_book: BookType = strawchemy.create(BookCreateInput)
+        update_book: BookType = strawchemy.update_by_ids(BookUpdateInput)
+        delete_books: list[BookType] = strawchemy.delete(BookFilter)
+        update_car: CarType = strawchemy.update_by_ids(CarUpdateInput)
+        delete_cars: list[CarType] = strawchemy.delete(CarFilter)
+
+    return Operations(query=Query, mutation=Mutation)
 
 
-@_strawchemy.type(_Book, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class BookType: ...
-
-
-@_strawchemy.create_input(_Book, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class BookCreateInput: ...
-
-
-@_strawchemy.pk_update_input(_Book, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class BookUpdateInput: ...
-
-
-@_strawchemy.filter(_Book, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class BookFilter: ...
-
-
-@_strawchemy.type(_Car, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class CarType: ...
-
-
-@_strawchemy.pk_update_input(_Car, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class CarUpdateInput: ...
-
-
-@_strawchemy.filter(_Car, include="all")  # ty: ignore[invalid-argument-type]  # imperatively mapped, not a DeclarativeBase
-class CarFilter: ...
-
-
-@strawberry.type
-class AsyncQuery:
-    books: list[BookType] = _strawchemy.field(repository_type=StrawchemyAsyncRepository)
-    books_paginated: list[BookType] = _strawchemy.field(pagination=True, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncQuery:
-    books: list[BookType] = _strawchemy.field(repository_type=StrawchemySyncRepository)
-    books_paginated: list[BookType] = _strawchemy.field(pagination=True, repository_type=StrawchemySyncRepository)
-
-
-@strawberry.type
-class AsyncMutation:
-    create_book: BookType = _strawchemy.create(BookCreateInput, repository_type=StrawchemyAsyncRepository)
-    update_book: BookType = _strawchemy.update_by_ids(BookUpdateInput, repository_type=StrawchemyAsyncRepository)
-    delete_books: list[BookType] = _strawchemy.delete(BookFilter, repository_type=StrawchemyAsyncRepository)
-    update_car: CarType = _strawchemy.update_by_ids(CarUpdateInput, repository_type=StrawchemyAsyncRepository)
-    delete_cars: list[CarType] = _strawchemy.delete(CarFilter, repository_type=StrawchemyAsyncRepository)
-
-
-@strawberry.type
-class SyncMutation:
-    create_book: BookType = _strawchemy.create(BookCreateInput, repository_type=StrawchemySyncRepository)
-    update_book: BookType = _strawchemy.update_by_ids(BookUpdateInput, repository_type=StrawchemySyncRepository)
-    delete_books: list[BookType] = _strawchemy.delete(BookFilter, repository_type=StrawchemySyncRepository)
-    update_car: CarType = _strawchemy.update_by_ids(CarUpdateInput, repository_type=StrawchemySyncRepository)
-    delete_cars: list[CarType] = _strawchemy.delete(CarFilter, repository_type=StrawchemySyncRepository)
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -135,35 +123,7 @@ def metadata() -> MetaData:
 
 @pytest.fixture
 def seed_insert_statements() -> list[Insert]:
-    return [
-        insert(_Author).values([{"id": 1, "name": "Ursula"}]),
-        insert(_Book).values(
-            [{"id": 1, "title": "Earthsea", "author_id": 1}, {"id": 2, "title": "The Dispossessed", "author_id": 1}]
-        ),
-        insert(_Vehicle).values(
-            [{"id": 1, "name": "Cart", "kind": "vehicle"}, {"id": 2, "name": "Coupe", "kind": "car"}]
-        ),
-    ]
-
-
-@pytest.fixture
-def async_query() -> type[AsyncQuery]:
-    return AsyncQuery
-
-
-@pytest.fixture
-def sync_query() -> type[SyncQuery]:
-    return SyncQuery
-
-
-@pytest.fixture
-def async_mutation() -> type[AsyncMutation]:
-    return AsyncMutation
-
-
-@pytest.fixture
-def sync_mutation() -> type[SyncMutation]:
-    return SyncMutation
+    return [insert(_Author).values(_AUTHORS), insert(_Book).values(_BOOKS), insert(_Vehicle).values(_VEHICLES)]
 
 
 async def test_query(any_query: AnyQueryExecutor) -> None:

@@ -1,11 +1,11 @@
-# ruff: noqa: DTZ005
-
 from __future__ import annotations
 
 import dataclasses
+import functools
 import os
 import platform
 import re
+from collections.abc import Callable
 from copy import copy
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -34,7 +34,6 @@ from sqlalchemy import (
     Select,
     Update,
     create_engine,
-    insert,
 )
 from sqlalchemy.event import listens_for
 from sqlalchemy.ext.asyncio import AsyncConnection, AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
@@ -44,26 +43,14 @@ from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from typing_extensions import Self
 
+from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemyConfig, StrawchemySyncRepository
 from strawchemy.config.databases import DatabaseFeatures
 from strawchemy.constants import GEO_INSTALLED
 from strawchemy.schema.scalars import Date, DateTime, Interval, Time
 from tests.duplicate_reads import assert_no_duplicate_reads
-from tests.fixtures import DefaultQuery
 from tests.integration.models import (
-    Color,
-    Department,
-    Fruit,
-    FruitFarm,
-    Group,
-    Topic,
-    User,
-    UserDepartmentJoinTable,
     metadata,
 )
-from tests.integration.types import AnyAsyncMutationType, AnyAsyncQueryType, AnySyncQueryType
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
 from tests.typing import AnyQueryExecutor
 from tests.utils import generate_query
 
@@ -78,15 +65,16 @@ if TYPE_CHECKING:
     from pytest_databases.types import XdistIsolationLevel
     from syrupy.assertion import SnapshotAssertion
 
-    from strawchemy import Strawchemy, StrawchemyConfig
     from strawchemy.repository.typing import AnySession
     from strawchemy.typing import SupportedDialect
-    from tests.integration.typing import RawRecordData
 
 __all__ = (
     "ASYNCPG_ENGINE_PARAM",
     "ASYNC_ENGINE_PARAMS",
+    "Operations",
     "QueryTracker",
+    "SchemaBuilder",
+    "SchemaTypes",
     "StatementCounter",
     "any_async_query",
     "any_async_session",
@@ -98,9 +86,6 @@ __all__ = (
     "expire_on_commit",
     "psycopg_async_engine",
     "psycopg_engine",
-    "raw_colors",
-    "raw_fruits",
-    "raw_users",
     "seed_db_async",
     "seed_db_sync",
     "session",
@@ -125,52 +110,6 @@ if GEO_INSTALLED:
 
     engine_plugins = ["geoalchemy2"]
     scalar_overrides |= GEO_SCALAR_OVERRIDES
-
-# Mock data
-
-
-GEO_DATA = [
-    # Complete record with all geometry types
-    {
-        "id": 1,
-        "point_required": "POINT(0 0)",  # Origin point
-        "point": "POINT(1 1)",  # Simple point
-        "line_string": "LINESTRING(0 0, 1 1, 2 2)",  # Simple line with 3 points
-        "polygon": "POLYGON((0 0, 0 1, 1 1, 1 0, 0 0))",  # Simple square
-        "multi_point": "MULTIPOINT((0 0), (1 1), (2 2))",  # 3 points
-        "multi_line_string": "MULTILINESTRING((0 0, 1 1), (2 2, 3 3))",  # 2 lines
-        "multi_polygon": "MULTIPOLYGON(((0 0, 0 1, 1 1, 1 0, 0 0)), ((2 2, 2 3, 3 3, 3 2, 2 2)))",  # 2 squares
-        "geometry": "POINT(5 5)",  # Using point as generic geometry
-    },
-    # Record with only required fields
-    {
-        "id": 2,
-        "point_required": "POINT(10 20)",  # Required point
-        "point": None,
-        "line_string": None,
-        "polygon": None,
-        "multi_point": None,
-        "multi_line_string": None,
-        "multi_polygon": None,
-        "geometry": None,
-    },
-    # Record with complex geometries
-    {
-        "id": 3,
-        "point_required": "POINT(-122.6 45.5)",  # Real-world coordinates (Portland, OR)
-        "point": "POINT(-74.0060 40.7128)",  # New York City
-        "line_string": "LINESTRING(-122.4194 37.7749, -118.2437 34.0522, -74.0060 40.7128)",  # SF to LA to NYC
-        "polygon": "POLYGON((-122.4194 37.7749, -122.4194 37.8, -122.4 37.8, -122.4 37.7749, -122.4194 37.7749))",
-        # Area in SF
-        "multi_point": "MULTIPOINT((-122.4194 37.7749), (-118.2437 34.0522), (-74.0060 40.7128))",  # Major US cities
-        "multi_line_string": "MULTILINESTRING((-122.4194 37.7749, -118.2437 34.0522), (-118.2437 34.0522, -74.0060 40.7128))",
-        # Route segments
-        "multi_polygon": "MULTIPOLYGON(((-122.42 37.78, -122.42 37.8, -122.4 37.8, -122.4 37.78, -122.42 37.78)), ((-118.25 34.05, -118.25 34.06, -118.24 34.06, -118.24 34.05, -118.25 34.05)))",
-        # Areas in SF and LA
-        "geometry": "LINESTRING(-122.4194 37.7749, -74.0060 40.7128)",  # Direct SF to NYC
-    },
-]
-
 
 ASYNC_ENGINE_PARAMS = (
     pytest.param(
@@ -228,270 +167,6 @@ def _query_executor(
     request.getfixturevalue("seed_db_sync")
 
     return generate_query(session=session, query=sync_query, mutation=sync_mutation, scalar_overrides=scalar_overrides)
-
-
-@pytest.fixture
-def raw_topics(raw_groups: RawRecordData) -> RawRecordData:
-    return [
-        {"id": 1, "name": "Hello!", "group_id": raw_groups[0]["id"]},
-        {"id": 2, "name": "Problems", "group_id": raw_groups[1]["id"]},
-        {"id": 3, "name": "Solution", "group_id": raw_groups[2]["id"]},
-        {"id": 4, "name": "How bake bread?", "group_id": raw_groups[3]["id"]},
-        {"id": 5, "name": "My new basement!", "group_id": raw_groups[4]["id"]},
-    ]
-
-
-@pytest.fixture
-def raw_farms(raw_fruits: RawRecordData) -> RawRecordData:
-    # Apple and Cherry share a color, so holding a different number of farms each makes an
-    # aggregate over farms differ between two siblings of the same fruit collection.
-    farm_counts = {1: 3, 2: 2}
-    farms: RawRecordData = []
-    for fruit in raw_fruits:
-        for index in range(1, farm_counts.get(fruit["id"], 1) + 1):
-            suffix = "" if index == 1 else f" {index}"
-            farms.append({"id": len(farms) + 1, "name": f"{fruit['name']} farm{suffix}", "fruit_id": fruit["id"]})
-    return farms
-
-
-@pytest.fixture
-def raw_groups() -> RawRecordData:
-    return [
-        {"id": 1, "name": "Group 1"},
-        {"id": 2, "name": "Group 2"},
-        {"id": 3, "name": "Group 3"},
-        {"id": 4, "name": "Group 4"},
-        {"id": 5, "name": "Group 5"},
-    ]
-
-
-@pytest.fixture
-def raw_colors() -> RawRecordData:
-    return [
-        {"id": 1, "name": "Red"},
-        {"id": 2, "name": "Yellow"},
-        {"id": 3, "name": "Orange"},
-        {"id": 4, "name": "Green"},
-        {"id": 5, "name": "Pink"},
-    ]
-
-
-@pytest.fixture
-def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
-    return [
-        {
-            "id": 1,
-            "created_at": datetime.now().replace(second=1, microsecond=0),
-            "name": "Apple",
-            "sweetness": 4,
-            "water_percent": 0.84,
-            "best_time_to_pick": time(hour=9),
-            "color_id": raw_colors[0]["id"],
-        },
-        {
-            "id": 2,
-            "created_at": datetime.now().replace(second=2, microsecond=0),
-            "name": "Cherry",
-            "sweetness": 9,
-            "water_percent": 0.93,
-            "best_time_to_pick": time(hour=10, minute=30),
-            "color_id": raw_colors[0]["id"],
-        },
-        {
-            "id": 3,
-            "created_at": datetime.now().replace(second=3, microsecond=0),
-            "name": "Banana",
-            "sweetness": 2,
-            "water_percent": 0.75,
-            "best_time_to_pick": time(hour=17, minute=15),
-            "color_id": raw_colors[1]["id"],
-        },
-        {
-            "id": 4,
-            "created_at": datetime.now().replace(second=4, microsecond=0),
-            "name": "Lemon",
-            "sweetness": 1,
-            "water_percent": 0.88,
-            "best_time_to_pick": time(hour=20),
-            "color_id": raw_colors[1]["id"],
-        },
-        {
-            "id": 5,
-            "created_at": datetime.now().replace(second=5, microsecond=0),
-            "name": "Quince",
-            "sweetness": 3,
-            "water_percent": 0.81,
-            "best_time_to_pick": time(hour=13),
-            "color_id": raw_colors[1]["id"],
-        },
-        {
-            "id": 6,
-            "created_at": datetime.now().replace(second=6, microsecond=0),
-            "name": "Orange",
-            "sweetness": 8,
-            "water_percent": 0.86,
-            "best_time_to_pick": time(hour=12, minute=12),
-            "color_id": raw_colors[2]["id"],
-        },
-        {
-            "id": 7,
-            "created_at": datetime.now().replace(second=7, microsecond=0),
-            "name": "clementine",
-            "sweetness": 14,
-            "water_percent": 0.9,
-            "best_time_to_pick": time(hour=0, minute=0),
-            "color_id": raw_colors[2]["id"],
-        },
-        {
-            "id": 8,
-            "created_at": datetime.now().replace(second=8, microsecond=0),
-            "name": "Strawberry",
-            "sweetness": 5,
-            "water_percent": 0.91,
-            "best_time_to_pick": time(hour=9),
-            "color_id": raw_colors[3]["id"],
-        },
-        {
-            "id": 9,
-            "created_at": datetime.now().replace(second=9, microsecond=0),
-            "name": "Cantaloupe",
-            "sweetness": 0,
-            "water_percent": 0.51,
-            "best_time_to_pick": time(hour=20, minute=45, second=15, microsecond=10),
-            "color_id": raw_colors[3]["id"],
-        },
-        {
-            "id": 10,
-            "created_at": datetime.now().replace(second=10, microsecond=0),
-            "name": "Watermelon",
-            "sweetness": 7,
-            "water_percent": 0.92,
-            "best_time_to_pick": time(hour=19, microsecond=55),
-            "color_id": raw_colors[4]["id"],
-        },
-        {
-            "id": 11,
-            "created_at": datetime.now().replace(second=11, microsecond=0),
-            "name": "Pears",
-            "sweetness": 11,
-            "water_percent": 0.15,
-            "best_time_to_pick": time(hour=2),
-            "color_id": raw_colors[4]["id"],
-        },
-    ]
-
-
-@pytest.fixture
-def raw_users(raw_groups: RawRecordData) -> RawRecordData:
-    return [
-        {"id": 1, "name": "Alice", "group_id": raw_groups[0]["id"], "bio": None},
-        {"id": 2, "name": "Bob", "group_id": None, "bio": None},
-        {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
-        {"id": 4, "name": "Tango", "group_id": None, "bio": "Tango's bio"},
-    ]
-
-
-@pytest.fixture
-def raw_user_departments() -> RawRecordData:
-    return [
-        {"user_id": 1, "department_id": 1},
-        {"user_id": 2, "department_id": 2},
-        {"user_id": 3, "department_id": 3},
-        {"user_id": 3, "department_id": 1},
-    ]
-
-
-@pytest.fixture
-def raw_arrays() -> RawRecordData:
-    return [
-        # Standard case with typical values
-        {"id": 1, "array_str_col": ["one", "two", "three"]},
-        # Case with negative numbers and different values
-        {"id": 2, "array_str_col": ["apple", "banana", "cherry", "date"]},
-        # empty array
-        {"id": 3, "array_str_col": []},
-    ]
-
-
-@pytest.fixture
-def raw_intervals() -> RawRecordData:
-    return [
-        # Standard case with typical values
-        {"id": 1, "time_delta_col": timedelta(days=2, hours=23, minutes=59, seconds=59)},
-        # Case with negative numbers and different values
-        {"id": 2, "time_delta_col": timedelta(weeks=1, days=3, hours=12)},
-        # empty array
-        {"id": 3, "time_delta_col": timedelta(seconds=1)},
-    ]
-
-
-@pytest.fixture
-def raw_json() -> RawRecordData:
-    return [
-        # Standard case with typical values
-        {"id": 1, "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}, "key3": 3, "key4": None}},
-        # Case with negative numbers and different values
-        {"id": 2, "dict_col": {"status": "pending", "count": 0, "key3": 3, "key4": None}},
-        {"id": 3, "dict_col": {"key3": 3, "key4": None}},
-    ]
-
-
-@pytest.fixture
-def raw_date_times() -> RawRecordData:
-    return [
-        # Standard case with typical values
-        {
-            "id": 1,
-            "date_col": date(2023, 1, 15),
-            "time_col": time(14, 30, 45),
-            "datetime_col": datetime(2023, 1, 15, 14, 30, 45),  # noqa: DTZ001
-        },
-        # Case with negative numbers and different values
-        {
-            "id": 2,
-            "date_col": date(2022, 12, 31),
-            "time_col": time(8, 15, 0),
-            "datetime_col": datetime(2022, 12, 31, 23, 59, 59),  # noqa: DTZ001
-        },
-        # empty array
-        {
-            "id": 3,
-            "date_col": date(2024, 2, 29),  # leap year
-            "time_col": time(0, 0, 0),
-            "datetime_col": datetime(2024, 2, 29, 0, 0, 0),  # noqa: DTZ001
-        },
-    ]
-
-
-@pytest.fixture
-def raw_departments() -> RawRecordData:
-    return [
-        {"id": 1, "name": "IT"},
-        {"id": 2, "name": "Sales"},
-        {"id": 3, "name": "Platform"},
-    ]
-
-
-@pytest.fixture
-def raw_geo_flipped() -> RawRecordData:
-    from tests.integration.geo.utils import invert_wkt_coordinates
-
-    # Create GEO_DATA_INVERTED by inverting coordinates in GEO_DATA
-    geo_data_flipped = []
-    for item in GEO_DATA:
-        inverted_item = item.copy()
-        for key, value in item.items():
-            if key != "id" and value is not None:
-                inverted_item[key] = invert_wkt_coordinates(str(value))
-        geo_data_flipped.append(inverted_item)
-    return geo_data_flipped
-
-
-@pytest.fixture
-def raw_geo(dialect: SupportedDialect, raw_geo_flipped: RawRecordData) -> RawRecordData:
-    if dialect == "mysql":
-        return raw_geo_flipped
-    return GEO_DATA
 
 
 def _namespaced_postgres_service(service: PostgresService, namespace: str) -> PostgresService:
@@ -769,26 +444,8 @@ async def async_session(async_engine: AsyncEngine, expire_on_commit: bool) -> As
 
 
 @pytest.fixture
-def seed_insert_statements(
-    raw_fruits: RawRecordData,
-    raw_colors: RawRecordData,
-    raw_users: RawRecordData,
-    raw_farms: RawRecordData,
-    raw_groups: RawRecordData,
-    raw_topics: RawRecordData,
-    raw_departments: RawRecordData,
-    raw_user_departments: RawRecordData,
-) -> list[Insert]:
-    return [
-        insert(Group).values(raw_groups),
-        insert(Topic).values(raw_topics),
-        insert(Color).values(raw_colors),
-        insert(Fruit).values(raw_fruits),
-        insert(FruitFarm).values(raw_farms),
-        insert(User).values(raw_users),
-        insert(Department).values(raw_departments),
-        insert(UserDepartmentJoinTable).values(raw_user_departments),
-    ]
+def seed_insert_statements() -> list[Insert]:
+    return []
 
 
 @pytest.fixture
@@ -846,16 +503,49 @@ def db_features(dialect: SupportedDialect) -> DatabaseFeatures:
     return DatabaseFeatures.new(dialect)
 
 
+@dataclass(frozen=True)
+class Operations:
+    query: type[Any]
+    mutation: type[Any] | None = None
+
+
+SchemaBuilder: TypeAlias = Callable[[Strawchemy], Operations]
+
+
+@functools.cache
+def _build_schema_types(dialect: SupportedDialect, builder: SchemaBuilder) -> SchemaTypes:
+    async_mapper = Strawchemy(StrawchemyConfig(dialect, repository_type=StrawchemyAsyncRepository))
+    sync_mapper = Strawchemy(StrawchemyConfig(dialect, repository_type=StrawchemySyncRepository))
+    return SchemaTypes(
+        async_mapper=async_mapper,
+        sync_mapper=sync_mapper,
+        async_operations=builder(async_mapper),
+        sync_operations=builder(sync_mapper),
+    )
+
+
+@dataclass(frozen=True)
+class SchemaTypes:
+    async_mapper: Strawchemy
+    sync_mapper: Strawchemy
+    async_operations: Operations
+    sync_operations: Operations
+
+    @classmethod
+    def build(cls, dialect: SupportedDialect, builder: SchemaBuilder) -> Self:
+        return cast("Self", _build_schema_types(dialect, builder))
+
+
 @pytest.fixture
-def mapper(dialect: SupportedDialect) -> Strawchemy:
-    if dialect == "postgresql":
-        return postgres_types.strawchemy
-    if dialect == "mysql":
-        return mysql_types.strawchemy
-    if dialect == "sqlite":
-        return sqlite_types.strawchemy
-    msg = f"Unknown dialect: {dialect}"
-    raise ValueError(msg)
+def schema(request: FixtureRequest) -> SchemaTypes:
+    pytest.fail(f"{request.module.__name__} must override the schema fixture")
+
+
+@pytest.fixture
+def mapper(schema: SchemaTypes, request: FixtureRequest) -> Strawchemy:
+    if isinstance(_requested_session(request), AsyncSession):
+        return schema.async_mapper
+    return schema.sync_mapper
 
 
 @pytest.fixture
@@ -867,47 +557,23 @@ def config(mapper: Strawchemy) -> Generator[StrawchemyConfig]:
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[AnyAsyncQueryType | DefaultQuery]:
-    if dialect == "postgresql":
-        return postgres_types.AsyncQuery
-    if dialect == "mysql":
-        return mysql_types.AsyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.AsyncQuery
-    return DefaultQuery
+def async_query(schema: SchemaTypes) -> type[Any]:
+    return schema.async_operations.query
 
 
 @pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[AnySyncQueryType | DefaultQuery]:
-    if dialect == "postgresql":
-        return postgres_types.SyncQuery
-    if dialect == "mysql":
-        return mysql_types.SyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.SyncQuery
-    return DefaultQuery
+def sync_query(schema: SchemaTypes) -> type[Any]:
+    return schema.sync_operations.query
 
 
 @pytest.fixture
-def async_mutation(dialect: SupportedDialect) -> type[AnyAsyncMutationType] | None:
-    if dialect == "postgresql":
-        return postgres_types.AsyncMutation
-    if dialect == "mysql":
-        return mysql_types.AsyncMutation
-    if dialect == "sqlite":
-        return sqlite_types.AsyncMutation
-    return None
+def async_mutation(schema: SchemaTypes) -> type[Any] | None:
+    return schema.async_operations.mutation
 
 
 @pytest.fixture
-def sync_mutation(dialect: SupportedDialect) -> type[Any] | None:
-    if dialect == "postgresql":
-        return postgres_types.SyncMutation
-    if dialect == "mysql":
-        return mysql_types.SyncMutation
-    if dialect == "sqlite":
-        return sqlite_types.SyncMutation
-    return None
+def sync_mutation(schema: SchemaTypes) -> type[Any] | None:
+    return schema.sync_operations.mutation
 
 
 @pytest.fixture(params=[lf("async_session"), lf("session")], ids=["async", "sync"])

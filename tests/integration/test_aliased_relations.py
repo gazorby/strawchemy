@@ -4,19 +4,116 @@ from collections import Counter
 from typing import TYPE_CHECKING, Any
 
 import pytest
-from sqlalchemy import insert, update
+import strawberry
+from sqlalchemy import Insert, insert, update
+from typing_extensions import override
 
-from tests.integration.fixtures import QueryTracker
-from tests.integration.models import DerivedProduct, Fruit
-from tests.integration.typing import RawRecordData
+from strawchemy import QueryHook
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, DerivedProduct, Fruit, FruitFarm
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from sqlalchemy.orm.util import AliasedClass
+
+    from strawchemy import Strawchemy
     from strawchemy.repository.typing import AnySession
+    from strawchemy.typing import SelectOf, SupportedDialect
 
 pytestmark = [pytest.mark.integration]
+
+_COLORS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Red"},
+    {"id": 2, "name": "Yellow"},
+    {"id": 3, "name": "Orange"},
+    {"id": 4, "name": "Green"},
+    {"id": 5, "name": "Pink"},
+]
+# Every fruit and color is kept because several cases pin literal id tables.
+_FRUITS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 9, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+    {"id": 4, "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": 2},
+    {"id": 5, "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": 2},
+    {"id": 6, "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": 3},
+    {"id": 7, "name": "clementine", "sweetness": 14, "water_percent": 0.9, "color_id": 3},
+    {"id": 8, "name": "Strawberry", "sweetness": 5, "water_percent": 0.91, "color_id": 4},
+    {"id": 9, "name": "Cantaloupe", "sweetness": 0, "water_percent": 0.51, "color_id": 4},
+    {"id": 10, "name": "Watermelon", "sweetness": 7, "water_percent": 0.92, "color_id": 5},
+    {"id": 11, "name": "Pears", "sweetness": 11, "water_percent": 0.15, "color_id": 5},
+]
+# Apple and Cherry share a color, so holding a different number of farms each makes an
+# aggregate over farms differ between two siblings of the same fruit collection.
+_FARMS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple farm", "fruit_id": 1},
+    {"id": 2, "name": "Apple farm 2", "fruit_id": 1},
+    {"id": 3, "name": "Apple farm 3", "fruit_id": 1},
+    {"id": 4, "name": "Cherry farm", "fruit_id": 2},
+    {"id": 5, "name": "Cherry farm 2", "fruit_id": 2},
+    {"id": 6, "name": "Banana farm", "fruit_id": 3},
+]
+
+
+class _SweetFruitHook(QueryHook[Fruit]):
+    @override
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
+        return statement.where(alias.sweetness > 5)
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color_id", "color", "farms"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(
+        Color,
+        include=["id", "name", "fruits"],
+        order=["id", "sweetness", "derived_product_id", "fruits"],
+        override=True,
+    )
+    class ColorType: ...
+
+    @strawchemy.type(Color, include=["id", "fruits"], order=["id", "sweetness", "fruits"], paginate=["fruits"])
+    class ColorTypeWithPagination: ...
+
+    @strawchemy.type(Color, include=["id", "fruits"])
+    class ColorWithSweetFruits:
+        fruits: list[FruitType] = strawchemy.field(query_hook=_SweetFruitHook())
+
+    @strawchemy.type(Color, include=["id", "fruits"])
+    class ColorWithPaginatedSweetFruits:
+        fruits: list[FruitType] = strawchemy.field(
+            query_hook=_SweetFruitHook(load=[Fruit.water_percent]), pagination=True
+        )
+
+    @strawchemy.pk_update_input(Color, include=["id", "name"])
+    class ColorUpdateInput: ...
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field()
+        colors: list[ColorType] = strawchemy.field()
+        colors_paginated: list[ColorTypeWithPagination] = strawchemy.field(pagination=True)
+        colors_with_sweet_fruits: list[ColorWithSweetFruits] = strawchemy.field()
+        colors_with_paginated_sweet_fruits: list[ColorWithPaginatedSweetFruits] = strawchemy.field()
+
+    @strawberry.type
+    class Mutation:
+        update_color: ColorType = strawchemy.update_by_ids(ColorUpdateInput)
+
+    return Operations(query=Query, mutation=Mutation)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS), insert(FruitFarm).values(_FARMS)]
 
 
 async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]:
@@ -26,10 +123,8 @@ async def _data(any_async_query: AnyQueryExecutor, query: str) -> dict[str, Any]
     return result.data
 
 
-def _fruits_of(
-    raw_fruits: RawRecordData, color_id: int, *, by: str = "id", descending: bool = False
-) -> list[dict[str, Any]]:
-    fruits = [fruit for fruit in raw_fruits if fruit["color_id"] == color_id]
+def _fruits_of(color_id: int, *, by: str = "id", descending: bool = False) -> list[dict[str, Any]]:
+    fruits = [fruit for fruit in _FRUITS if fruit["color_id"] == color_id]
     return sorted(fruits, key=lambda fruit: fruit[by], reverse=descending)
 
 
@@ -38,7 +133,7 @@ def _ids_by_color(colors: list[dict[str, Any]], *aliases: str) -> dict[int, tupl
 
 
 async def test_aliased_relations_with_different_order_by(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that two aliases of a relation ordered differently are each ordered their own way, in one query."""
     data = await _data(
@@ -55,13 +150,13 @@ async def test_aliased_relations_with_different_order_by(
     )
     assert query_tracker.query_count == 1
     for color in data["colors"]:
-        ascending = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness")]
+        ascending = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness")]
         assert color["a"] == ascending[::-1]
         assert color["b"] == ascending
 
 
 async def test_aliased_relations_with_different_pagination(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that two aliases of a relation paginated differently each get their own page, in one query."""
     data = await _data(
@@ -80,15 +175,13 @@ async def test_aliased_relations_with_different_pagination(
     assert query_tracker.query_count == 1
     assert [color["id"] for color in data["colorsPaginated"]] == [2, 3, 4]
     for color in data["colorsPaginated"]:
-        fruits = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"])]
+        fruits = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"])]
         assert color["a"] == fruits[:1]
         assert color["b"] == fruits[1:2]
         assert color["c"] == fruits
 
 
-async def test_aliased_relations_with_different_arguments_and_selections(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_colors: RawRecordData
-) -> None:
+async def test_aliased_relations_with_different_arguments_and_selections(any_async_query: AnyQueryExecutor) -> None:
     """Test that aliases with different arguments keep their own selection, sub-relations included."""
     data = await _data(
         any_async_query,
@@ -102,9 +195,9 @@ async def test_aliased_relations_with_different_arguments_and_selections(
         }
         """,
     )
-    color_names = {color["id"]: color["name"] for color in raw_colors}
+    color_names = {color["id"]: color["name"] for color in _COLORS}
     for color in data["colors"]:
-        ascending = _fruits_of(raw_fruits, color["id"], by="sweetness")
+        ascending = _fruits_of(color["id"], by="sweetness")
         assert color["a"] == [{"name": fruit["name"]} for fruit in reversed(ascending)]
         assert color["b"] == [
             {"id": fruit["id"], "sweetness": fruit["sweetness"], "color": {"name": color_names[color["id"]]}}
@@ -112,9 +205,7 @@ async def test_aliased_relations_with_different_arguments_and_selections(
         ]
 
 
-async def test_aliased_relations_with_and_without_arguments(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
-) -> None:
+async def test_aliased_relations_with_and_without_arguments(any_async_query: AnyQueryExecutor) -> None:
     """Test that an alias without arguments is unaffected by another alias of the same relation that has some."""
     data = await _data(
         any_async_query,
@@ -129,10 +220,8 @@ async def test_aliased_relations_with_and_without_arguments(
         """,
     )
     for color in data["colors"]:
-        assert color["a"] == [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"])]
-        assert color["b"] == [
-            {"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness", descending=True)
-        ]
+        assert color["a"] == [{"id": fruit["id"]} for fruit in _fruits_of(color["id"])]
+        assert color["b"] == [{"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness", descending=True)]
 
 
 @pytest.mark.allow_duplicate_reads(
@@ -143,7 +232,7 @@ async def test_aliased_relations_with_and_without_arguments(
     dialects=("sqlite", "mysql"),
 )
 async def test_aliased_relations_nested_in_relation(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases of a relation with different arguments, below another relation, are each ordered."""
     data = await _data(
@@ -163,13 +252,13 @@ async def test_aliased_relations_nested_in_relation(
     )
     assert query_tracker.query_count == 1
     for fruit in data["fruits"]:
-        ascending = [{"id": related["id"]} for related in _fruits_of(raw_fruits, fruit["colorId"], by="sweetness")]
+        ascending = [{"id": related["id"]} for related in _fruits_of(fruit["colorId"], by="sweetness")]
         assert fruit["color"]["a"] == ascending[::-1]
         assert fruit["color"]["b"] == ascending
 
 
 async def test_aliased_relations_with_same_arguments_share_one_join(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases of a relation with the same arguments share one join and both get the merged selection."""
     data = await _data(
@@ -187,14 +276,12 @@ async def test_aliased_relations_with_same_arguments_share_one_join(
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count("JOIN") == 1
     for color in data["colors"]:
-        descending = _fruits_of(raw_fruits, color["id"], by="sweetness", descending=True)
+        descending = _fruits_of(color["id"], by="sweetness", descending=True)
         assert color["a"] == [{"id": fruit["id"]} for fruit in descending]
         assert color["b"] == [{"id": fruit["id"], "sweetness": fruit["sweetness"]} for fruit in descending]
 
 
-async def test_aliased_relations_with_computed_values(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
-) -> None:
+async def test_aliased_relations_with_computed_values(any_async_query: AnyQueryExecutor) -> None:
     """Test that computed values under one alias still map to the right objects when another alias has arguments."""
     data = await _data(
         any_async_query,
@@ -208,19 +295,17 @@ async def test_aliased_relations_with_computed_values(
         }
         """,
     )
-    farm_counts = Counter(farm["fruit_id"] for farm in raw_farms)
+    farm_counts = Counter(farm["fruit_id"] for farm in _FARMS)
     for color in data["colors"]:
         assert color["a"] == [
             {"id": fruit["id"], "farmsAggregate": {"count": farm_counts[fruit["id"]]}}
-            for fruit in _fruits_of(raw_fruits, color["id"])
+            for fruit in _fruits_of(color["id"])
         ]
-        assert color["b"] == [
-            {"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness", descending=True)
-        ]
+        assert color["b"] == [{"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness", descending=True)]
 
 
 async def test_aliased_relations_with_query_hook(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that a relation query hook applies to every alias of the relation, each keeping its own page."""
     data = await _data(
@@ -237,7 +322,7 @@ async def test_aliased_relations_with_query_hook(
     )
     assert query_tracker.query_count == 1
     for color in data["colorsWithPaginatedSweetFruits"]:
-        sweet = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"]) if fruit["sweetness"] > 5]
+        sweet = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"]) if fruit["sweetness"] > 5]
         assert color["a"] == sweet[:1]
         assert color["b"] == sweet[1:2]
 
@@ -250,7 +335,7 @@ async def test_aliased_relations_with_query_hook(
     dialects=("sqlite", "mysql"),
 )
 async def test_aliased_relations_under_to_one_relation_selected_twice(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases of a to-one relation merge, and the differently-argued relations below each keep theirs."""
     data = await _data(
@@ -267,16 +352,14 @@ async def test_aliased_relations_under_to_one_relation_selected_twice(
     )
     assert query_tracker.query_count == 1
     for fruit in data["fruits"]:
-        ascending = [{"id": related["id"]} for related in _fruits_of(raw_fruits, fruit["colorId"], by="sweetness")]
+        ascending = [{"id": related["id"]} for related in _fruits_of(fruit["colorId"], by="sweetness")]
         assert fruit["x"] == {"a": ascending[::-1]}
         assert fruit["y"] == {"b": ascending}
 
 
-async def test_mutation_returning_aliased_relations(
-    any_async_query: AnyQueryExecutor, raw_colors: RawRecordData, raw_fruits: RawRecordData
-) -> None:
+async def test_mutation_returning_aliased_relations(any_async_query: AnyQueryExecutor) -> None:
     """Test that a mutation result selecting aliases of a relation with different arguments returns each alias."""
-    color_id = raw_colors[0]["id"]
+    color_id = _COLORS[0]["id"]
     data = await _data(
         any_async_query,
         f"""
@@ -289,12 +372,12 @@ async def test_mutation_returning_aliased_relations(
         }}
         """,
     )
-    ascending = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color_id, by="sweetness")]
+    ascending = [{"id": fruit["id"]} for fruit in _fruits_of(color_id, by="sweetness")]
     assert data["updateColor"] == {"name": "updated", "a": ascending[::-1], "b": ascending}
 
 
 async def test_aliased_relations_with_same_query_hook_apply_it_once(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that aliases of a hooked relation sharing one node run the relation's query hook only once."""
     data = await _data(
@@ -312,14 +395,12 @@ async def test_aliased_relations_with_same_query_hook_apply_it_once(
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted.count("> ") == 1
     for color in data["colorsWithSweetFruits"]:
-        sweet = [fruit for fruit in _fruits_of(raw_fruits, color["id"]) if fruit["sweetness"] > 5]
+        sweet = [fruit for fruit in _fruits_of(color["id"]) if fruit["sweetness"] > 5]
         assert color["a"] == [{"id": fruit["id"]} for fruit in sweet]
         assert color["b"] == [{"name": fruit["name"]} for fruit in sweet]
 
 
-async def test_aliased_relations_queried_twice(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
-) -> None:
+async def test_aliased_relations_queried_twice(any_async_query: AnyQueryExecutor) -> None:
     """Test that an aliased query runs again once its compiled statement is cached."""
     query = """
         {
@@ -330,16 +411,16 @@ async def test_aliased_relations_queried_twice(
             }
         }
     """
-    farm_counts = Counter(farm["fruit_id"] for farm in raw_farms)
+    farm_counts = Counter(farm["fruit_id"] for farm in _FARMS)
     for _ in range(2):
         data = await _data(any_async_query, query)
         for color in data["colors"]:
             assert color["a"] == [
                 {"id": fruit["id"], "farmsAggregate": {"count": farm_counts[fruit["id"]]}}
-                for fruit in _fruits_of(raw_fruits, color["id"])
+                for fruit in _fruits_of(color["id"])
             ]
             assert color["b"] == [
-                {"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness", descending=True)
+                {"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness", descending=True)
             ]
 
 
@@ -479,7 +560,7 @@ async def test_row_in_one_alias_page_only(any_async_query: AnyQueryExecutor, que
 
 
 async def test_hooked_aliases_with_an_unbounded_alias(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that a hooked relation's bounded and unbounded aliases each keep the hook's rows and their own page."""
     data = await _data(
@@ -496,7 +577,7 @@ async def test_hooked_aliases_with_an_unbounded_alias(
     )
     assert query_tracker.query_count == 1
     for color in data["colorsWithPaginatedSweetFruits"]:
-        sweet = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"]) if fruit["sweetness"] > 5]
+        sweet = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"]) if fruit["sweetness"] > 5]
         assert color["a"] == sweet[:1]
         assert color["b"] == sweet
 
@@ -508,9 +589,7 @@ async def test_hooked_aliases_with_an_unbounded_alias(
     ),
     dialects=("postgresql",),
 )
-async def test_aliases_on_both_paths(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
-) -> None:
+async def test_aliases_on_both_paths(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that aliases of a relation and aliases of the same relation through another path each keep their rows."""
     data = await _data(
         any_async_query,
@@ -529,15 +608,15 @@ async def test_aliases_on_both_paths(
     )
     assert query_tracker.query_count == 1
     for color in data["colors"]:
-        by_sweetness = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness")]
-        by_id = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"])]
+        by_sweetness = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness")]
+        by_id = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"])]
         nested = {"c": by_sweetness, "d": by_id[::-1]}
         assert color["a"] == [{"id": fruit["id"], "color": nested} for fruit in by_sweetness[::-1]]
         assert color["b"] == by_id
 
 
 async def test_aggregate_two_levels_under_aliases(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that an aggregate two levels under both aliases of a relation counts the rows of each alias's objects."""
     data = await _data(
@@ -553,9 +632,9 @@ async def test_aggregate_two_levels_under_aliases(
         """,
     )
     assert query_tracker.query_count == 1
-    counts = Counter(fruit["color_id"] for fruit in raw_fruits)
+    counts = Counter(fruit["color_id"] for fruit in _FRUITS)
     for color in data["colors"]:
-        ascending = _fruits_of(raw_fruits, color["id"], by="sweetness")
+        ascending = _fruits_of(color["id"], by="sweetness")
         nested = {"color": {"fruitsAggregate": {"count": counts[color["id"]]}}}
         assert color["a"] == [{"id": fruit["id"], **nested} for fruit in ascending]
         assert color["b"] == [{"id": fruit["id"], **nested} for fruit in ascending[::-1]]
@@ -568,7 +647,7 @@ async def test_aggregate_two_levels_under_aliases(
     )
 )
 async def test_relation_aliased_under_one_shared_alias(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that a relation aliased under one alias and selected once under another keeps each alias's rows."""
     data = await _data(
@@ -588,16 +667,14 @@ async def test_relation_aliased_under_one_shared_alias(
     )
     assert query_tracker.query_count == 1
     for color in data["colors"]:
-        by_id = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"])]
-        by_sweetness = [{"id": fruit["id"]} for fruit in _fruits_of(raw_fruits, color["id"], by="sweetness")]
+        by_id = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"])]
+        by_sweetness = [{"id": fruit["id"]} for fruit in _fruits_of(color["id"], by="sweetness")]
         a_color = {"x": by_id, "y": by_sweetness[::-1]}
         assert color["a"] == [{"id": fruit["id"], "color": a_color} for fruit in by_id]
         assert color["b"] == [{"id": fruit["id"], "color": {"fruits": by_id}} for fruit in by_id[::-1]]
 
 
-async def test_argless_aliases_with_different_nested_selections(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData
-) -> None:
+async def test_argless_aliases_with_different_nested_selections(any_async_query: AnyQueryExecutor) -> None:
     """Test that argument-free aliases of a relation each keep their own nested selection."""
     data = await _data(
         any_async_query,
@@ -612,7 +689,7 @@ async def test_argless_aliases_with_different_nested_selections(
         """,
     )
     for color in data["colors"]:
-        fruits = _fruits_of(raw_fruits, color["id"])
+        fruits = _fruits_of(color["id"])
         a_color = {"fruits": [{"id": fruit["id"], "name": fruit["name"]} for fruit in fruits]}
         b_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits[::-1]]}
         assert sorted(color["a"], key=lambda fruit: fruit["id"]) == [
@@ -623,9 +700,7 @@ async def test_argless_aliases_with_different_nested_selections(
         ]
 
 
-async def test_argless_to_one_aliases_with_different_nested_selections(
-    any_async_query: AnyQueryExecutor, raw_fruits: RawRecordData, raw_farms: RawRecordData
-) -> None:
+async def test_argless_to_one_aliases_with_different_nested_selections(any_async_query: AnyQueryExecutor) -> None:
     """Test that argument-free aliases of a to-one relation each keep their own nested relations and selections."""
     data = await _data(
         any_async_query,
@@ -640,11 +715,11 @@ async def test_argless_to_one_aliases_with_different_nested_selections(
         """,
     )
     for fruit in data["fruits"]:
-        siblings = _fruits_of(raw_fruits, fruit["colorId"])
+        siblings = _fruits_of(fruit["colorId"])
         x_fruits = [
             {
                 "id": sibling["id"],
-                "farms": sorted(farm["id"] for farm in raw_farms if farm["fruit_id"] == sibling["id"]),
+                "farms": sorted(farm["id"] for farm in _FARMS if farm["fruit_id"] == sibling["id"]),
             }
             for sibling in siblings
         ]
@@ -663,7 +738,7 @@ async def test_argless_to_one_aliases_with_different_nested_selections(
     dialects=("postgresql",),
 )
 async def test_argless_aliases_with_partly_shared_nested_arguments(
-    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker, raw_fruits: RawRecordData
+    any_async_query: AnyQueryExecutor, query_tracker: QueryTracker
 ) -> None:
     """Test that argument-free aliases keep their own nested selections when only some share nested arguments."""
     data = await _data(
@@ -681,7 +756,7 @@ async def test_argless_aliases_with_partly_shared_nested_arguments(
     )
     assert query_tracker.query_count == 1
     for color in data["colors"]:
-        fruits = _fruits_of(raw_fruits, color["id"])
+        fruits = _fruits_of(color["id"])
         a_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits]}
         b_color = {"fruits": [{"name": fruit["name"]} for fruit in fruits]}
         c_color = {"fruits": [{"id": fruit["id"]} for fruit in fruits[::-1]]}

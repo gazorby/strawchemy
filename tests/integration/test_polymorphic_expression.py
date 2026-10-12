@@ -3,36 +3,28 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert
 
-from tests.integration.models import ExprGarage, ExprVehicle, expression_polymorphic_metadata
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
-from tests.integration.typing import RawRecordData
+from tests.integration.fixtures import Operations, SchemaTypes
+from tests.integration.models import ExprBike, ExprGarage, ExprVehicle, expression_polymorphic_metadata
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
 
 pytestmark = [pytest.mark.integration]
 
-
-@pytest.fixture
-def raw_garages() -> RawRecordData:
-    return [{"id": 1, "name": "North"}, {"id": 2, "name": "South"}]
-
-
-@pytest.fixture
-def raw_vehicles() -> RawRecordData:
-    return [
-        {"id": 1, "name": "Car", "wheels": 4, "garage_id": 1},
-        {"id": 2, "name": "BMX", "wheels": 2, "garage_id": 1},
-        {"id": 3, "name": "Truck", "wheels": 6, "garage_id": 2},
-        {"id": 4, "name": "Racer", "wheels": 2, "garage_id": 2},
-    ]
+_GARAGES: list[dict[str, Any]] = [{"id": 1, "name": "North"}, {"id": 2, "name": "South"}]
+_VEHICLES: list[dict[str, Any]] = [
+    {"id": 1, "name": "Car", "wheels": 4, "garage_id": 1},
+    {"id": 2, "name": "BMX", "wheels": 2, "garage_id": 1},
+    {"id": 3, "name": "Truck", "wheels": 6, "garage_id": 2},
+    {"id": 4, "name": "Racer", "wheels": 2, "garage_id": 2},
+]
 
 
 @pytest.fixture
@@ -41,26 +33,52 @@ def metadata() -> MetaData:
 
 
 @pytest.fixture
-def seed_insert_statements(raw_garages: RawRecordData, raw_vehicles: RawRecordData) -> list[Insert]:
-    return [insert(ExprGarage).values(raw_garages), insert(ExprVehicle).values(raw_vehicles)]
+def seed_insert_statements() -> list[Insert]:
+    return [insert(ExprGarage).values(_GARAGES), insert(ExprVehicle).values(_VEHICLES)]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.filter(ExprVehicle, include=["name", "wheels"])
+    class ExprVehicleFilter: ...
+
+    @strawchemy.order(ExprVehicle, include=["id", "wheels"])
+    class ExprVehicleOrderBy: ...
+
+    @strawchemy.type(ExprVehicle, include=["id", "name", "wheels"])
+    class ExprVehicleType: ...
+
+    @strawchemy.filter(ExprBike, include=["name"])
+    class ExprBikeFilter: ...
+
+    @strawchemy.order(ExprBike, include=["id", "name"])
+    class ExprBikeOrderBy: ...
+
+    @strawchemy.type(ExprBike, include=["id", "name", "garage"], override=True)
+    class ExprBikeType: ...
+
+    @strawchemy.type(ExprGarage, include=["name", "vehicles", "bikes"], override=True)
+    class ExprGarageType: ...
+
+    @strawberry.type
+    class Query:
+        vehicles: list[ExprVehicleType] = strawchemy.field(
+            filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy
+        )
+        vehicles_paginated: list[ExprVehicleType] = strawchemy.field(
+            filter_input=ExprVehicleFilter, order_by_input=ExprVehicleOrderBy, pagination=True
+        )
+        bikes: list[ExprBikeType] = strawchemy.field(filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy)
+        bikes_paginated: list[ExprBikeType] = strawchemy.field(
+            filter_input=ExprBikeFilter, order_by_input=ExprBikeOrderBy, pagination=True
+        )
+        garages: list[ExprGarageType] = strawchemy.field()
+
+    return Operations(query=Query)
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.ExprVehicleAsyncQuery
-    if dialect == "mysql":
-        return mysql_types.ExprVehicleAsyncQuery
-    return sqlite_types.ExprVehicleAsyncQuery
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.ExprVehicleSyncQuery
-    if dialect == "mysql":
-        return mysql_types.ExprVehicleSyncQuery
-    return sqlite_types.ExprVehicleSyncQuery
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.mark.parametrize(

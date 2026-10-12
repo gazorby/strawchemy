@@ -1,53 +1,161 @@
 from __future__ import annotations
 
-from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from sqlalchemy import Insert, insert, select
+from typing_extensions import override
 
-from tests.integration.fixtures import QueryTracker
-from tests.integration.typing import RawRecordData
+from strawchemy import QueryHook
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, Fruit, FruitFarm, User
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from collections.abc import Sequence
+
+    from sqlalchemy.orm.util import AliasedClass
     from syrupy.assertion import SnapshotAssertion
 
-    from strawchemy import StrawchemyConfig
+    from strawchemy import Strawchemy, StrawchemyConfig
+    from strawchemy.transpiler.hook import LoadType
+    from strawchemy.typing import SelectOf, SupportedDialect
+
+pytestmark = [pytest.mark.integration]
+
+# Alice and Charlie each appear twice so distinctOn on name drops rows; every bio is null so ordering by it ties.
+_USERS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Alice", "group_id": None, "bio": None},
+    {"id": 2, "name": "Alice", "group_id": None, "bio": None},
+    {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
+    {"id": 4, "name": "Charlie", "group_id": None, "bio": None},
+    {"id": 5, "name": "Bob", "group_id": None, "bio": None},
+]
+# Orange and Pink have no fruit.
+_COLORS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Red"},
+    {"id": 2, "name": "Yellow"},
+    {"id": 3, "name": "Orange"},
+    {"id": 4, "name": "Green"},
+    {"id": 5, "name": "Pink"},
+]
+# Fruits of a color share a sweetness (Apple/Cherry, Banana/Lemon) so distinctOn on sweetness drops rows, and water
+# percent order differs from name order.
+_FRUITS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 4, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Plum", "sweetness": 9, "water_percent": 0.8, "color_id": 1},
+    {"id": 4, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+    {"id": 5, "name": "Lemon", "sweetness": 2, "water_percent": 0.88, "color_id": 2},
+    {"id": 6, "name": "Strawberry", "sweetness": 5, "water_percent": 0.91, "color_id": 4},
+]
+# Apple holds more farms than Cherry, and Cherry more than Plum, to order fruits by farm count.
+_FRUIT_FARMS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple farm", "fruit_id": 1},
+    {"id": 2, "name": "Apple farm 2", "fruit_id": 1},
+    {"id": 3, "name": "Apple farm 3", "fruit_id": 1},
+    {"id": 4, "name": "Cherry farm", "fruit_id": 2},
+    {"id": 5, "name": "Cherry farm 2", "fruit_id": 2},
+    {"id": 6, "name": "Plum farm", "fruit_id": 3},
+    {"id": 7, "name": "Banana farm", "fruit_id": 4},
+    {"id": 8, "name": "Lemon farm", "fruit_id": 5},
+    {"id": 9, "name": "Strawberry farm", "fruit_id": 6},
+]
+_VISIBLE_COLOR_NAMES = ["Red", "Green", "Pink"]
+
+
+class _FruitOrderingHook(QueryHook[Fruit]):
+    load: Sequence[LoadType] = [Fruit.water_percent]
+
+    @override
+    def apply_hook(self, statement: SelectOf[Fruit], alias: AliasedClass[Fruit]) -> SelectOf[Fruit]:
+        return statement.order_by(alias.water_percent.asc())
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(User, include=["id", "name", "group_id", "bio"])
+    class UserType: ...
+
+    @strawchemy.order(User, include=["id", "name", "bio"])
+    class UserOrderBy: ...
+
+    @strawchemy.distinct_on(User, include=["name", "group_id"])
+    class UserDistinctOn: ...
+
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], override=True)
+    class FruitType: ...
+
+    @strawchemy.type(Fruit, include=["name"], query_hook=_FruitOrderingHook())
+    class OrderedFruitType: ...
+
+    # The order list also filters the aggregation order inputs of `fruits`: `sweetness` is the column the sum orders by.
+    @strawchemy.type(Color, include=["id", "name", "fruits"], order=["name", "sweetness", "fruits"], override=True)
+    class ColorType: ...
+
+    # `id` keeps the fruit count fields of `fruitsAggregate` from being empty.
+    @strawchemy.type(
+        Color, include=["name", "fruits"], order=["id", "fruits"], distinct_on=["fruits"], paginate=["fruits"]
+    )
+    class ColorTypeWithDistinctOn: ...
+
+    @strawchemy.order(Fruit, include=["name", "sweetness", "water_percent", "color_id", "farms"])
+    class FruitOrderBy: ...
+
+    @strawchemy.order(Color, include=["name", "fruits"])
+    class ColorOrder: ...
+
+    @strawchemy.distinct_on(Fruit, include=["name", "sweetness", "color_id"])
+    class FruitDistinctOn: ...
+
+    @strawchemy.distinct_on(Color, include=["name"])
+    class ColorDistinctOn: ...
+
+    @strawchemy.type(Color, include=["name", "fruits"])
+    class ColorWithOrderedFruits:
+        fruits: list[OrderedFruitType] = strawchemy.field(order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn)
+
+    @strawberry.type
+    class Query:
+        users: list[UserType] = strawchemy.field(order_by_input=UserOrderBy, distinct_on=UserDistinctOn)
+        users_paginated: list[UserType] = strawchemy.field(
+            order_by_input=UserOrderBy, distinct_on=UserDistinctOn, pagination=True
+        )
+        fruits_default_order_distinct: list[FruitType] = strawchemy.field(
+            default_order_by=Fruit.name.asc(), distinct_on=FruitDistinctOn, order_by_input=FruitOrderBy
+        )
+        ordered_fruits: list[OrderedFruitType] = strawchemy.field(
+            order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn
+        )
+        ordered_fruits_paginated: list[OrderedFruitType] = strawchemy.field(
+            order_by_input=FruitOrderBy, distinct_on=FruitDistinctOn, pagination=True
+        )
+        colors: list[ColorType] = strawchemy.field(order_by_input=ColorOrder, distinct_on=ColorDistinctOn)
+        colors_nested_distinct: list[ColorTypeWithDistinctOn] = strawchemy.field()
+        colors_filtered_distinct: list[ColorType] = strawchemy.field(
+            distinct_on=ColorDistinctOn,
+            order_by_input=ColorOrder,
+            pagination=True,
+            filter_statement=lambda _: select(Color).where(Color.name.in_(_VISIBLE_COLOR_NAMES)),
+        )
+        colors_with_ordered_fruits: list[ColorWithOrderedFruits] = strawchemy.field()
+
+    return Operations(query=Query)
 
 
 @pytest.fixture
-def raw_users() -> RawRecordData:
-    return [
-        {"id": 1, "name": "Alice", "group_id": None, "bio": None},
-        {"id": 2, "name": "Alice", "group_id": None, "bio": None},
-        {"id": 3, "name": "Charlie", "group_id": None, "bio": None},
-        {"id": 4, "name": "Charlie", "group_id": None, "bio": None},
-        {"id": 5, "name": "Bob", "group_id": None, "bio": None},
-    ]
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
-def raw_fruits(raw_colors: RawRecordData) -> RawRecordData:
-    red, yellow, green = raw_colors[0]["id"], raw_colors[1]["id"], raw_colors[3]["id"]
-    fruits = [
-        ("Apple", 4, 0.84, red),
-        ("Cherry", 4, 0.93, red),
-        ("Plum", 9, 0.8, red),
-        ("Banana", 2, 0.75, yellow),
-        ("Lemon", 2, 0.88, yellow),
-        ("Strawberry", 5, 0.91, green),
-    ]
+def seed_insert_statements() -> list[Insert]:
     return [
-        {
-            "id": index,
-            "created_at": datetime.now().replace(second=index, microsecond=0),  # noqa: DTZ005
-            "name": name,
-            "sweetness": sweetness,
-            "water_percent": water_percent,
-            "color_id": color_id,
-        }
-        for index, (name, sweetness, water_percent, color_id) in enumerate(fruits, start=1)
+        insert(User).values(_USERS),
+        insert(Color).values(_COLORS),
+        insert(Fruit).values(_FRUITS),
+        insert(FruitFarm).values(_FRUIT_FARMS),
     ]
 
 

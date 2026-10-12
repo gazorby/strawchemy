@@ -1,12 +1,14 @@
 from __future__ import annotations
 
 import re
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
+from sqlalchemy import Insert, insert
 
-from tests.integration.fixtures import QueryTracker
-from tests.integration.typing import RawRecordData
+from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
+from tests.integration.models import Color, Fruit, FruitFarm
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
@@ -14,19 +16,110 @@ from tests.utils import maybe_async
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
+    from strawchemy.typing import SupportedDialect
+
 pytestmark = [pytest.mark.integration]
+
+# Fruit counts per color are 2 (Red), 3 (Yellow), 2 (Orange), 1 (Green) and 2 (Pink), so count predicates keep rows on
+# both sides of every threshold. Fruit aggregates per color:
+#
+#   color   sweetness sum / avg   water percent sum / avg    min / max name
+#   Red     13 / 6.5              1.77 / 0.885               Apple / Cherry
+#   Yellow  6 / 2                 2.44 / 0.8133              Banana / Quince
+#   Orange  22 / 11               1.76 / 0.88                Orange or clementine (collation)
+#   Green   5 / 5                 0.91 / 0.91                Strawberry
+#   Pink    18 / 9                1.07 / 0.535               Pears / Watermelon
+#
+# Green sums to exactly 5, the boundary of the paginated `sum > 5` filter.
+_COLORS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Red"},
+    {"id": 2, "name": "Yellow"},
+    {"id": 3, "name": "Orange"},
+    {"id": 4, "name": "Green"},
+    {"id": 5, "name": "Pink"},
+]
+_FRUITS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple", "sweetness": 4, "water_percent": 0.84, "color_id": 1},
+    {"id": 2, "name": "Cherry", "sweetness": 9, "water_percent": 0.93, "color_id": 1},
+    {"id": 3, "name": "Banana", "sweetness": 2, "water_percent": 0.75, "color_id": 2},
+    {"id": 4, "name": "Lemon", "sweetness": 1, "water_percent": 0.88, "color_id": 2},
+    {"id": 5, "name": "Quince", "sweetness": 3, "water_percent": 0.81, "color_id": 2},
+    {"id": 6, "name": "Orange", "sweetness": 8, "water_percent": 0.86, "color_id": 3},
+    {"id": 7, "name": "clementine", "sweetness": 14, "water_percent": 0.9, "color_id": 3},
+    {"id": 8, "name": "Strawberry", "sweetness": 5, "water_percent": 0.91, "color_id": 4},
+    {"id": 9, "name": "Watermelon", "sweetness": 7, "water_percent": 0.92, "color_id": 5},
+    {"id": 10, "name": "Pears", "sweetness": 11, "water_percent": 0.15, "color_id": 5},
+]
+# Apple and Cherry hold more than one farm, the other fruits exactly one, so a farm count filter splits the fruits.
+_FRUIT_FARMS: list[dict[str, Any]] = [
+    {"id": 1, "name": "Apple farm", "fruit_id": 1},
+    {"id": 2, "name": "Apple farm 2", "fruit_id": 1},
+    {"id": 3, "name": "Apple farm 3", "fruit_id": 1},
+    {"id": 4, "name": "Cherry farm", "fruit_id": 2},
+    {"id": 5, "name": "Cherry farm 2", "fruit_id": 2},
+    {"id": 6, "name": "Banana farm", "fruit_id": 3},
+    {"id": 7, "name": "Lemon farm", "fruit_id": 4},
+    {"id": 8, "name": "Quince farm", "fruit_id": 5},
+    {"id": 9, "name": "Orange farm", "fruit_id": 6},
+    {"id": 10, "name": "clementine farm", "fruit_id": 7},
+    {"id": 11, "name": "Strawberry farm", "fruit_id": 8},
+    {"id": 12, "name": "Watermelon farm", "fruit_id": 9},
+    {"id": 13, "name": "Pears farm", "fruit_id": 10},
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(Fruit, include=["id", "color"], override=True)
+    class FruitType: ...
+
+    # The order list also filters the order inputs of `fruits`: `sweetness` is the column the sum orders by.
+    @strawchemy.type(
+        Color, include=["id", "name", "fruits"], order=["id", "name", "sweetness", "fruits"], override=True
+    )
+    class ColorType: ...
+
+    # The include list also filters the columns `fruitsAggregate` predicates take as arguments.
+    @strawchemy.filter(Fruit, include=["id", "name", "sweetness", "water_percent", "color", "farms"])
+    class FruitFilter: ...
+
+    @strawchemy.filter(Color, include=["name", "fruits"])
+    class ColorFilter: ...
+
+    @strawchemy.order(Color, include=["name", "fruits"])
+    class ColorOrder: ...
+
+    @strawberry.type
+    class Query:
+        fruits: list[FruitType] = strawchemy.field(filter_input=FruitFilter)
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter, order_by_input=ColorOrder)
+        colors_filterable_paginated: list[ColorType] = strawchemy.field(
+            filter_input=ColorFilter, order_by_input=ColorOrder, pagination=True
+        )
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
+
+
+@pytest.fixture
+def seed_insert_statements() -> list[Insert]:
+    return [insert(Color).values(_COLORS), insert(Fruit).values(_FRUITS), insert(FruitFarm).values(_FRUIT_FARMS)]
 
 
 @pytest.mark.parametrize(
     ("predicate", "value", "expected_indices"),
     [
-        pytest.param("eq", 2, [0, 2, 3, 4], id="eq-match"),
-        pytest.param("neq", 0, [0, 1, 2, 3, 4], id="neq-match"),
-        pytest.param("gt", 1, [0, 1, 2, 3, 4], id="gt-match"),
-        pytest.param("gte", 2, [0, 1, 2, 3, 4], id="gte-match"),
+        pytest.param("eq", 2, [0, 2, 4], id="eq-match"),
+        pytest.param("neq", 3, [0, 2, 3, 4], id="neq-match"),
+        pytest.param("gt", 1, [0, 1, 2, 4], id="gt-match"),
+        pytest.param("gte", 2, [0, 1, 2, 4], id="gte-match"),
         pytest.param("lt", 3, [0, 2, 3, 4], id="lt-match"),
         pytest.param("lte", 2, [0, 2, 3, 4], id="lte-match"),
-        pytest.param("in", [1, 2, 3], [0, 1, 2, 3, 4], id="in-match"),
+        pytest.param("in", [1, 3], [1, 3], id="in-match"),
         pytest.param("nin", [0, 3, 4], [0, 2, 3, 4], id="nin-match"),
     ],
 )
@@ -36,7 +129,6 @@ async def test_count_aggregation_filter(
     value: int | list[int],
     expected_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -68,7 +160,7 @@ async def test_count_aggregation_filter(
     result_container_ids = {container["id"] for container in result.data["colors"]}
 
     # Get the expected container IDs
-    expected_container_ids = {raw_colors[idx]["id"] for idx in expected_indices}
+    expected_container_ids = {_COLORS[idx]["id"] for idx in expected_indices}
 
     # Assert that the result contains exactly the expected container IDs
     assert result_container_ids == expected_container_ids
@@ -94,7 +186,6 @@ async def test_min_string_aggregation_filter(
     value: str,
     expected_color_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -125,7 +216,7 @@ async def test_min_string_aggregation_filter(
     result_color_ids = {color["id"] for color in result.data["colors"]}
 
     # Get the expected color IDs
-    expected_color_ids = {raw_colors[idx]["id"] for idx in expected_color_indices}
+    expected_color_ids = {_COLORS[idx]["id"] for idx in expected_color_indices}
 
     # Assert that the result contains exactly the expected color IDs
     assert result_color_ids == expected_color_ids
@@ -151,7 +242,6 @@ async def test_max_string_aggregation_filter(
     value: str,
     expected_color_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -182,7 +272,7 @@ async def test_max_string_aggregation_filter(
     result_color_ids = {color["id"] for color in result.data["colors"]}
 
     # Get the expected color IDs
-    expected_color_ids = {raw_colors[idx]["id"] for idx in expected_color_indices}
+    expected_color_ids = {_COLORS[idx]["id"] for idx in expected_color_indices}
 
     # Assert that the result contains exactly the expected color IDs
     assert result_color_ids == expected_color_ids
@@ -207,7 +297,6 @@ async def test_sum_aggregation_filter(
     value: float,
     expected_color_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -238,7 +327,7 @@ async def test_sum_aggregation_filter(
     result_color_ids = {color["id"] for color in result.data["colors"]}
 
     # Get the expected color IDs
-    expected_color_ids = {raw_colors[idx]["id"] for idx in expected_color_indices}
+    expected_color_ids = {_COLORS[idx]["id"] for idx in expected_color_indices}
 
     # Assert that the result contains exactly the expected color IDs
     assert result_color_ids == expected_color_ids
@@ -253,7 +342,7 @@ async def test_sum_aggregation_filter(
         pytest.param("sweetness", "eq", 6.5, [0], id="int-avg-eq-match"),
         pytest.param("sweetness", "gt", 7.0, [2, 4], id="int-avg-gt-match"),
         pytest.param("waterPercent", "eq", 0.885, [0], id="float-avg-eq-match"),
-        pytest.param("waterPercent", "gt", 0.85, [0, 2], id="float-avg-gt-match"),
+        pytest.param("waterPercent", "gt", 0.85, [0, 2, 3], id="float-avg-gt-match"),
     ],
 )
 @pytest.mark.snapshot
@@ -263,7 +352,6 @@ async def test_avg_aggregation_filter(
     value: float,
     expected_color_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -292,7 +380,7 @@ async def test_avg_aggregation_filter(
     result_color_ids = {color["id"] for color in result.data["colors"]}
 
     # Get the expected color IDs
-    expected_color_ids = {raw_colors[idx]["id"] for idx in expected_color_indices}
+    expected_color_ids = {_COLORS[idx]["id"] for idx in expected_color_indices}
 
     # Assert that the result contains exactly the expected color IDs
     assert result_color_ids == expected_color_ids
@@ -372,9 +460,9 @@ async def test_aggregation_built_once_across_filter_and_order_by(
 @pytest.mark.parametrize(
     ("distinct", "expected_count", "expected_color_indices"),
     [
-        pytest.param(True, 2, [0, 2, 3, 4], id="distinct-match"),
-        pytest.param(False, 2, [0, 2, 3, 4], id="non-distinct-match"),
-        pytest.param(None, 2, [0, 2, 3, 4], id="default-match"),
+        pytest.param(True, 2, [0, 2, 4], id="distinct-match"),
+        pytest.param(False, 2, [0, 2, 4], id="non-distinct-match"),
+        pytest.param(None, 2, [0, 2, 4], id="default-match"),
     ],
 )
 @pytest.mark.snapshot
@@ -383,7 +471,6 @@ async def test_count_aggregation_filter_with_distinct(
     expected_count: int,
     expected_color_indices: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_colors: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -415,7 +502,7 @@ async def test_count_aggregation_filter_with_distinct(
     result_color_ids = {color["id"] for color in result.data["colors"]}
 
     # Get the expected color IDs
-    expected_color_ids = {raw_colors[idx]["id"] for idx in expected_color_indices}
+    expected_color_ids = {_COLORS[idx]["id"] for idx in expected_color_indices}
 
     # Assert that the result contains exactly the expected color IDs
     assert result_color_ids == expected_color_ids
@@ -565,7 +652,7 @@ async def test_not_or_of_aggregation_and_to_many_through_to_one_relation(
     assert not result.errors
     assert result.data
 
-    assert sorted(fruit["id"] for fruit in result.data["fruits"]) == [6, 7, 8, 9, 10, 11]
+    assert sorted(fruit["id"] for fruit in result.data["fruits"]) == [6, 7, 8, 9, 10]
     assert re.search(r"\) IS NOT (TRUE|1) ", query_tracker[0].statement_str, re.IGNORECASE)
 
 

@@ -1,0 +1,43 @@
+# serializer version: 1
+# name: test_column_override[session-async-tracked-aiosqlite_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (?, ?, ?) RETURNING id
+  '''
+# ---
+# name: test_column_override[session-async-tracked-aiosqlite_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_column_override[session-async-tracked-asyncmy_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at)
+  VALUES (%s, %s, %s)
+  '''
+# ---
+# name: test_column_override[session-async-tracked-asyncmy_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---
+# name: test_column_override[session-async-tracked-psycopg_async_engine]
+  '''
+  INSERT INTO color (name, created_at, updated_at, id)
+  VALUES (%(name)s::VARCHAR, %(created_at)s::TIMESTAMP WITHOUT TIME ZONE, %(updated_at)s::TIMESTAMP WITHOUT TIME ZONE, nextval('color_id_seq')) RETURNING color.id
+  '''
+# ---
+# name: test_column_override[session-async-tracked-psycopg_async_engine].1
+  '''
+  SELECT color.name,
+         color.id
+    FROM color AS color
+   WHERE color.id IN (__[POSTCOMPILE_id_1])
+  '''
+# ---

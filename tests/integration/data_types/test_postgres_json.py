@@ -3,16 +3,18 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert, null
 
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.integration.models import PostgresJSONChildModel, PostgresJSONModel, postgres_json_metadata
-from tests.integration.types import postgres as postgres_types
 from tests.integration.utils import graphql_input
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
@@ -34,6 +36,44 @@ _CHILD_ROWS: RawRecordData = [
 ]
 
 
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.filter(PostgresJSONModel, include=["dict_col", "children"])
+    class PostgresJSONFilter: ...
+
+    @strawchemy.order(PostgresJSONModel, include=["id", "dict_col", "children"])
+    class PostgresJSONOrder: ...
+
+    @strawchemy.distinct_on(PostgresJSONModel, include=["dict_col"])
+    class PostgresJSONDistinctOn: ...
+
+    @strawchemy.type(
+        PostgresJSONModel,
+        include=["id", "dict_col", "children"],
+        order=["id", "dict_col", "children"],
+        distinct_on=["dict_col", "children"],
+        paginate=["children"],
+    )
+    class PostgresJSONType: ...
+
+    @strawberry.type
+    class Query:
+        json: list[PostgresJSONType] = strawchemy.field(
+            filter_input=PostgresJSONFilter, order_by_input=PostgresJSONOrder, distinct_on=PostgresJSONDistinctOn
+        )
+        json_paginated: list[PostgresJSONType] = strawchemy.field(
+            order_by_input=PostgresJSONOrder, distinct_on=PostgresJSONDistinctOn, pagination=True
+        )
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    if dialect != "postgresql":
+        pytest.skip(f"PostgreSQL json tests can't be run on this dialect: {dialect}")
+    return SchemaTypes.build(dialect, _schema)
+
+
 @pytest.fixture
 def metadata() -> MetaData:
     return postgres_json_metadata
@@ -42,20 +82,6 @@ def metadata() -> MetaData:
 @pytest.fixture
 def seed_insert_statements() -> list[Insert]:
     return [insert(PostgresJSONModel).values(_ROWS), insert(PostgresJSONChildModel).values(_CHILD_ROWS)]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.PostgresJSONAsyncQuery
-    pytest.skip(f"PostgreSQL json tests can't be run on this dialect: {dialect}")
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.PostgresJSONSyncQuery
-    pytest.skip(f"PostgreSQL json tests can't be run on this dialect: {dialect}")
 
 
 @pytest.mark.parametrize(

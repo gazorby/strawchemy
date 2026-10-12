@@ -1,17 +1,17 @@
 from __future__ import annotations
 
-from functools import cache
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 import pytest
 import strawberry
 from sqlalchemy import ForeignKey, Insert, MetaData, String, Text, insert, select
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
-from strawchemy import Strawchemy, StrawchemyAsyncRepository, StrawchemySyncRepository
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from strawchemy import Strawchemy
     from strawchemy.repository.typing import AnySession
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
@@ -41,42 +41,28 @@ class BasketItem(_Base):
     basket: Mapped[Basket] = relationship(Basket)
 
 
-@cache
-def _schema_types(dialect: SupportedDialect) -> dict[str, type[Any]]:
-    strawchemy = Strawchemy(dialect)
-
-    @strawchemy.type(BasketItem, include="all")
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.type(BasketItem, include=["basket_id", "label", "name"])
     class BasketItemType: ...
 
+    # include="all" is the subject of test_update_by_ids_input_leaves_out_relation_writing_key.
     @strawchemy.pk_update_input(BasketItem, include="all")
     class BasketItemUpdate: ...
 
     @strawberry.type
-    class AsyncQuery:
-        basket_items: list[BasketItemType] = strawchemy.field(repository_type=StrawchemyAsyncRepository)
+    class Query:
+        basket_items: list[BasketItemType] = strawchemy.field()
 
     @strawberry.type
-    class SyncQuery:
-        basket_items: list[BasketItemType] = strawchemy.field(repository_type=StrawchemySyncRepository)
+    class Mutation:
+        update_basket_item: BasketItemType = strawchemy.update_by_ids(BasketItemUpdate)
 
-    @strawberry.type
-    class AsyncMutation:
-        update_basket_item: BasketItemType = strawchemy.update_by_ids(
-            BasketItemUpdate, repository_type=StrawchemyAsyncRepository
-        )
+    return Operations(query=Query, mutation=Mutation)
 
-    @strawberry.type
-    class SyncMutation:
-        update_basket_item: BasketItemType = strawchemy.update_by_ids(
-            BasketItemUpdate, repository_type=StrawchemySyncRepository
-        )
 
-    return {
-        "async_query": AsyncQuery,
-        "sync_query": SyncQuery,
-        "async_mutation": AsyncMutation,
-        "sync_mutation": SyncMutation,
-    }
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -95,26 +81,6 @@ def seed_insert_statements() -> list[Insert]:
             ]
         ),
     ]
-
-
-@pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["async_query"]
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["sync_query"]
-
-
-@pytest.fixture
-def async_mutation(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["async_mutation"]
-
-
-@pytest.fixture
-def sync_mutation(dialect: SupportedDialect) -> type[Any]:
-    return _schema_types(dialect)["sync_mutation"]
 
 
 async def test_update_by_ids_matches_every_key_column(

@@ -3,23 +3,49 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 import pytest
+import strawberry
 from sqlalchemy import Insert, MetaData, insert
 
+from tests.integration.fixtures import Operations, SchemaTypes
 from tests.integration.models import JSONModel, json_metadata
-from tests.integration.types import mysql as mysql_types
-from tests.integration.types import postgres as postgres_types
-from tests.integration.types import sqlite as sqlite_types
 from tests.integration.utils import graphql_input
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
     from syrupy.assertion import SnapshotAssertion
 
+    from strawchemy import Strawchemy
     from strawchemy.config.databases import DatabaseFeatures
     from strawchemy.typing import SupportedDialect
     from tests.integration.fixtures import QueryTracker
     from tests.integration.typing import RawRecordData
     from tests.typing import AnyQueryExecutor
+
+
+_JSON: RawRecordData = [
+    {"id": 1, "dict_col": {"key1": "value1", "key2": 2, "nested": {"inner": "value"}, "key3": 3, "key4": None}},
+    {"id": 2, "dict_col": {"status": "pending", "count": 0, "key3": 3, "key4": None}},
+    {"id": 3, "dict_col": {"key3": 3, "key4": None}},
+]
+
+
+def _schema(strawchemy: Strawchemy) -> Operations:
+    @strawchemy.filter(JSONModel, include=["dict_col"])
+    class JSONFilter: ...
+
+    @strawchemy.type(JSONModel, include=["id", "dict_col"])
+    class JSONType: ...
+
+    @strawberry.type
+    class Query:
+        json: list[JSONType] = strawchemy.field(filter_input=JSONFilter)
+
+    return Operations(query=Query)
+
+
+@pytest.fixture
+def schema(dialect: SupportedDialect) -> SchemaTypes:
+    return SchemaTypes.build(dialect, _schema)
 
 
 @pytest.fixture
@@ -28,30 +54,13 @@ def metadata() -> MetaData:
 
 
 @pytest.fixture
-def seed_insert_statements(raw_json: RawRecordData) -> list[Insert]:
-    return [insert(JSONModel).values(raw_json)]
+def seed_rows() -> RawRecordData:
+    return _JSON
 
 
 @pytest.fixture
-def async_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.JSONAsyncQuery
-    if dialect == "mysql":
-        return mysql_types.JSONAsyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.JSONAsyncQuery
-    pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
-
-
-@pytest.fixture
-def sync_query(dialect: SupportedDialect) -> type[Any]:
-    if dialect == "postgresql":
-        return postgres_types.JSONSyncQuery
-    if dialect == "mysql":
-        return mysql_types.JSONSyncQuery
-    if dialect == "sqlite":
-        return sqlite_types.JSONSyncQuery
-    pytest.skip(f"JSON tests can't be run on this dialect: {dialect}")
+def seed_insert_statements(seed_rows: RawRecordData) -> list[Insert]:
+    return [insert(JSONModel).values(seed_rows)]
 
 
 # Tests for JSON-specific filters
@@ -79,7 +88,6 @@ async def test_json_filters(
     value: Any,
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
     db_features: DatabaseFeatures,
@@ -101,7 +109,7 @@ async def test_json_filters(
     assert len(result.data["json"]) == len(expected_ids)
 
     for i, expected_id in enumerate(expected_ids):
-        assert result.data["json"][i]["id"] == raw_json[expected_id]["id"]
+        assert result.data["json"][i]["id"] == _JSON[expected_id]["id"]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -122,7 +130,6 @@ async def test_json_not_filters(
     value: Any,
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -136,7 +143,7 @@ async def test_json_not_filters(
     result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
-    assert [row["id"] for row in result.data["json"]] == [raw_json[i]["id"] for i in expected_ids]
+    assert [row["id"] for row in result.data["json"]] == [_JSON[i]["id"] for i in expected_ids]
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
@@ -163,7 +170,7 @@ _KEY_ROWS: RawRecordData = [
 _KEY_ROW_IDS = [row["id"] for row in _KEY_ROWS]
 
 
-@pytest.mark.parametrize("raw_json", [pytest.param(_KEY_ROWS, id="keys")])
+@pytest.mark.parametrize("seed_rows", [pytest.param(_KEY_ROWS, id="keys")])
 @pytest.mark.parametrize(
     ("filter_name", "value", "expected_ids"),
     [
@@ -191,7 +198,7 @@ async def test_json_has_key_literal(
     value: str | list[str],
     expected_ids: list[int],
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,  # noqa: ARG001
+    seed_rows: RawRecordData,  # noqa: ARG001
 ) -> None:
     """Test that ``hasKey*`` match literal top-level object keys, and that ``_not`` matches every other row."""
     variable_type = "String!" if isinstance(value, str) else "[String!]!"
@@ -206,7 +213,7 @@ async def test_json_has_key_literal(
         assert sorted(row["id"] for row in result.data["json"]) == ids
 
 
-@pytest.mark.parametrize("raw_json", [pytest.param(_KEY_ROWS, id="keys")])
+@pytest.mark.parametrize("seed_rows", [pytest.param(_KEY_ROWS, id="keys")])
 @pytest.mark.parametrize(
     "comparison",
     [
@@ -222,7 +229,7 @@ async def test_json_null_comparison_ignored(
     comparison: str,
     negated: bool,
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,  # noqa: ARG001
+    seed_rows: RawRecordData,  # noqa: ARG001
     db_features: DatabaseFeatures,
 ) -> None:
     """Test that a null JSON comparison is ignored, directly and under ``_not``."""
@@ -240,7 +247,6 @@ async def test_json_null_comparison_ignored(
 @pytest.mark.snapshot
 async def test_json_output(
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -257,7 +263,7 @@ async def test_json_output(
     assert result.data
 
     for interval in result.data["json"]:
-        expected_interval = next(f for f in raw_json if f["id"] == interval["id"])
+        expected_interval = next(f for f in _JSON if f["id"] == interval["id"])
         assert interval["dictCol"] == expected_interval["dict_col"]
 
     assert query_tracker.query_count == 1
@@ -277,7 +283,6 @@ async def test_json_output(
 async def test_json_extract_path(
     path: str,
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -294,7 +299,7 @@ async def test_json_extract_path(
     assert result.data
 
     for json in result.data["json"]:
-        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])
+        expected_dict_col = next(f for f in _JSON if f["id"] == json["id"])
         assert json["dictCol"] == expected_dict_col["dict_col"].get(path.strip("$."), {})
 
     assert query_tracker.query_count == 1
@@ -304,7 +309,6 @@ async def test_json_extract_path(
 @pytest.mark.snapshot
 async def test_json_extract_inner_path(
     any_async_query: AnyQueryExecutor,
-    raw_json: RawRecordData,
     query_tracker: QueryTracker,
     sql_snapshot: SnapshotAssertion,
 ) -> None:
@@ -321,16 +325,14 @@ async def test_json_extract_inner_path(
     assert result.data
 
     for json in result.data["json"]:
-        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])
+        expected_dict_col = next(f for f in _JSON if f["id"] == json["id"])
         assert json["dictCol"] == expected_dict_col["dict_col"].get("nested", {}).get("inner", {})
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
 
 
-async def test_json_extract_aliased_paths(
-    any_async_query: AnyQueryExecutor, raw_json: RawRecordData, query_tracker: QueryTracker
-) -> None:
+async def test_json_extract_aliased_paths(any_async_query: AnyQueryExecutor, query_tracker: QueryTracker) -> None:
     """Test that aliases of a JSON column extracting different paths each get their own path."""
     query = """
         {
@@ -346,7 +348,7 @@ async def test_json_extract_aliased_paths(
     assert result.data
 
     for json in result.data["json"]:
-        expected_dict_col = next(f for f in raw_json if f["id"] == json["id"])["dict_col"]
+        expected_dict_col = next(f for f in _JSON if f["id"] == json["id"])["dict_col"]
         assert json["key1"] == expected_dict_col.get("key1", {})
         assert json["nested"] == expected_dict_col.get("nested", {})
 
