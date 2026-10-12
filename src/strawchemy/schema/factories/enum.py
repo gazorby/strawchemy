@@ -151,13 +151,17 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
+        *,
+        name: str | None = None,
         **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(model, purpose, **kwargs)
+        return super().decorator(model, purpose, name=name, **kwargs)
 
     def input(
         self,
         model: type[DeclarativeBase],
+        *,
+        name: str | None = None,
         **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         """Decorate a class into an enum of the write fields of ``model``.
@@ -166,7 +170,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
             ReadOnlyModelError: If ``model`` maps a join or a selectable.
         """
         self.inspector.check_writable(model)
-        return super().decorator(model, Purpose.WRITE, **kwargs)
+        return self.decorator(model, Purpose.WRITE, name=name, **kwargs)
 
     def upsert_conflict_fields(
         self,

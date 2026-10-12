@@ -174,6 +174,16 @@ def test_class_body_literal_defaults_preserved_aggregate(
     assert fields["name"].default == default_value, FruitTestType.__name__
 
 
+@pytest.mark.parametrize("decorator", ["distinct_on", "upsert_update_fields", "upsert_conflict_fields"])
+def test_enum_decorator_name(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that `name=` on an enum decorator sets the GraphQL enum name."""
+
+    @getattr(strawchemy, decorator)(Fruit, include="all", name="CustomFruitEnum")
+    class FruitEnum: ...
+
+    assert FruitEnum.__strawberry_definition__.name == "CustomFruitEnum"
+
+
 def test_field_metadata_default(strawchemy: Strawchemy) -> None:
     """Test metadata default.
 
