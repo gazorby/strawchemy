@@ -115,9 +115,11 @@ class InsertData:
     def upsert_set(
         self, dialect: SupportedDialect, columns: ReadOnlyColumnCollection[str, KeyedColumnElement[Any]]
     ) -> Mapping[Column[Any], KeyedColumnElement[Any] | Function[Any]]:
-        update_fields_set = {
-            dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields
-        } or {name for value_dict in self.values for name in value_dict}
+        given = {name for value_dict in self.values for name in value_dict}
+        update_fields_set = (
+            {dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields}
+            or given
+        ) & given
         update_fields = {self._columns[name]: value for name, value in columns.items() if name in update_fields_set}
         if (
             dialect == "mysql"
@@ -130,7 +132,8 @@ class InsertData:
             is not None
         ):
             update_fields = {auto_increment_pk_column: func.last_insert_id(auto_increment_pk_column)} | update_fields
-        return update_fields
+        # Assigning the keys to themselves still updates the conflicting row, so that it is returned like the others.
+        return update_fields or {pk: pk for pk in self.pks}
 
 
 @dataclass(frozen=True)
