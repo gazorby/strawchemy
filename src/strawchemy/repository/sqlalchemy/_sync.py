@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
+from dataclasses import replace
 from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
@@ -35,17 +36,20 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         if self._dialect.insert_executemany_returning_sort_by_parameter_order and not (
             self._dialect.name == "postgresql" and data.is_upsert
         ):
-            results = self.session.execute(
-                self._insert_statement(data).returning(*data.pks, sort_by_parameter_order=True),
-                data.values,
-            )
-            returned = results.all()
-            self._check_all_written(data, returned)
-            return returned
+            by_position: dict[int, Row[Any]] = {}
+            for positions, group in data.column_groups():
+                results = self.session.execute(
+                    self._insert_statement(group).returning(*data.pks, sort_by_parameter_order=True),
+                    group.values,
+                )
+                returned = results.all()
+                self._check_all_written(group, returned)
+                by_position.update(zip(positions, returned, strict=True))
+            return [by_position[position] for position in range(len(data.values))]
         rows: list[Row[Any]] = []
         conn = self.session.connection()
         for value in data.values:
-            statement = self._insert_statement(data).values(**value)
+            statement = self._insert_statement(replace(data, values=[value])).values(**value)
             if data.conflict_where and self._dialect.insert_returning:
                 row = cast("Row[Any] | None", (conn.execute(statement.returning(*data.pks))).first())
             else:

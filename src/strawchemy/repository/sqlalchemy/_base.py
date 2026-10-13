@@ -75,6 +75,19 @@ class InsertData:
     def conflict_update_where(self) -> ColumnElement[bool] | None:
         return and_(*self.conflict_where) if self.conflict_where else None
 
+    def column_groups(self) -> list[tuple[list[int], InsertData]]:
+        """Splits the values of an upsert by the columns they give, each group with the positions of its values."""
+        if not self.is_upsert:
+            return [(list(range(len(self.values))), self)]
+        # A conflict updates the columns its values give: values giving other columns need their own statement.
+        positions: dict[frozenset[str], list[int]] = {}
+        for position, value in enumerate(self.values):
+            positions.setdefault(frozenset(value), []).append(position)
+        return [
+            (group, dataclasses.replace(self, values=[self.values[position] for position in group]))
+            for group in positions.values()
+        ]
+
     @property
     def pks(self) -> tuple[Column[Any], ...]:
         return inspect(self.model_type, raiseerr=True).primary_key
