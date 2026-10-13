@@ -735,6 +735,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             return None
         return self._identities.stand_in(scope_key)
 
+    def _declare_scope(self, dto: type[DTOBaseT], scope_key: Hashable, dto_config: DTOConfig) -> type[DTOBaseT]:
+        """Hold the declared ``dto`` as the stand-in of its schema scope, if its config declares one."""
+        if dto_config.scope == "global":
+            self._identities.declare_scope(scope_key, dto)
+        return dto
+
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
@@ -825,7 +831,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if cached is not None and (dto := self._cached_for_path(cached, cache_key, node, name)) is not None:
             if base is None:
                 return dto
-            return self._build_from_cached(dto, name, base, dto_config, tags=tags, backend_kwargs=backend_kwargs)
+            dto = self._build_from_cached(dto, name, base, dto_config, tags=tags, backend_kwargs=backend_kwargs)
+            return self._declare_scope(dto, scope_key, dto_config)
         name = self._name_for_build(node, name, rebuilt=cached is not None)
 
         dto = self._factory(
@@ -863,8 +870,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         self._cache_built(dto, cache_key, node, rebuilt=cached is not None)
 
-        if declared and dto_config.scope == "global":
-            self._identities.declare_scope(scope_key, dto)
+        if declared:
+            self._declare_scope(dto, scope_key, dto_config)
 
         return dto
 
