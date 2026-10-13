@@ -428,7 +428,7 @@ class DTOConfig:
         if scope == "local":
             return field in FieldSet(self.include) and field not in FieldSet(self.exclude)
         if scope == "global":
-            included = field in FieldSet(self.global_include) or FieldGroup.ALL in self.included_fields.field_set
+            included = self.global_include is None or field in FieldSet(self.global_include)
             return included and field not in FieldSet(self.global_exclude)
         return field in self.included_fields and field not in self.excluded_fields
 

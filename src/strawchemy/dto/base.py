@@ -34,6 +34,7 @@ from strawchemy.dto.types import (
     DTOSkip,
     DTOUnset,
     FieldGroup,
+    FieldSet,
     FieldSpec,
     Purpose,
     PurposeConfig,
@@ -500,10 +501,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         )
 
     def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
+        # Under an unrestricted global include, a root "include all" config has the shape of the
+        # nested defaults: dropping ALL shares their cache entry, letting relations reuse user-defined types.
+        global_all = (
+            dto_config.global_include is None or FieldGroup.ALL in FieldSet(dto_config.global_include).field_set
+        )
         root_key = [
-            # ALL is dropped so a root "include all" config shares its cache entry with
-            # nested defaults, letting relations reuse user-defined types.
-            frozenset(dto_config.included_fields) - {FieldGroup.ALL},
+            frozenset(dto_config.included_fields) - ({FieldGroup.ALL} if global_all else set()),
             frozenset(dto_config.excluded_fields),
             frozenset(dto_config.aliases.items()),
             frozenset(dto_config.annotation_overrides.items()),
