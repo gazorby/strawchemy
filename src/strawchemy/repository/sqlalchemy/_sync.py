@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
@@ -39,13 +39,20 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
                 self._insert_statement(data).returning(*data.pks, sort_by_parameter_order=True),
                 data.values,
             )
-            return results.all()
-        rows: Sequence[Row[Any]] = []
+            returned = results.all()
+            self._check_all_written(data, returned)
+            return returned
+        rows: list[Row[Any]] = []
         conn = self.session.connection()
         for value in data.values:
-            cursor = conn.execute(self._insert_statement(data).values(**value))
-            assert cursor.inserted_primary_key is not None
-            rows.append(cursor.inserted_primary_key)
+            statement = self._insert_statement(data).values(**value)
+            if data.conflict_where and self._dialect.insert_returning:
+                row = cast("Row[Any] | None", (conn.execute(statement.returning(*data.pks))).first())
+            else:
+                row = (conn.execute(statement)).inserted_primary_key
+            if row is not None:
+                rows.append(row)
+        self._check_all_written(data, rows)
         return rows
 
     def _insert_nested(self, data: InsertData, level: LevelInput) -> None:
@@ -241,21 +248,22 @@ class SQLAlchemyGraphQLSyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT, 
         if data.mode == "insert":
             return self._insert_many(InsertData(self.model, values))
 
+        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         if data.mode == "upsert":
-            return self._insert_many(
-                InsertData(
-                    self.model,
-                    values,
-                    UpsertData(
-                        update_fields=data.upsert_update_fields or [], conflict_constraint=data.upsert_conflict_fields
-                    ),
-                )
+            upsert_data = UpsertData(
+                update_fields=data.upsert_update_fields or [], conflict_constraint=data.upsert_conflict_fields
             )
+            where = transpiler.filter_expressions(None)
+            insert_data = InsertData(self.model, values, upsert_data, conflict_where=where)
+            if where and (conflicting := self._conflicting_keys_statement(insert_data)) is not None:
+                keys = {tuple(row) for row in (self.session.execute(conflicting)).all()}
+                in_scope = (self.session.execute(conflicting.where(*where))).all()
+                self._check_keys_in_scope(keys, in_scope)
+            return self._insert_many(insert_data)
 
         pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
         AsRow = namedtuple("AsRow", pks)  # noqa: PYI024
 
-        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         if data.mode == "update_by_pks":
             if self.statement is None:
                 self.session.execute(update(self.model), values)

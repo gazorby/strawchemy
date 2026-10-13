@@ -40,6 +40,8 @@ InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "
 RowLike: TypeAlias = "Row[Any] | NamedTuple"
 _ModelOrTable: TypeAlias = "type[DeclarativeBase] | Table"
 
+_OUT_OF_SCOPE = "Some rows to write do not exist or are not selected by the filter statement"
+
 
 @dataclass
 class QueryParams:
@@ -66,6 +68,12 @@ class InsertData:
     model_type: type[DeclarativeBase] | Table
     values: list[dict[str, Any]]
     upsert_data: UpsertData | None = None
+    conflict_where: Sequence[ColumnElement[bool]] = ()
+    """Bounds the rows a conflict may update, on databases whose upsert takes a WHERE."""
+
+    @property
+    def conflict_update_where(self) -> ColumnElement[bool] | None:
+        return and_(*self.conflict_where) if self.conflict_where else None
 
     @property
     def pks(self) -> tuple[Column[Any], ...]:
@@ -208,12 +216,14 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             statement = statement.on_conflict_do_update(
                 set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
+                where=data.conflict_update_where,
             )
         elif dialect_name == "sqlite":
             statement = sqlite.insert(data.model_type)
             statement = statement.on_conflict_do_update(
                 set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
+                where=data.conflict_update_where,
             )
         elif dialect_name == "mysql":
             statement = mysql.insert(data.model_type)
@@ -257,6 +267,30 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         matched = or_(*[and_(*[pk == value for pk, value in zip(pks, key, strict=True)]) for key in keys])
         return select(*pks).where(*where, matched)
 
+    def _conflicting_keys_statement(self, data: InsertData) -> Select[Any] | None:
+        """Selects and locks the primary keys of the rows ``data`` conflicts with, or None if no value can conflict."""
+        mapper = self.model.__mapper__
+        attribute_keys = {column: key for key, column in mapper.columns.items()}
+        columns = [(column, attribute_keys[column]) for column in data.conflict_target_columns()]
+        matches = [
+            and_(*[column == value[key] for column, key in columns])
+            for value in data.values
+            if all(value.get(key) is not None for _, key in columns)
+        ]
+        if not matches:
+            return None
+        pks = [getattr(self.model, column.key) for column in mapper.primary_key if column.key]
+        return select(*pks).where(or_(*matches)).with_for_update()
+
+    def _check_all_written(self, data: InsertData, rows: Sequence[Row[Any]]) -> None:
+        """Checks that a row was written for each value of ``data``.
+
+        Raises:
+            MutationScopeError: If the conflict update skipped a row the repository statement does not select.
+        """
+        if len(rows) < len(data.values):
+            raise MutationScopeError(_OUT_OF_SCOPE)
+
     def _check_keys_in_scope(self, keys: set[tuple[Any, ...]], rows: Sequence[Row[Any]]) -> None:
         """Checks that every primary key of ``keys`` is among ``rows``.
 
@@ -264,8 +298,7 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             MutationScopeError: If a key is missing, whether its row does not exist or the statement excludes it.
         """
         if keys - {tuple(row) for row in rows}:
-            msg = "Some rows to update do not exist or are not selected by the filter statement"
-            raise MutationScopeError(msg)
+            raise MutationScopeError(_OUT_OF_SCOPE)
 
     def _rows_to_filter_dict(self, rows: Sequence[Row[Any]]) -> dict[str, list[Any]]:
         filter_dict = defaultdict(list)
