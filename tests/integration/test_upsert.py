@@ -405,6 +405,97 @@ async def test_upsert_many_new_and_existing(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
+@pytest.mark.parametrize(
+    ("data", "conflict_fields", "names_after", "kept_ids"),
+    [
+        pytest.param(
+            '[{ name: "Grape", sweetness: 7, waterPercent: 0.85 }, { id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }]',
+            "id",
+            ["Apple", "Grape", "X"],
+            {"Apple": 1, "X": 2},
+            id="id-conflict-new-first",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }, { name: "Grape", sweetness: 7, waterPercent: 0.85 }]',
+            "id",
+            ["Apple", "Grape", "X"],
+            {"Apple": 1, "X": 2},
+            id="id-conflict-existing-first",
+        ),
+        pytest.param(
+            '[{ id: 3, name: "Grape", sweetness: 7, waterPercent: 0.85 }, '
+            '{ name: "Cherry", sweetness: 1, waterPercent: 0.5 }]',
+            "name",
+            ["Apple", "Cherry", "Grape"],
+            {"Apple": 1, "Cherry": 2, "Grape": 3},
+            id="name-conflict-without-id",
+        ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 2, waterPercent: 0.6 }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }]',
+            "id",
+            ["Green apple", "X"],
+            {"Green apple": 1, "X": 2},
+            id="all-ids",
+        ),
+    ],
+)
+async def test_upsert_many_with_and_without_primary_key(
+    data: str, conflict_fields: str, names_after: list[str], kept_ids: dict[str, int], any_query: AnyQueryExecutor
+) -> None:
+    """An upsert batch mixing rows with and without a primary key writes and returns every row, keeping existing ids."""
+    result = await maybe_async(
+        any_query(f"mutation {{ upsertFruits(data: {data}, conflictFields: {conflict_fields}) {{ id name }} }}")
+    )
+    assert not result.errors
+    assert result.data
+    returned = {fruit["name"]: fruit["id"] for fruit in result.data["upsertFruits"]}
+
+    result = await maybe_async(any_query("{ fruits { id name } }"))
+    assert not result.errors
+    assert result.data
+    stored = {fruit["name"]: fruit["id"] for fruit in result.data["fruits"]}
+    assert sorted(stored) == names_after
+    assert {name: stored[name] for name in kept_ids} == kept_ids
+    assert returned == {name: stored[name] for name in returned}
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(
+            '[{ id: 1, name: "Apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            id="extra-column-first",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }, '
+            '{ id: 1, name: "Apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }]',
+            id="extra-column-last",
+        ),
+    ],
+)
+async def test_upsert_many_with_heterogeneous_columns(data: str, any_query: AnyQueryExecutor) -> None:
+    """An upsert batch whose rows give different columns updates each row with the columns it gives, and no other."""
+    result = await maybe_async(
+        any_query(f"mutation {{ upsertFruits(data: {data}, conflictFields: id) {{ id name color {{ name }} }} }}")
+    )
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["upsertFruits"], key=lambda fruit: fruit["id"]) == [
+        {"id": 1, "name": "Apple", "color": {"name": "Green"}},
+        {"id": 2, "name": "X", "color": {"name": "Red"}},
+    ]
+
+    result = await maybe_async(any_query("{ fruits { id name color { name } } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["id"]) == [
+        {"id": 1, "name": "Apple", "color": {"name": "Green"}},
+        {"id": 2, "name": "X", "color": {"name": "Red"}},
+    ]
+
+
 # To-One Upsert Tests
 
 
