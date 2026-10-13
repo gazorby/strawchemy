@@ -124,7 +124,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         return f"{base_name}Fields"
 
     @override
-    def _scope_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
         return (type(self), model)
 
     @override

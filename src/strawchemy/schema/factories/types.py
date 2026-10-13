@@ -346,7 +346,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 current_node=kwargs.get("current_node"),
                 declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
-                scope_key=self._scope_key(model, dto_config),
+                scope_key=self._scope_key(model, dto_config, **kwargs),
             )
         return dto
 
@@ -735,6 +735,12 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             node.root.value.model,
             mode,
         )
+
+    @override
+    def _scope_key(
+        self, model: type[Any], dto_config: DTOConfig, *, mode: GraphQLPurpose | None = None, **_: Any
+    ) -> Hashable:
+        return (super()._scope_key(model, dto_config), mode)
 
     @override
     def type_description(self) -> str:

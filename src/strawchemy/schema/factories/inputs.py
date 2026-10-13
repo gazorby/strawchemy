@@ -89,7 +89,7 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
         )
 
     @override
-    def _scope_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
         return (type(self), model)
 
     @staticmethod

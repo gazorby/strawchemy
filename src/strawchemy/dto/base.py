@@ -447,7 +447,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         type_hint = self.type_map.get(field.type_hint, field.type_)
         relation_model = self.inspector.relation_model(field.model_field)
         dto_name = self._scoped_dto_names.get(
-            self._scope_key(relation_model, dto_config), self.dto_name(relation_model.__name__, dto_config, node)
+            self._scope_key(relation_model, dto_config, **factory_kwargs),
+            self.dto_name(relation_model.__name__, dto_config, node),
         )
         relation_child = Relation(relation_model, name=dto_name)
         parent = node.find_parent(lambda parent: parent.value == relation_child)
@@ -525,7 +526,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         ]
         return frozenset(key for key in root_key if key)
 
-    def _scope_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
         """Identify the schema-scoped declaration standing in for the types this factory generates for `model`."""
         return (type(self), model, self._base_cache_key(dto_config))
 
@@ -774,7 +775,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         node = self._node_or_root(model, name, current_node)
 
         declared = node.is_root and base is not None
-        scope_key = self._scope_key(model, dto_config)
+        scope_key = self._scope_key(model, dto_config, **kwargs)
         cache_key = self._cache_key(model, dto_config, node, declared=declared, **kwargs)
 
         if node.is_root:
