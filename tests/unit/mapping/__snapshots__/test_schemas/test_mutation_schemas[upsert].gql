@@ -46,9 +46,9 @@ input FruitColorIdFieldsInputFruitColorInputFruitColorUpdateFieldsFruitColorConf
   updateFields: [FruitColorUpdateFields!]
 }
 
-"""Filter update input"""
+"""Create input"""
 input FruitColorInput {
-  name: String
+  name: String!
   id: UUID
 }
 

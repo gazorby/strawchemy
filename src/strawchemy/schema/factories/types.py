@@ -797,7 +797,11 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
     ) -> Any:
         if not field.is_relation:
             return super()._resolve_basic_type(field, dto_config)
-        self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
+        # The related input is the payload of `create`, so it takes the create shape under every root mode.
+        create_config = (
+            dto_config if mode == "create_input" else dto_config.copy_with(partial=None, exclude_defaults=False)
+        )
+        self._resolve_relation_type(field, create_config, node, mode="create_input", **factory_kwargs)
         identifier_input = self._identifier_input(field, node)
         field_required = self.inspector.required(field.model_field)
         upsert_update_fields = self._upsert_udpate_fields(field, node, dto_config)

@@ -18,6 +18,7 @@ from graphql import (
     GraphQLInputObjectType,
     GraphQLNamedType,
     GraphQLObjectType,
+    GraphQLSchema,
     build_schema,
     get_named_type,
 )
@@ -2377,3 +2378,59 @@ def test_query_on_join_mapped_model_accepted(strawchemy: Strawchemy) -> None:
         joined: list[JoinedABType] = strawchemy.field(filter_input=JoinedABFilter, order_by_input=JoinedABOrder)
 
     assert "joined(" in str(strawberry.Schema(query=Query))
+
+
+def _field_named_type(graphql_schema: GraphQLSchema, type_name: str, *path: str) -> GraphQLNamedType:
+    named = graphql_schema.get_type(type_name)
+    for field_name in path:
+        assert isinstance(named, (GraphQLObjectType, GraphQLInputObjectType))
+        named = get_named_type(named.fields[field_name].type)
+    assert named is not None
+    return named
+
+
+@pytest.mark.parametrize(
+    "roots",
+    [
+        pytest.param(("create_input",), id="create"),
+        pytest.param(("pk_update_input",), id="pk-update"),
+        pytest.param(("filter_update_input",), id="filter-update"),
+        pytest.param(("create_input", "pk_update_input"), id="create-then-pk-update"),
+        pytest.param(("pk_update_input", "create_input"), id="pk-update-then-create"),
+        pytest.param(("filter_update_input", "create_input"), id="filter-update-then-create"),
+    ],
+)
+def test_nested_create_payload_has_create_shape(roots: tuple[str, ...]) -> None:
+    """Test that the nested `create` payload of every root input has the create shape, whatever roots exist (#494)."""
+    strawchemy = Strawchemy("postgresql")
+    declared = {
+        decorator: getattr(strawchemy, decorator)(Color, include="all")(
+            type("Color" + "".join(part.title() for part in decorator.split("_")), (), {})
+        )
+        for decorator in roots
+    }
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    fields: dict[str, Any] = {}
+    annotations: dict[str, Any] = {}
+    for decorator, input_type in declared.items():
+        if decorator == "create_input":
+            fields["create_color"], annotations["create_color"] = strawchemy.create(input_type), ColorType
+        elif decorator == "pk_update_input":
+            fields["update_color"], annotations["update_color"] = strawchemy.update_by_ids(input_type), ColorType
+        else:
+            fields["update_colors"] = strawchemy.update(input_type, ColorFilter)
+            annotations["update_colors"] = list[ColorType]
+    mutation = strawberry.type(type("Mutation", (), {"__annotations__": annotations, **fields}))
+    graphql_schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=mutation)))
+
+    for input_type in declared.values():
+        payload = _field_named_type(graphql_schema, input_type.__name__, "fruits", "create")
+        assert isinstance(payload, GraphQLInputObjectType)
+        assert str(payload.fields["name"].type) == "String!", input_type.__name__
+        assert str(payload.fields["id"].type) == "UUID", input_type.__name__
