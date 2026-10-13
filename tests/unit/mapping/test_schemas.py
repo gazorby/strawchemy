@@ -1808,6 +1808,34 @@ def test_schema_scope_keeps_explicit_root_argument(decorator: str, argument: str
     assert _root_argument_type_name(strawchemy, fruit_type, {} if on_type else explicit, argument) == "FruitExplicit"
 
 
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize("forward_ref", [False, True])
+def test_schema_scope_keeps_explicit_declared_type(declared_first: bool, forward_ref: bool) -> None:
+    """Test that a field annotated with a declaration keeps it over a schema-scoped declaration, in either order."""
+    strawchemy = Strawchemy("postgresql")
+
+    def declare_scoped() -> None:
+        strawchemy.type(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    if declared_first:
+        declare_scoped()
+    explicit = strawchemy.type(Fruit, include=["id"])(type("FruitType", (), {}))
+    if not declared_first:
+        declare_scoped()
+    annotation = "list[FruitType]" if forward_ref else list[explicit]  # ty: ignore[invalid-type-form]
+    color_type = strawchemy.type(Color, include="all")(
+        type("ColorType", (), {"__annotations__": {"fruits": annotation}})
+    )
+    query = strawberry.type(
+        type("Query", (), {"__annotations__": {"colors": list[color_type]}, "colors": strawchemy.field()})  # ty: ignore[invalid-type-form]
+    )
+
+    schema = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)))
+    color = schema.get_type("ColorType")
+    assert isinstance(color, GraphQLObjectType)
+    assert get_named_type(color.fields["fruits"].type).name == "FruitType"
+
+
 @pytest.mark.parametrize(
     ("kind", "name"),
     [
