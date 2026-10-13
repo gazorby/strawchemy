@@ -96,7 +96,7 @@ See [query hooks](/learn/query-hooks) for what `QueryHook` can do, and [custom r
 
 Mapping `UserType` with `include="all"` doesn't stop at `User`: it walks the `posts` relationship and generates a default `PostType`. Declaring your own `PostType` afterward gives you a second type over the same model: the declaration keeps the name, the generated type is renamed, and `UserType.posts` still returns the generated one.
 
-To have your type stand in for every type Strawchemy generates for its model and kind (a `type`, `filter`, `order`, `input`, `distinct_on`, …), declare it with `scope="schema"`. Declaration order does not matter: relations built before or after it resolve to your type.
+To have your type stand in for every type Strawchemy generates for its model and kind (a `type`, `filter`, `order`, `input`, `distinct_on`, …), declare it with `scope="schema"`. Declaration order does not matter: relations and root field arguments built before or after it resolve to your type. A type you pass explicitly, such as `order_by_input=FruitOrderBy`, is kept.
 
 ```python
 @strawchemy.type(User, include="all")

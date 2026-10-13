@@ -685,14 +685,14 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         return dto
 
     def _scoped_stand_in(
-        self, scope_key: Hashable, dto_config: DTOConfig, name: str, *, declared: bool, no_cache: bool
+        self, scope_key: Hashable, dto_config: DTOConfig, name: str, *, declared: bool
     ) -> type[DTOBaseT] | None:
         """Return the schema-scoped declaration standing in for a generated DTO, declarations keeping their own config."""
         if declared:
             if dto_config.scope == "global":
                 self._scoped_dto_names[scope_key] = name
             return None
-        if no_cache or dto_config.exclude_from_scope:
+        if dto_config.exclude_from_scope:
             return None
         return self._scoped_dtos.get(scope_key)
 
@@ -780,9 +780,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         if node.is_root:
             self._root_names.add(name)
-        if (
-            scoped := self._scoped_stand_in(scope_key, dto_config, name, declared=declared, no_cache=no_cache)
-        ) is not None:
+        if (scoped := self._scoped_stand_in(scope_key, dto_config, name, declared=declared)) is not None:
             return scoped
         cached = None if no_cache else self._dto_cache.get(cache_key)
         if cached is not None and (dto := self._cached_for_path(cached, cache_key, node, name)) is not None:

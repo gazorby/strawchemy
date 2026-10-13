@@ -296,9 +296,26 @@ class StrawberryRegistry:
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
             for reference in self._type_refs[type_info.scope_key]:
                 reference.update_type(strawberry_type)
+            self._retarget_root_defaults(type_info.scope_key, strawberry_type)
             self._scoped_types[type_info.scope_key] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
+
+    def _retarget_root_defaults(self, scope_key: Hashable, scoped_type: type[Any]) -> None:
+        """Point the root-field defaults generated for `scope_key` at the schema-scoped declaration taking them."""
+        generated = [
+            type_
+            for info, type_ in self._type_map.items()
+            if info.scope_key == scope_key and info not in self._declared
+        ]
+        for type_ in self._type_map.values():
+            if not issubclass(type_, MappedStrawberryGraphQLDTO):
+                continue
+            definition = type_.__strawchemy_definition__
+            if definition.order_by in generated:
+                definition.order_by = scoped_type
+            if definition.distinct_on in generated:
+                definition.distinct_on = scoped_type
 
     def _check_conflicts(self, type_info: RegistryTypeInfo, new_type: type[Any], *, declared: bool) -> None:
         """Check for conflicts in the registry.
