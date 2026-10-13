@@ -45,10 +45,12 @@ from strawchemy.dto.types import DTOAuto, DTOConfig, DTOScope, DTOSkip, Purpose,
 from strawchemy.dto.utils import config
 from strawchemy.exceptions import EmptyDTOError, StrawchemyError, StrawchemyFieldError
 from strawchemy.instance import MapperModelInstance
+from strawchemy.schema.factories._kwargs import InputDecoratorKwargs, TypeDecoratorKwargs
 from strawchemy.schema.field import StrawchemyField
 from strawchemy.transpiler import hook
 from strawchemy.typing import GraphQLDTOT, GraphQLPurpose, GraphQLType, MappedGraphQLDTO
 from strawchemy.utils.annotation import get_annotations, get_type_hints_partial, inner_types, try_resolve_forwardref
+from strawchemy.utils.kwargs import reject_unknown_declaration_kwargs
 
 if TYPE_CHECKING:
     import builtins
@@ -57,11 +59,7 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
     from strawchemy.dto.types import FieldSelector, FieldSpec
-    from strawchemy.schema.factories._kwargs import (
-        InputDecoratorKwargs,
-        MakeInputKwargs,
-        TypeDecoratorKwargs,
-    )
+    from strawchemy.schema.factories._kwargs import MakeInputKwargs
     from strawchemy.schema.pagination import DefaultOffsetPagination
     from strawchemy.transpiler.hook import QueryHook
     from strawchemy.utils.graph import Node
@@ -625,6 +623,8 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         mode: GraphQLPurpose = "type",
         **kwargs: Unpack[TypeDecoratorKwargs],
     ) -> Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]:
+        if reject := reject_unknown_declaration_kwargs(model, kwargs, TypeDecoratorKwargs):
+            return reject
         # The generated DTO subclasses the decorated class, so the decorated name is
         # typed as itself: a `type[...]` return would demote it to a variable, making it
         # unusable in type expressions such as `list[MyType]`.
@@ -651,6 +651,8 @@ class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[builtins.type[_DecoratedT]], builtins.type[_DecoratedT]]:
+        if reject := reject_unknown_declaration_kwargs(model, kwargs, InputDecoratorKwargs):
+            return reject
         # The generated DTO subclasses the decorated class, so the decorated name is
         # typed as itself: a `type[...]` return would demote it to a variable, making it
         # unusable in type expressions such as `list[MyType]`.

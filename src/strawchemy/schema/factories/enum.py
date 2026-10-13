@@ -11,6 +11,8 @@ from typing_extensions import Unpack, override
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
 from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.schema.factories._kwargs import DecoratorKwargs
+from strawchemy.utils.kwargs import reject_unknown_declaration_kwargs
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
@@ -18,7 +20,7 @@ if TYPE_CHECKING:
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.schema.factories._kwargs import DecoratorKwargs, FactoryMethodKwargs
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")
@@ -151,13 +153,19 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
+        *,
+        name: str | None = None,
         **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(model, purpose, **kwargs)
+        if reject := reject_unknown_declaration_kwargs(model, kwargs, DecoratorKwargs):
+            return reject
+        return super().decorator(model, purpose, name=name, **kwargs)
 
     def input(
         self,
         model: type[DeclarativeBase],
+        *,
+        name: str | None = None,
         **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         """Decorate a class into an enum of the write fields of ``model``.
@@ -166,7 +174,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
             ReadOnlyModelError: If ``model`` maps a join or a selectable.
         """
         self.inspector.check_writable(model)
-        return super().decorator(model, Purpose.WRITE, **kwargs)
+        return self.decorator(model, Purpose.WRITE, name=name, **kwargs)
 
     def upsert_conflict_fields(
         self,

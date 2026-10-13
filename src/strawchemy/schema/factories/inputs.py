@@ -25,6 +25,7 @@ from strawchemy.dto.strawberry import (
 from strawchemy.dto.types import DTOAuto, DTOConfig, DTOMissing, Purpose
 from strawchemy.exceptions import StrawchemyFieldError
 from strawchemy.schema.factories import AggregationInspector, StrawchemyUnMappedFactory, UnmappedGraphQLDTOT
+from strawchemy.schema.factories._kwargs import InputDecoratorKwargs
 from strawchemy.schema.filters.fields import FilterFieldMarker
 from strawchemy.typing import (
     AggregationFilterFunction,
@@ -39,6 +40,7 @@ from strawchemy.utils.annotation import (
     get_type_hints_partial,
     non_optional_type_hint,
 )
+from strawchemy.utils.kwargs import reject_unknown_declaration_kwargs
 from strawchemy.utils.text import snake_to_camel
 
 if TYPE_CHECKING:
@@ -50,7 +52,7 @@ if TYPE_CHECKING:
     from strawchemy import Strawchemy
     from strawchemy.dto.base import DTOBackend, DTOBase, DTOFieldDefinition, ModelFieldT, Relation
     from strawchemy.repository.typing import DeclarativeT
-    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs, InputDecoratorKwargs
+    from strawchemy.schema.factories._kwargs import FactoryMethodKwargs
     from strawchemy.schema.factories.base import TypeScope
     from strawchemy.schema.filters import GraphQLComparison, GraphQLFilter
     from strawchemy.utils.graph import Node
@@ -79,6 +81,8 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
+        if reject := reject_unknown_declaration_kwargs(model, kwargs, InputDecoratorKwargs):
+            return reject
         # `scope` is deliberately dropped: order-by and filter inputs share generated argument types
         # across a schema, so scoping them makes the registry reject the second registration.
         return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
@@ -574,6 +578,8 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
         functions: Sequence[AggregationFilterFunction] | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[AggregateFilterDTO]]:  # ty: ignore[invalid-method-override]
+        if reject := reject_unknown_declaration_kwargs(model, kwargs, InputDecoratorKwargs):
+            return reject
         # `_input_wrapper` is called directly: `functions` is not part of `InputDecoratorKwargs`,
         # so routing it through `super().input()` would break the TypedDict contract. Declaring it
         # narrows what the base accepts through `**kwargs`, which is what the suppression covers.
