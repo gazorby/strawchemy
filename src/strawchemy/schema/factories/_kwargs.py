@@ -14,7 +14,7 @@ from typing import TYPE_CHECKING, Any, Literal
 from typing_extensions import TypedDict
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Mapping, Sequence
+    from collections.abc import Callable, Hashable, Mapping, Sequence
 
     from sqlalchemy.orm import QueryableAttribute
 
@@ -67,7 +67,7 @@ class RegistrationKwargs(TypedDict, total=False):
     ``Unpack[]``. Methods that take ``name`` as a keyword declare it
     explicitly.
 
-    Internal-only flags (``register_type``, ``user_defined``) live in
+    The internal-only ``register_type`` flag lives in
     ``ForwardedFactoryKwargs`` so they are not exposed via public
     decorators.
     """
@@ -90,9 +90,8 @@ class TypeWrapperKwargs(TypedDict, total=False):
 class ForwardedFactoryKwargs(TypedDict, total=False):
     """Pure pass-through args between ``factory()`` overrides.
 
-    Includes internal-only registration flags (``register_type``,
-    ``user_defined``) — these are intentionally not on the public
-    decorators.
+    Includes the internal-only ``register_type`` flag, intentionally not on
+    the public decorators.
     """
 
     parent_field_def: DTOFieldDefinition[Any, QueryableAttribute[Any]] | None
@@ -102,7 +101,6 @@ class ForwardedFactoryKwargs(TypedDict, total=False):
     backend_kwargs: dict[str, Any] | None
     no_cache: bool
     register_type: bool
-    user_defined: bool
 
 
 class DecoratorKwargs(DTOConfigKwargs, RegistrationKwargs, total=False):
@@ -135,3 +133,5 @@ class FactoryMethodKwargs(ForwardedFactoryKwargs, RegistrationKwargs, TypeWrappe
 
     mode: GraphQLPurpose | None
     aggregations: bool
+    registration: Hashable
+    field_arguments: Hashable

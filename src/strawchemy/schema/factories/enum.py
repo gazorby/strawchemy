@@ -63,16 +63,6 @@ class EnumBackend(DTOBackend[EnumDTO]):
             EnumDTO(value=name, names=list(zip(list(field_map), values, strict=False)), type=base, module=module),
         )
 
-    @override
-    def copy(self, dto: type[EnumDTO], name: str) -> type[EnumDTO]:
-        enum = cast(
-            "type[EnumDTO]",
-            EnumDTO(value=name, names=[(value.name, value.value) for value in dto]),
-        )
-        enum.__field_definitions__ = dto.__field_definitions__
-        enum.__dto_model__ = dto.__dto_model__
-        return enum
-
 
 class UpsertConflictEnumBackend(EnumBackend):
     def __init__(self, inspector: SQLAlchemyGraphQLInspector, to_camel: bool = True) -> None:
@@ -114,7 +104,11 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
     ) -> None:
         self._mapper = mapper
         super().__init__(
-            mapper.config.inspector, backend or EnumBackend(), handle_cycles=handle_cycles, type_map=type_map
+            mapper.config.inspector,
+            backend or EnumBackend(),
+            handle_cycles=handle_cycles,
+            type_map=type_map,
+            identities=mapper.identities,
         )
 
     @override
@@ -224,6 +218,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         **kwargs: Unpack[FactoryMethodKwargs],
     ) -> type[EnumDTO]:
         register_type = kwargs.get("register_type", True)
+        kwargs["registration"] = (kwargs.get("description"), tuple(map(repr, kwargs.get("directives") or ())))
         dto = super().factory(model=model, dto_config=dto_config, base=base, name=name, **kwargs)
         if register_type:
             return self._mapper.registry.register_enum(

@@ -75,15 +75,6 @@ input FruitOrderBy {
   id: OrderByEnum
 }
 
-"""Ordering input."""
-input FruitOrderBy2 {
-  color: ColorOrderBy
-  name: OrderByEnum
-  colorId: OrderByEnum
-  sweetness: OrderByEnum
-  id: OrderByEnum
-}
-
 """GraphQL type"""
 type FruitSumFields {
   sweetness: Int
@@ -109,7 +100,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy2!] = null): [FruitType!]!
+  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
 }
 
 scalar UUID

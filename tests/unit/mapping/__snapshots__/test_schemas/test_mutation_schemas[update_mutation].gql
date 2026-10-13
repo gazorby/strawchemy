@@ -346,11 +346,11 @@ input GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConf
   updateFields: [GroupColorUpdateFields!]
 }
 
-"""Identifier update input"""
+"""Create input"""
 input GroupColorInput {
-  fruits: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpdateInput
-  name: String
-  id: UUID!
+  fruits: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyCreateInput
+  name: String!
+  id: UUID
 }
 
 """Update fields enum"""
@@ -366,10 +366,10 @@ enum GroupCountFields {
   id
 }
 
-"""Identifier update input"""
+"""Create input"""
 input GroupDepartmentInput {
-  name: String
-  id: UUID!
+  name: String = null
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -382,13 +382,12 @@ input GroupDepartmentsIdFieldsInput {
   id: UUID!
 }
 
-"""Add new objects or update existing ones"""
-input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpdateInput {
+"""Add new or existing objects"""
+input GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyCreateInput {
   set: [GroupDepartmentsIdFieldsInput!]
   add: [GroupDepartmentsIdFieldsInput!]
   create: [GroupDepartmentInput!]
   upsert: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpsertInput
-  remove: [GroupDepartmentsIdFieldsInput!]
 }
 
 """Add new objects or update if existing"""
@@ -421,11 +420,11 @@ input GroupFilter {
   id: UUIDGenericComparison
 }
 
-"""Identifier update input"""
+"""Create input"""
 input GroupFruitInput {
-  name: String
-  sweetness: Int
-  id: UUID!
+  name: String!
+  sweetness: Int!
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -439,13 +438,12 @@ input GroupFruitsIdFieldsInput {
   id: UUID!
 }
 
-"""Add new objects or update existing ones"""
-input GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpdateInput {
+"""Add new or existing objects"""
+input GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyCreateInput {
   set: [GroupFruitsIdFieldsInput!]
   add: [GroupFruitsIdFieldsInput!]
   create: [GroupFruitInput!]
   upsert: GroupFruitsIdFieldsInputGroupFruitInputGroupFruitsUpdateFieldsGroupFruitsConflictFieldsToManyUpsertInput
-  remove: [GroupFruitsIdFieldsInput!]
 }
 
 """Add new objects or update if existing"""
@@ -512,10 +510,10 @@ input GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFiel
   updateFields: [GroupTagUpdateFields!]
 }
 
-"""Identifier update input"""
+"""Create input"""
 input GroupTagInput {
-  name: String
-  id: UUID!
+  name: String!
+  id: UUID
 }
 
 """Update fields enum"""
@@ -547,12 +545,12 @@ input GroupUpdate {
   id: UUID!
 }
 
-"""Identifier update input"""
+"""Create input"""
 input GroupUserInput {
-  tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput
-  departments: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyUpdateInput
-  name: String
-  id: UUID!
+  tag: GroupTagIdFieldsInputGroupTagInputGroupTagUpdateFieldsGroupTagConflictFieldsToOneInput = null
+  departments: GroupDepartmentsIdFieldsInputGroupDepartmentInputGroupDepartmentsUpdateFieldsGroupDepartmentsConflictFieldsToManyCreateInput
+  name: String!
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -709,11 +707,11 @@ input TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFiel
   updateFields: [TagColorUpdateFields!]
 }
 
-"""Identifier update input"""
+"""Create input"""
 input TagColorInput {
-  fruits: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpdateInput
-  name: String
-  id: UUID!
+  fruits: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyCreateInput
+  name: String!
+  id: UUID
 }
 
 """Update fields enum"""
@@ -722,10 +720,10 @@ enum TagColorUpdateFields {
   id
 }
 
-"""Identifier update input"""
+"""Create input"""
 input TagDepartmentInput {
-  name: String
-  id: UUID!
+  name: String = null
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -738,13 +736,12 @@ input TagDepartmentsIdFieldsInput {
   id: UUID!
 }
 
-"""Add new objects or update existing ones"""
-input TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpdateInput {
+"""Add new or existing objects"""
+input TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyCreateInput {
   set: [TagDepartmentsIdFieldsInput!]
   add: [TagDepartmentsIdFieldsInput!]
   create: [TagDepartmentInput!]
   upsert: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpsertInput
-  remove: [TagDepartmentsIdFieldsInput!]
 }
 
 """Add new objects or update if existing"""
@@ -760,11 +757,11 @@ enum TagDepartmentsUpdateFields {
   id
 }
 
-"""Identifier update input"""
+"""Create input"""
 input TagFruitInput {
-  name: String
-  sweetness: Int
-  id: UUID!
+  name: String!
+  sweetness: Int!
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -778,13 +775,12 @@ input TagFruitsIdFieldsInput {
   id: UUID!
 }
 
-"""Add new objects or update existing ones"""
-input TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpdateInput {
+"""Add new or existing objects"""
+input TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyCreateInput {
   set: [TagFruitsIdFieldsInput!]
   add: [TagFruitsIdFieldsInput!]
   create: [TagFruitInput!]
   upsert: TagFruitsIdFieldsInputTagFruitInputTagFruitsUpdateFieldsTagFruitsConflictFieldsToManyUpsertInput
-  remove: [TagFruitsIdFieldsInput!]
 }
 
 """Add new objects or update if existing"""
@@ -802,12 +798,12 @@ enum TagFruitsUpdateFields {
   id
 }
 
-"""Identifier update input"""
+"""Create input"""
 input TagGroupInput {
-  users: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpdateInput
-  color: TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsRequiredToOneInput
-  name: String
-  id: UUID!
+  users: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyCreateInput
+  color: TagColorIdFieldsInputTagColorInputTagColorUpdateFieldsTagColorConflictFieldsRequiredToOneInput!
+  name: String!
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -854,17 +850,23 @@ input TagTagIdFieldsInput {
 }
 
 """Add a new or existing object"""
-input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput {
+input TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneInput {
   set: TagTagIdFieldsInput
-  create: TagUpdate
-  upsert: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput
+  create: TagTagInput
+  upsert: TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput
 }
 
 """Add new object or update if existing"""
-input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput {
-  create: TagUpdate!
+input TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput {
+  create: TagTagInput!
   conflictFields: TagTagConflictFields
   updateFields: [TagTagUpdateFields!]
+}
+
+"""Create input"""
+input TagTagInput {
+  name: String!
+  id: UUID
 }
 
 """Update fields enum"""
@@ -890,12 +892,12 @@ input TagUpdate {
   id: UUID!
 }
 
-"""Identifier update input"""
+"""Create input"""
 input TagUserInput {
-  tag: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput
-  departments: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyUpdateInput
-  name: String
-  id: UUID!
+  tag: TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneInput = null
+  departments: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyCreateInput
+  name: String!
+  id: UUID
 }
 
 """Conflict fields enum"""
@@ -908,13 +910,12 @@ input TagUsersIdFieldsInput {
   id: UUID!
 }
 
-"""Add new objects or update existing ones"""
-input TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpdateInput {
+"""Add new or existing objects"""
+input TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyCreateInput {
   set: [TagUsersIdFieldsInput!]
   add: [TagUsersIdFieldsInput!]
   create: [TagUserInput!]
   upsert: TagUsersIdFieldsInputTagUserInputTagUsersUpdateFieldsTagUsersConflictFieldsToManyUpsertInput
-  remove: [TagUsersIdFieldsInput!]
 }
 
 """Add new objects or update if existing"""

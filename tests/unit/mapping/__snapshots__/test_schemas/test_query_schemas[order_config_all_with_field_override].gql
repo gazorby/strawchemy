@@ -76,7 +76,7 @@ input FruitOrderBy {
 }
 
 """Ordering input."""
-input FruitOrderBy2 {
+input FruitOrderBy1 {
   name: OrderByEnum
 }
 
@@ -105,7 +105,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy2!] = null): [FruitType!]!
+  fruits(orderBy: [FruitOrderBy1!] = null): [FruitType!]!
 }
 
 scalar UUID

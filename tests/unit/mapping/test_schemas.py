@@ -18,6 +18,7 @@ from graphql import (
     GraphQLInputObjectType,
     GraphQLNamedType,
     GraphQLObjectType,
+    GraphQLSchema,
     build_schema,
     get_named_type,
 )
@@ -40,7 +41,7 @@ from strawchemy.exceptions import (
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
-from tests.unit.models import Album, Color, Container, Department, Fruit, Group, Tag, User
+from tests.unit.models import Album, Color, Container, Department, Fruit, Group, TableMappedFruit, Tag, User
 from tests.unit.models import Book as BookModel
 from tests.unit.schemas.join_mapped import JoinedAB, JoinOwner
 from tests.unit.schemas.join_mapped_columns import ColumnJoinOwner
@@ -1861,6 +1862,56 @@ def test_schema_scope_declaration_takes_over_generated_name(kind: _DeclarationKi
     assert "sweetness" not in declared.fields
 
 
+def test_generated_type_outside_schema_scope_avoids_its_default_name() -> None:
+    """Test that a type generated outside a schema scope takes another name than the default one the scope holds."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"], partial=True, scope="schema")(type("FruitScoped", (), {}))
+    root = strawchemy.type(Color, include="all")(type("ColorRoot", (), {}))
+
+    schema = _query_schema(strawchemy, root)
+    generated = build_schema(str(schema)).get_type(_relation_type_name(schema, _DECLARATION_KINDS["type"]))
+
+    assert isinstance(generated, GraphQLObjectType)
+    assert generated.name not in {"FruitScoped", "FruitType"}
+    assert "sweetness" in generated.fields
+
+
+def test_declaration_takes_default_name_of_schema_scope() -> None:
+    """Test that a declaration named like the default name of another shape's schema scope keeps that name."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"], partial=True, scope="schema")(type("FruitScoped", (), {}))
+    declared = strawchemy.type(Fruit, include="all")(type("FruitType", (), {}))
+
+    assert build_schema(str(_query_schema(strawchemy, declared))).get_type("FruitType") is not None
+
+
+@pytest.mark.parametrize("partial", [None, True])
+def test_declaration_takes_name_of_generated_type_after_schema_scope(partial: bool | None) -> None:
+    """Test that a declaration named like a type generated before a schema scope of that default name displaces it."""
+    strawchemy = Strawchemy("postgresql")
+    root = strawchemy.type(Color, include="all")(type("ColorRoot", (), {}))
+    scoped = strawchemy.type(Fruit, include=["name"], partial=partial, scope="schema")(type("FruitScoped", (), {}))
+    declared = strawchemy.type(Fruit, include=["id"])(type("FruitType", (), {}))
+    query = strawberry.type(
+        type(
+            "Query",
+            (),
+            {
+                "__annotations__": {"colors": list[root], "fruits": list[declared]},  # ty: ignore[invalid-type-form]
+                "colors": strawchemy.field(),
+                "fruits": strawchemy.field(),
+            },
+        )
+    )
+
+    graphql_schema = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)))
+    fruit_type = graphql_schema.get_type("FruitType")
+
+    assert isinstance(fruit_type, GraphQLObjectType)
+    assert get_object_definition(scoped, strict=True).name == "FruitScoped"
+    assert list(fruit_type.fields) == ["id"]
+
+
 @pytest.mark.parametrize("declared_first", [True, False])
 @pytest.mark.parametrize("kind", ["type", "filter", "order"])
 def test_relation_back_reference_points_to_its_declaration(kind: str, declared_first: bool) -> None:
@@ -1893,6 +1944,27 @@ def test_second_schema_scoped_declaration_error(decorator: str) -> None:
 
     with pytest.raises(ScopeConflictError, match=r"^`[\w.]+` \(model `Fruit`\) cannot declare the schema scope"):
         getattr(strawchemy, decorator)(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
+
+
+def test_schema_scoped_declaration_after_unscoped_one_of_same_fields() -> None:
+    """Test that a schema-scoped declaration of the fields an unscoped one declared stands in and holds the scope."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"])(type("FruitPlain", (), {}))
+    strawchemy.type(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    @strawchemy.type(Color, include="all")
+    class ColorNode: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorNode] = strawchemy.field()
+
+    color_node = build_schema(str(strawberry.Schema(query=Query))).get_type("ColorNode")
+    assert isinstance(color_node, GraphQLObjectType)
+
+    assert get_named_type(color_node.fields["fruits"].type).name == "FruitScoped"
+    with pytest.raises(ScopeConflictError):
+        strawchemy.type(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
 
 
 def test_schema_scoped_update_inputs_of_each_mode() -> None:
@@ -2377,3 +2449,177 @@ def test_query_on_join_mapped_model_accepted(strawchemy: Strawchemy) -> None:
         joined: list[JoinedABType] = strawchemy.field(filter_input=JoinedABFilter, order_by_input=JoinedABOrder)
 
     assert "joined(" in str(strawberry.Schema(query=Query))
+
+
+def _field_named_type(graphql_schema: GraphQLSchema, type_name: str, *path: str) -> GraphQLNamedType:
+    named = graphql_schema.get_type(type_name)
+    for field_name in path:
+        assert isinstance(named, (GraphQLObjectType, GraphQLInputObjectType))
+        named = get_named_type(named.fields[field_name].type)
+    assert named is not None
+    return named
+
+
+@pytest.mark.parametrize(
+    "roots",
+    [
+        pytest.param(("create_input",), id="create"),
+        pytest.param(("pk_update_input",), id="pk-update"),
+        pytest.param(("filter_update_input",), id="filter-update"),
+        pytest.param(("create_input", "pk_update_input"), id="create-then-pk-update"),
+        pytest.param(("pk_update_input", "create_input"), id="pk-update-then-create"),
+        pytest.param(("filter_update_input", "create_input"), id="filter-update-then-create"),
+    ],
+)
+def test_nested_create_payload_has_create_shape(roots: tuple[str, ...]) -> None:
+    """Test that the nested `create` payload of every root input has the create shape, whatever roots exist (#494)."""
+    strawchemy = Strawchemy("postgresql")
+    declared = {
+        decorator: getattr(strawchemy, decorator)(Color, include="all")(
+            type("Color" + "".join(part.title() for part in decorator.split("_")), (), {})
+        )
+        for decorator in roots
+    }
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    fields: dict[str, Any] = {}
+    annotations: dict[str, Any] = {}
+    for decorator, input_type in declared.items():
+        if decorator == "create_input":
+            fields["create_color"], annotations["create_color"] = strawchemy.create(input_type), ColorType
+        elif decorator == "pk_update_input":
+            fields["update_color"], annotations["update_color"] = strawchemy.update_by_ids(input_type), ColorType
+        else:
+            fields["update_colors"] = strawchemy.update(input_type, ColorFilter)
+            annotations["update_colors"] = list[ColorType]
+    mutation = strawberry.type(type("Mutation", (), {"__annotations__": annotations, **fields}))
+    graphql_schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=mutation)))
+
+    for input_type in declared.values():
+        payload = _field_named_type(graphql_schema, input_type.__name__, "fruits", "create")
+        assert isinstance(payload, GraphQLInputObjectType)
+        assert str(payload.fields["name"].type) == "String!", input_type.__name__
+        assert str(payload.fields["id"].type) == "UUID", input_type.__name__
+
+
+_FIELD_ARGUMENT_NAMES = {"paginate": {"limit", "offset"}, "order": {"orderBy"}, "distinct_on": {"distinctOn"}}
+
+
+@pytest.mark.parametrize("option", sorted(_FIELD_ARGUMENT_NAMES))
+@pytest.mark.parametrize("configured_first", [True, False])
+def test_nested_relation_arguments_follow_their_root(option: str, configured_first: bool) -> None:
+    """Test that nested relations get the field arguments of the root they are reached from, in either order (#518)."""
+    strawchemy = Strawchemy("postgresql")
+
+    def plain() -> type[Any]:
+        return strawchemy.type(Container, include="all")(type("ContainerPlain", (), {}))
+
+    def configured() -> type[Any]:
+        return strawchemy.type(
+            Container,
+            include="all",
+            paginate="all" if option == "paginate" else None,
+            order="all" if option == "order" else None,
+            distinct_on="all" if option == "distinct_on" else None,
+        )(type("ContainerConfigured", (), {}))
+
+    if configured_first:
+        configured_type, plain_type = configured(), plain()
+    else:
+        plain_type, configured_type = plain(), configured()
+
+    query = strawberry.type(
+        type(
+            "Query",
+            (),
+            {
+                "__annotations__": {"plain": list[plain_type], "configured": list[configured_type]},  # ty: ignore[invalid-type-form]
+                "plain": strawchemy.field(),
+                "configured": strawchemy.field(),
+            },
+        )
+    )
+    graphql_schema = build_schema(str(strawberry.Schema(query=query)))
+    expected = _FIELD_ARGUMENT_NAMES[option]
+
+    for root, has_arguments in (("ContainerPlain", False), ("ContainerConfigured", True)):
+        nested_color = _field_named_type(graphql_schema, root, "fruits", "color")
+        assert isinstance(nested_color, GraphQLObjectType)
+        assert (expected <= set(nested_color.fields["fruits"].args)) is has_arguments, root
+
+
+@pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
+def test_nested_create_payload_back_reference_is_a_create_input(decorator: str) -> None:
+    """Test that a nested `create` payload relating back to the root model nests a create input, not the root (#494)."""
+    strawchemy = Strawchemy("postgresql")
+    root = getattr(strawchemy, decorator)(TableMappedFruit, include="all")(type("FruitRoot", (), {}))
+
+    @strawchemy.type(TableMappedFruit, include="all")
+    class FruitType: ...
+
+    @strawchemy.filter(TableMappedFruit, include="all")
+    class FruitFilter: ...
+
+    if decorator == "create_input":
+        field: Any = strawchemy.create(root)
+    elif decorator == "pk_update_input":
+        field = strawchemy.update_by_ids(root)
+    else:
+        field = strawchemy.update(root, FruitFilter)
+    mutation = strawberry.type(type("Mutation", (), {"__annotations__": {"mutate": list[FruitType]}, "mutate": field}))
+    graphql_schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=mutation)))
+    back_reference = _field_named_type(graphql_schema, "FruitRoot", "color", "create", "requiredFruit", "create")
+
+    assert back_reference.description == "Create input"
+    assert back_reference.name != "FruitRoot" or decorator == "create_input"
+
+
+def test_generated_aggregate_count_enum_ignores_narrowed_declaration(strawchemy: Strawchemy) -> None:
+    """Test that a narrowed aggregate filter leaves the generated count arguments enum model-wide (#493)."""
+
+    @strawchemy.aggregate_filter(Fruit, include=["sweetness"], name="FruitSweetnessAggregate")
+    class FruitSweetnessAggregate: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter)
+
+    graphql_schema = build_schema(str(strawberry.Schema(query=Query)))
+    count_fields = _field_named_type(graphql_schema, "ColorFilter", "fruitsAggregate", "count", "arguments")
+
+    assert isinstance(count_fields, GraphQLEnumType)
+    assert count_fields.name == "FruitCountFields"
+    assert set(count_fields.values) == {"id", "name", "sweetness", "colorId"}
+
+
+def test_field_distinct_on_lists_get_their_own_enums(strawchemy: Strawchemy) -> None:
+    """Test that fields with different distinct_on lists each expose their own columns (#493)."""
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors_by_id: list[ColorType] = strawchemy.field(distinct_on=["id"])
+        colors_by_name: list[ColorType] = strawchemy.field(distinct_on=["name"])
+
+    query = build_schema(str(strawberry.Schema(query=Query))).get_type("Query")
+    assert isinstance(query, GraphQLObjectType)
+    by_id = get_named_type(query.fields["colorsById"].args["distinctOn"].type)
+    by_name = get_named_type(query.fields["colorsByName"].args["distinctOn"].type)
+
+    assert isinstance(by_id, GraphQLEnumType)
+    assert isinstance(by_name, GraphQLEnumType)
+    assert set(by_id.values) == {"id"}
+    assert set(by_name.values) == {"name"}

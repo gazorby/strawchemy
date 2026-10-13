@@ -75,6 +75,10 @@ class _HasModeKwargs(TypedDict, total=False):
     mode: GraphQLPurpose
 
 
+def _spec_key(spec: FieldSpec | type[Any] | None) -> Hashable:
+    return spec if isinstance(spec, type) else FieldSet(spec)
+
+
 class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     root_bound_relations: ClassVar[bool] = True
 
@@ -301,6 +305,25 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             yield field
 
     @override
+    def _cache_key(
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        *args: Any,
+        field_arguments: Hashable = None,
+        **factory_kwargs: Any,
+    ) -> Hashable:
+        return (super()._cache_key(model, dto_config, node, *args, **factory_kwargs), field_arguments)
+
+    @override
+    def _shape_kind(
+        self, dto: type[MappedGraphQLDTOT], *, field_arguments: Hashable = None, **factory_kwargs: Any
+    ) -> Hashable:
+        takes_arguments = any(field.is_relation and field.uselist for field in dto.__dto_field_definitions__.values())
+        return (super()._shape_kind(dto, **factory_kwargs), field_arguments if takes_arguments else None)
+
+    @override
     def factory(
         self,
         model: type[DeclarativeT],
@@ -322,6 +345,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         kwargs["paginate"] = paginate if paginate == "all" else self._mapper.config.pagination
         kwargs["order"] = order if order == "all" else self._mapper.config.order_by
         kwargs["distinct_on"] = distinct_on if distinct_on == "all" else self._mapper.config.distinct_on
+        kwargs["field_arguments"] = (_spec_key(paginate), _spec_key(order), _spec_key(distinct_on), default_pagination)
         dto = super().factory(model, dto_config, base, name, **kwargs)
         if self.graphql_type(dto_config) == "object":
             dto = self._add_fields_arguments(
@@ -339,10 +363,6 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 dto_config=dto_config,
                 description=description,
                 directives=directives,
-                default_pagination=default_pagination,
-                order=order,
-                distinct_on=distinct_on,
-                paginate=paginate,
                 current_node=kwargs.get("current_node"),
                 declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
@@ -728,12 +748,14 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[Any, MappedGraphQLDTOT], None],
         *,
         mode: GraphQLPurpose,
+        under_update_root: bool = False,
         **factory_kwargs: Any,
     ) -> Hashable:
         return (
             super()._cache_key(model, dto_config, node, **factory_kwargs),
             node.root.value.model,
             mode,
+            under_update_root,
         )
 
     @override
@@ -741,6 +763,18 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         self, model: type[Any], dto_config: DTOConfig, *, mode: GraphQLPurpose | None = None, **_: Any
     ) -> Hashable:
         return (super()._scope_key(model, dto_config), mode)
+
+    @override
+    def _relation_ancestor(
+        self,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        relation: Relation[Any, MappedGraphQLDTOT],
+        *,
+        under_update_root: bool = False,
+        **factory_kwargs: Any,
+    ) -> Node[Relation[Any, MappedGraphQLDTOT], None] | None:
+        # An update root input does not have the create shape a nested `create` payload points back to.
+        return node.find_parent(lambda parent: parent.value == relation and not (under_update_root and parent.is_root))
 
     @override
     def type_description(self) -> str:
@@ -793,11 +827,19 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         *,
         mode: GraphQLPurpose,
+        under_update_root: bool = False,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
             return super()._resolve_basic_type(field, dto_config)
-        self._resolve_relation_type(field, dto_config, node, mode=mode, **factory_kwargs)
+        under_update_root = under_update_root or mode != "create_input"
+        # The related input is the payload of `create`, so it takes the create shape under every root mode.
+        create_config = (
+            dto_config if mode == "create_input" else dto_config.copy_with(partial=None, exclude_defaults=False)
+        )
+        self._resolve_relation_type(
+            field, create_config, node, mode="create_input", under_update_root=under_update_root, **factory_kwargs
+        )
         identifier_input = self._identifier_input(field, node)
         field_required = self.inspector.required(field.model_field)
         upsert_update_fields = self._upsert_udpate_fields(field, node, dto_config)

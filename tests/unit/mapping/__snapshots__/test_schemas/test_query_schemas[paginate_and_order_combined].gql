@@ -41,12 +41,6 @@ input ContainerOrderBy1 {
   fruits: FruitOrderBy
 }
 
-"""Ordering input."""
-input ContainerOrderBy2 {
-  fruitsAggregate: FruitAggregateOrderBy
-  fruits: FruitOrderBy
-}
-
 """GraphQL type"""
 type ContainerType1 {
   fruitsAggregate: FruitAggregate!
@@ -87,16 +81,35 @@ type ContainerType2 {
 type ContainerType3 {
   fruitsAggregate: FruitAggregate!
 
-  """Fetch objects from the FruitType collection"""
-  fruits(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [FruitType!]!
+  """Fetch objects from the ContainerType3FruitType collection"""
+  fruits(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [ContainerType3FruitType!]!
   vegetablesAggregate: VegetableAggregate!
 
   """Fetch objects from the VegetableType collection"""
   vegetables(limit: Int = 100, offset: Int! = 0): [VegetableType!]!
   colorsAggregate: ColorAggregate!
 
-  """Fetch objects from the ColorType collection"""
-  colors(limit: Int = 100, offset: Int! = 0): [ColorType!]!
+  """Fetch objects from the ContainerType3FruitTypeColorType collection"""
+  colors(limit: Int = 100, offset: Int! = 0): [ContainerType3FruitTypeColorType!]!
+  name: String!
+  id: UUID!
+}
+
+"""GraphQL type"""
+type ContainerType3FruitType {
+  color: ContainerType3FruitTypeColorType!
+  name: String!
+  colorId: UUID
+  sweetness: Int!
+  id: UUID!
+}
+
+"""GraphQL type"""
+type ContainerType3FruitTypeColorType {
+  fruitsAggregate: FruitAggregate!
+
+  """Fetch objects from the FruitType collection"""
+  fruits(limit: Int = 100, offset: Int! = 0): [FruitType!]!
   name: String!
   id: UUID!
 }
@@ -190,7 +203,7 @@ type Query {
   container2(orderBy: [ContainerOrderBy1!] = null): [ContainerType2!]!
 
   """Fetch objects from the ContainerType3 collection"""
-  container3(orderBy: [ContainerOrderBy2!] = null): [ContainerType3!]!
+  container3(orderBy: [ContainerOrderBy1!] = null): [ContainerType3!]!
 }
 
 scalar UUID

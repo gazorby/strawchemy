@@ -4,7 +4,7 @@ Five pieces make up a Strawchemy schema: a mapper holding the configuration, the
 
 ## The mapper
 
-`Strawchemy` is the entry point. It holds the `StrawchemyConfig` that every decorator and field below it inherits — the SQL dialect, the repository class, the defaults for field selection, pagination and ordering — and it is the registry of generated types, so it reuses a type it has already built rather than building it a second time.
+`Strawchemy` is the entry point. It holds the `StrawchemyConfig` that every decorator and field below it inherits — the SQL dialect, the repository class, the defaults for field selection, pagination and ordering — and it keeps track of generated types, so a request for a type it has already built, or for one exposing the same fields under the same name, gets that type rather than a second one.
 
 ```python
 strawchemy = Strawchemy(StrawchemyConfig("sqlite"))
