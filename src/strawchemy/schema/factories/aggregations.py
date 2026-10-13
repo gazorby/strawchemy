@@ -528,7 +528,10 @@ class AggregationInspector:
         return sorted(aggregations, key=lambda aggregation: aggregation.function)
 
     def filter_functions(self, model: type[DeclarativeBase], dto_config: DTOConfig) -> list[FilterFunctionInfo]:
-        dto_config = dto_config.copy_with(scope=None)
+        # The argument enums are shared by every filter of the model: only the mapper-wide selection narrows them.
+        dto_config = dto_config.copy_with(
+            include=dto_config.global_include or "all", exclude=dto_config.global_exclude, scope=None
+        )
         count_fields = self._count_fields_factory.factory(model=model, dto_config=dto_config)
         numeric_arg_fields = self.arguments_type(model, dto_config, "numeric")
         sum_interval_arg_fields = self.arguments_type(model, dto_config, "sum_interval")

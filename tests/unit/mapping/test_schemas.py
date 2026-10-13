@@ -2480,3 +2480,49 @@ def test_nested_relation_arguments_follow_their_root(option: str, configured_fir
         nested_color = _field_named_type(graphql_schema, root, "fruits", "color")
         assert isinstance(nested_color, GraphQLObjectType)
         assert (expected <= set(nested_color.fields["fruits"].args)) is has_arguments, root
+
+
+def test_generated_aggregate_count_enum_ignores_narrowed_declaration(strawchemy: Strawchemy) -> None:
+    """Test that a narrowed aggregate filter leaves the generated count arguments enum model-wide (#493)."""
+
+    @strawchemy.aggregate_filter(Fruit, include=["sweetness"], name="FruitSweetnessAggregate")
+    class FruitSweetnessAggregate: ...
+
+    @strawchemy.filter(Color, include="all")
+    class ColorFilter: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field(filter_input=ColorFilter)
+
+    graphql_schema = build_schema(str(strawberry.Schema(query=Query)))
+    count_fields = _field_named_type(graphql_schema, "ColorFilter", "fruitsAggregate", "count", "arguments")
+
+    assert isinstance(count_fields, GraphQLEnumType)
+    assert count_fields.name == "FruitCountFields"
+    assert set(count_fields.values) == {"id", "name", "sweetness", "colorId"}
+
+
+def test_field_distinct_on_lists_get_their_own_enums(strawchemy: Strawchemy) -> None:
+    """Test that fields with different distinct_on lists each expose their own columns (#493)."""
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawberry.type
+    class Query:
+        colors_by_id: list[ColorType] = strawchemy.field(distinct_on=["id"])
+        colors_by_name: list[ColorType] = strawchemy.field(distinct_on=["name"])
+
+    query = build_schema(str(strawberry.Schema(query=Query))).get_type("Query")
+    assert isinstance(query, GraphQLObjectType)
+    by_id = get_named_type(query.fields["colorsById"].args["distinctOn"].type)
+    by_name = get_named_type(query.fields["colorsByName"].args["distinctOn"].type)
+
+    assert isinstance(by_id, GraphQLEnumType)
+    assert isinstance(by_name, GraphQLEnumType)
+    assert set(by_id.values) == {"id"}
+    assert set(by_name.values) == {"name"}
