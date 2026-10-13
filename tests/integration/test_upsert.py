@@ -35,10 +35,10 @@ _FRUITS: list[dict[str, Any]] = [
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "water_percent", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "water_percent", "color"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
     # Generated primary keys are optional on create inputs, nested ones included, only under include="all".

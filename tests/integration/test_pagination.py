@@ -52,12 +52,12 @@ _VISIBLE_COLOR_NAMES = ["Red", "Green", "Pink"]
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "farms"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "farms"], scope="schema")
     class FruitType: ...
 
     # The order list also filters the order inputs of `fruits`: `sweetness` is the column the sum ordering aggregates.
     @strawchemy.type(
-        Color, include=["id", "name", "fruits"], order=["id", "name", "sweetness", "fruits"], override=True
+        Color, include=["id", "name", "fruits"], order=["id", "name", "sweetness", "fruits"], scope="schema"
     )
     class ColorType: ...
 

@@ -89,10 +89,10 @@ class _SweetFruitHook(QueryHook[Fruit]):
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "fruits"], order=["id", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "fruits"], order=["id", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.type(Color, include=["id", "fruits"], order=["id", "fruits"], paginate=["fruits"])

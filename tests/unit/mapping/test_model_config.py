@@ -31,7 +31,7 @@ MODEL_DTO_DECORATOR_NAMES: list[str] = [
 
 @pytest.mark.parametrize("decorator", TYPE_DECORATOR_NAMES)
 def test_type_no_purpose_excluded(decorator: str, strawchemy: Strawchemy) -> None:
-    @getattr(strawchemy, decorator)(User, include="all", override=True)
+    @getattr(strawchemy, decorator)(User, include="all")
     class UserType: ...
 
     type_def = get_object_definition(UserType, strict=True)
@@ -150,10 +150,10 @@ def test_identical_relay_node_types(strawchemy: Strawchemy) -> None:
     assert OtherFruitNode.custom() == "custom"
 
 
-def test_identical_type_relations_use_first_type(strawchemy: Strawchemy) -> None:
-    """Test that relations reuse the first declared type when a later one shares its config."""
+def test_identical_type_relations_use_scoped_type(strawchemy: Strawchemy) -> None:
+    """Test that relations use the schema-scoped type when a later declaration shares its config."""
 
-    @strawchemy.type(Fruit, include="all")
+    @strawchemy.type(Fruit, include="all", scope="schema")
     class FruitType: ...
 
     @strawchemy.type(Fruit, include="all")

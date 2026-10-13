@@ -8,17 +8,17 @@ from tests.unit.models import Group, Tag, User
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Group, include="all", override=True)
+@strawchemy.type(Group, include="all", scope="schema")
 class GroupType:
     name: int
 
 
-@strawchemy.type(User, include="all", override=True)
+@strawchemy.type(User, include="all", scope="schema")
 class UserType:
     name: int
 
 
-@strawchemy.type(Tag, include="all", override=True)
+@strawchemy.type(Tag, include="all", scope="schema")
 class TagType:
     name: int
 

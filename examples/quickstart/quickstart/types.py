@@ -10,7 +10,7 @@ strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsy
 class UserFilter: ...
 
 
-@strawchemy.filter(Post, include="all", override=True)
+@strawchemy.filter(Post, include="all", scope="schema")
 class PostFilter: ...
 
 
@@ -18,7 +18,7 @@ class PostFilter: ...
 class UserOrderBy: ...
 
 
-@strawchemy.order(Post, include="all", override=True)
+@strawchemy.order(Post, include="all", scope="schema")
 class PostOrderBy: ...
 
 
@@ -26,11 +26,11 @@ class PostOrderBy: ...
 class UserType: ...
 
 
-@strawchemy.type(Post, include="all", override=True)
+@strawchemy.type(Post, include="all", scope="schema")
 class PostType: ...
 
 
-@strawchemy.type(Tag, include="all", override=True)
+@strawchemy.type(Tag, include="all", scope="schema")
 class TagType: ...
 
 

@@ -79,9 +79,18 @@ class _BaseFilterFactory(StrawchemyUnMappedFactory[UnmappedGraphQLDTOT]):
         scope: TypeScope | None = None,
         **kwargs: Unpack[InputDecoratorKwargs],
     ) -> Callable[[type[Any]], type[UnmappedGraphQLDTOT]]:
-        # `scope` is deliberately dropped: order-by and filter inputs share generated argument types
-        # across a schema, so scoping them makes the registry reject the second registration.
-        return self._input_wrapper(model=model, name=name, purpose=purpose, mode=mode, **kwargs)
+        return self._input_wrapper(
+            model=model,
+            name=name,
+            purpose=purpose,
+            mode=mode,
+            scope=self._type_scope_to_dto_scope(scope) if scope else None,
+            **kwargs,
+        )
+
+    @override
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
+        return (type(self), model)
 
     @staticmethod
     def _declared_strawberry_field(marker: FilterFieldMarker) -> StrawberryField:

@@ -7,7 +7,7 @@ import warnings
 from datetime import timedelta
 from importlib import import_module
 from importlib.util import find_spec
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, NamedTuple
 from uuid import UUID
 
 import pytest
@@ -32,6 +32,7 @@ from strawchemy.exceptions import (
     EmptyDTOError,
     QueryHookError,
     ReadOnlyModelError,
+    ScopeConflictError,
     StrawchemyError,
     StrawchemyFieldError,
     TypeNameConflictError,
@@ -47,6 +48,8 @@ from tests.unit.utils import MockContext
 from tests.utils import DTOInspect
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from syrupy.assertion import SnapshotAssertion
     from typing_extensions import Self
 
@@ -76,34 +79,6 @@ def test_type_instance(strawchemy: Strawchemy) -> None:
     user = UserType(id=1, name="user")  # ty: ignore[unknown-argument]
     assert user.id == 1
     assert user.name == "user"
-
-
-def test_override_same_name_does_not_leak_fields(strawchemy: Strawchemy) -> None:
-    """The last override wins when used with the same model/name pair.
-
-    A second `override=True` registration under the same GraphQL type name must
-    reflect its own (narrower) config, not inherit fields from the earlier
-    registration.
-    """
-    from tests.unit.models import Color, Fruit
-
-    @strawchemy.type(Fruit, name="FruitNode", include=["id"], override=True)
-    class FruitNode:
-        pass
-
-    @strawchemy.type(Color, name="ColorNode", include=["id", "name", "fruits"], override=True)
-    class ColorWide:
-        pass
-
-    @strawchemy.type(Color, name="ColorNode", include=["id"], override=True)
-    class ColorSlim:
-        pass
-
-    wide_fields = {f.name for f in get_object_definition(ColorWide, strict=True).fields}
-    slim_fields = {f.name for f in get_object_definition(ColorSlim, strict=True).fields}
-
-    assert wide_fields == {"fruits_aggregate", "fruits", "id", "name"}
-    assert slim_fields == {"id"}
 
 
 def test_type_implementing_interface() -> None:
@@ -215,13 +190,14 @@ def test_type_resolution_with_resolvers() -> None:
     assert field.type is ColorType
 
 
-@pytest.mark.parametrize(
-    "path",
-    [pytest.param("tests.unit.schemas.override.auto_type_existing", id="auto_type_existing")],
-)
-def test_multiple_types_error(path: str) -> None:
-    with pytest.raises(StrawchemyError, match=re.escape("Type `FruitType` is already registered")):
-        import_module(path)
+def test_declaration_named_like_a_generated_type_takes_its_name() -> None:
+    """Test that a declaration named like a type generated before it takes the name, the generated type being renamed."""
+    module = import_module("tests.unit.schemas.override.auto_type_existing")
+    color_fruits = get_object_definition(module.ColorType, strict=True).get_field("fruits")
+    assert color_fruits is not None
+
+    assert get_object_definition(module.FruitType, strict=True).name == "FruitType"
+    assert strawberry_contained_user_type(color_fruits.type) is not module.FruitType
 
 
 def _declare(strawchemy: Strawchemy, decorator: str, model: type[Any], kwargs: dict[str, Any]) -> type[Any]:
@@ -432,7 +408,6 @@ def test_generated_type_name_displaced_by_declaration(
     [
         pytest.param({}, "FruitCreateFruitColorInput", {"id", "name"}, id="declared"),
         pytest.param({"scope": "schema"}, "FruitColorInput", {"name"}, id="scope-schema"),
-        pytest.param({"override": True}, "FruitColorInput", {"name"}, id="override"),
     ],
 )
 def test_nested_generated_input_displaced_by_declaration(
@@ -1531,19 +1506,19 @@ def test_scoped_aggregate_filter_shares_argument_enums(strawchemy: Strawchemy) -
     assert schema_str.count("enum FruitCountFields ") == 1
 
 
-@pytest.mark.parametrize("override", [False, True])
-def test_schema_scope_does_not_leak_into_related_model_types(strawchemy: Strawchemy, override: bool) -> None:
+@pytest.mark.parametrize("scope", [None, "schema"])
+def test_schema_scope_does_not_leak_into_related_model_types(strawchemy: Strawchemy, scope: TypeScope | None) -> None:
     """Test that types of models related to a schema-scoped type keep their own include (#421)."""
 
     @strawchemy.type(Group, include="all", scope="schema")
     class GroupType:
         pass
 
-    @strawchemy.type(User, include=["name"], override=override)
+    @strawchemy.type(User, include=["name"], scope=scope)
     class UserNameType:
         pass
 
-    @strawchemy.type(Tag, include=["name"], override=override)
+    @strawchemy.type(Tag, include=["name"], scope=scope)
     class TagNameType:
         pass
 
@@ -1664,6 +1639,277 @@ def test_schema_scope_type_is_reused_by_relations(strawchemy: Strawchemy) -> Non
     assert isinstance(tag_type, StrawberryObjectDefinition)
     assert _field_type(user_type, "tag") is TagType
     assert [field.name for field in tag_type.fields] == ["name"]
+
+
+class _DeclarationKind(NamedTuple):
+    decorator: str
+    root: Callable[[Strawchemy], type[Any]]
+    schema: Callable[[Strawchemy, type[Any]], strawberry.Schema]
+    field: str
+    argument: str | None = None
+    inner_fields: tuple[str, ...] = ()
+
+
+def _root_type(**kwargs: Any) -> Callable[[Strawchemy], type[Any]]:
+    return lambda strawchemy: strawchemy.type(Color, include="all", **kwargs)(type("ColorRoot", (), {}))
+
+
+def _root_input(decorator: str) -> Callable[[Strawchemy], type[Any]]:
+    return lambda strawchemy: getattr(strawchemy, decorator)(Color, include="all")(type("ColorRoot", (), {}))
+
+
+def _query_schema(strawchemy: Strawchemy, root: type[Any]) -> strawberry.Schema:
+    query = strawberry.type(
+        type("Query", (), {"__annotations__": {"colors": list[root]}, "colors": strawchemy.field()})  # ty: ignore[invalid-type-form]
+    )
+    return strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)
+
+
+def _argument_schema(field_kwarg: str) -> Callable[[Strawchemy, type[Any]], strawberry.Schema]:
+    def schema(strawchemy: Strawchemy, root: type[Any]) -> strawberry.Schema:
+        color_type = strawchemy.type(Color, include=["name"])(type("ColorNode", (), {}))
+        field = (
+            strawchemy.field(filter_input=root)
+            if field_kwarg == "filter_input"
+            else strawchemy.field(order_by_input=root)
+        )
+        query = strawberry.type(
+            type("Query", (), {"__annotations__": {"colors": list[color_type]}, "colors": field})  # ty: ignore[invalid-type-form]
+        )
+        return strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)
+
+    return schema
+
+
+def _mutation_schema(strawchemy: Strawchemy, root: type[Any]) -> strawberry.Schema:
+    color_type = strawchemy.type(Color, include=["name"])(type("ColorNode", (), {}))
+    mutation = strawberry.type(
+        type("Mutation", (), {"__annotations__": {"create_color": color_type}, "create_color": strawchemy.create(root)})
+    )
+    return strawberry.Schema(query=DefaultQuery, mutation=mutation, scalar_overrides=SCALAR_OVERRIDES)
+
+
+_DECLARATION_KINDS = {
+    "type": _DeclarationKind("type", _root_type(), _query_schema, "fruits"),
+    "filter": _DeclarationKind("filter", _root_input("filter"), _argument_schema("filter_input"), "fruits"),
+    "order": _DeclarationKind("order", _root_input("order"), _argument_schema("order_by_input"), "fruits"),
+    "aggregate-filter": _DeclarationKind(
+        "aggregate_filter", _root_input("filter"), _argument_schema("filter_input"), "fruitsAggregate"
+    ),
+    "create-input": _DeclarationKind(
+        "create_input", _root_input("create_input"), _mutation_schema, "fruits", inner_fields=("create",)
+    ),
+    "upsert-update-fields": _DeclarationKind(
+        "upsert_update_fields",
+        _root_input("create_input"),
+        _mutation_schema,
+        "fruits",
+        inner_fields=("upsert", "updateFields"),
+    ),
+    "order-argument": _DeclarationKind("order", _root_type(order="all"), _query_schema, "fruits", argument="orderBy"),
+    "distinct-on-argument": _DeclarationKind(
+        "distinct_on", _root_type(distinct_on="all"), _query_schema, "fruits", argument="distinctOn"
+    ),
+}
+
+
+def _relation_type_name(schema: strawberry.Schema, kind: _DeclarationKind, type_name: str = "ColorRoot") -> str:
+    graphql_schema = build_schema(str(schema))
+    parent = graphql_schema.get_type(type_name)
+    assert isinstance(parent, (GraphQLObjectType, GraphQLInputObjectType))
+    field = parent.fields[kind.field]
+    named = get_named_type(field.args[kind.argument].type if kind.argument else field.type)
+    for inner_field in kind.inner_fields:
+        assert isinstance(named, GraphQLInputObjectType)
+        named = get_named_type(named.fields[inner_field].type)
+    return named.name
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize("kind", _DECLARATION_KINDS.values(), ids=_DECLARATION_KINDS.keys())
+def test_schema_scope_substitutes_generated_type(kind: _DeclarationKind, declared_first: bool) -> None:
+    """Test that a schema-scoped declaration replaces the type generated for its model and kind, in either order."""
+    strawchemy = Strawchemy("postgresql")
+
+    def declare() -> type[Any]:
+        return getattr(strawchemy, kind.decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    scoped = declare() if declared_first else None
+    root = kind.root(strawchemy)
+    if scoped is None:
+        scoped = declare()
+
+    assert _relation_type_name(kind.schema(strawchemy, root), kind) == "FruitScoped"
+
+
+def _root_argument_type_name(
+    strawchemy: Strawchemy, fruit_type: type[Any], field_kwargs: dict[str, Any], argument: str
+) -> str:
+    query = strawberry.type(
+        type("Query", (), {"__annotations__": {"fruits": list[fruit_type]}, "fruits": strawchemy.field(**field_kwargs)})  # ty: ignore[invalid-type-form]
+    )
+    query_type = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES))).query_type
+    assert query_type is not None
+    return get_named_type(query_type.fields["fruits"].args[argument].type).name
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize(
+    ("decorator", "argument", "config", "type_kwargs", "field_kwargs"),
+    [
+        pytest.param("order", "orderBy", {}, {}, {"order_by_input": "all"}, id="field-order-by"),
+        pytest.param("filter", "filter", {}, {}, {"filter_input": True}, id="field-filter"),
+        pytest.param("distinct_on", "distinctOn", {}, {}, {"distinct_on": "all"}, id="field-distinct-on"),
+        pytest.param("order", "orderBy", {"order_by": "all"}, {}, {}, id="config-order-by"),
+        pytest.param("distinct_on", "distinctOn", {"distinct_on": "all"}, {}, {}, id="config-distinct-on"),
+        pytest.param("order", "orderBy", {}, {"order": "all"}, {}, id="type-order-by"),
+        pytest.param("distinct_on", "distinctOn", {}, {"distinct_on": "all"}, {}, id="type-distinct-on"),
+    ],
+)
+def test_schema_scope_substitutes_generated_root_argument(
+    decorator: str,
+    argument: str,
+    config: dict[str, Any],
+    type_kwargs: dict[str, Any],
+    field_kwargs: dict[str, Any],
+    declared_first: bool,
+) -> None:
+    """Test that a schema-scoped declaration replaces the argument type generated for a root field, in either order."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", **config))
+
+    def declare() -> type[Any]:
+        return getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    scoped = declare() if declared_first else None
+    fruit_type = strawchemy.type(Fruit, include="all", **type_kwargs)(type("FruitNode", (), {}))
+    if scoped is None:
+        declare()
+
+    assert _root_argument_type_name(strawchemy, fruit_type, field_kwargs, argument) == "FruitScoped"
+
+
+@pytest.mark.parametrize(
+    ("decorator", "argument", "kwarg", "on_type"),
+    [
+        pytest.param("order", "orderBy", "order_by_input", False, id="field-order-by"),
+        pytest.param("filter", "filter", "filter_input", False, id="field-filter"),
+        pytest.param("distinct_on", "distinctOn", "distinct_on", False, id="field-distinct-on"),
+        pytest.param("order", "orderBy", "order", True, id="type-order-by"),
+        pytest.param("distinct_on", "distinctOn", "distinct_on", True, id="type-distinct-on"),
+    ],
+)
+def test_schema_scope_keeps_explicit_root_argument(decorator: str, argument: str, kwarg: str, on_type: bool) -> None:
+    """Test that a root field argument given a declaration explicitly keeps it over a schema-scoped declaration."""
+    strawchemy = Strawchemy("postgresql")
+    getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+    explicit = {kwarg: getattr(strawchemy, decorator)(Fruit, include=["id"])(type("FruitExplicit", (), {}))}
+    fruit_type = strawchemy.type(Fruit, include="all", **(explicit if on_type else {}))(type("FruitNode", (), {}))
+
+    assert _root_argument_type_name(strawchemy, fruit_type, {} if on_type else explicit, argument) == "FruitExplicit"
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize("forward_ref", [False, True])
+def test_schema_scope_keeps_explicit_declared_type(declared_first: bool, forward_ref: bool) -> None:
+    """Test that a field annotated with a declaration keeps it over a schema-scoped declaration, in either order."""
+    strawchemy = Strawchemy("postgresql")
+
+    def declare_scoped() -> None:
+        strawchemy.type(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    if declared_first:
+        declare_scoped()
+    explicit = strawchemy.type(Fruit, include=["id"])(type("FruitType", (), {}))
+    if not declared_first:
+        declare_scoped()
+    annotation = "list[FruitType]" if forward_ref else list[explicit]  # ty: ignore[invalid-type-form]
+    color_type = strawchemy.type(Color, include="all")(
+        type("ColorType", (), {"__annotations__": {"fruits": annotation}})
+    )
+    query = strawberry.type(
+        type("Query", (), {"__annotations__": {"colors": list[color_type]}, "colors": strawchemy.field()})  # ty: ignore[invalid-type-form]
+    )
+
+    schema = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)))
+    color = schema.get_type("ColorType")
+    assert isinstance(color, GraphQLObjectType)
+    assert get_named_type(color.fields["fruits"].type).name == "FruitType"
+
+
+@pytest.mark.parametrize(
+    ("kind", "name"),
+    [
+        pytest.param(_DECLARATION_KINDS["type"], "FruitType", id="type"),
+        pytest.param(_DECLARATION_KINDS["filter"], "FruitBoolExp", id="filter"),
+        pytest.param(_DECLARATION_KINDS["order"], "FruitOrderBy", id="order"),
+        pytest.param(_DECLARATION_KINDS["order-argument"], "FruitOrderBy", id="order-argument"),
+    ],
+)
+def test_schema_scope_declaration_takes_over_generated_name(kind: _DeclarationKind, name: str) -> None:
+    """Test that a schema-scoped declaration named like a type already generated for it replaces that type."""
+    strawchemy = Strawchemy("postgresql")
+    root = kind.root(strawchemy)
+    getattr(strawchemy, kind.decorator)(Fruit, include=["name"], scope="schema")(type(name, (), {}))
+
+    schema = kind.schema(strawchemy, root)
+
+    declared = build_schema(str(schema)).get_type(name)
+    assert isinstance(declared, (GraphQLObjectType, GraphQLInputObjectType))
+
+    assert _relation_type_name(schema, kind) == name
+    assert "name" in declared.fields
+    assert "sweetness" not in declared.fields
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize("kind", ["type", "filter", "order"])
+def test_relation_back_reference_points_to_its_declaration(kind: str, declared_first: bool) -> None:
+    """Test that a relation of a declaration leads back to it, an unscoped declaration of the related model standing apart."""
+    declaration_kind = _DECLARATION_KINDS[kind]
+    strawchemy = Strawchemy("postgresql")
+
+    def declare() -> type[Any]:
+        return getattr(strawchemy, declaration_kind.decorator)(Fruit, include="all")(type("FruitDeclared", (), {}))
+
+    declared = declare() if declared_first else None
+    root = declaration_kind.root(strawchemy)
+    if declared is None:
+        declared = declare()
+    schema = declaration_kind.schema(strawchemy, root)
+    graphql_schema = build_schema(str(schema))
+    nested_name = _relation_type_name(schema, declaration_kind)
+    nested = graphql_schema.get_type(nested_name)
+    assert isinstance(nested, (GraphQLObjectType, GraphQLInputObjectType))
+
+    assert nested_name != "FruitDeclared"
+    assert get_named_type(nested.fields["color"].type).name == "ColorRoot"
+
+
+@pytest.mark.parametrize("decorator", sorted({kind.decorator for kind in _DECLARATION_KINDS.values()}))
+def test_second_schema_scoped_declaration_error(decorator: str) -> None:
+    """Test that a schema-scoped declaration of a model and kind already scoped by another declaration raises."""
+    strawchemy = Strawchemy("postgresql")
+    getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    with pytest.raises(ScopeConflictError, match=r"^`[\w.]+` \(model `Fruit`\) cannot declare the schema scope"):
+        getattr(strawchemy, decorator)(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
+
+
+def test_schema_scoped_update_inputs_of_each_mode() -> None:
+    """Test that a model takes a schema-scoped declaration for each update input mode without conflict."""
+    strawchemy = Strawchemy("postgresql")
+    by_pk = strawchemy.pk_update_input(Fruit, include=["name"], scope="schema")(type("FruitByPk", (), {}))
+    by_filter = strawchemy.filter_update_input(Fruit, include=["name"], scope="schema")(type("FruitByFilter", (), {}))
+
+    assert get_object_definition(by_pk, strict=True).name == "FruitByPk"
+    assert get_object_definition(by_filter, strict=True).name == "FruitByFilter"
+
+
+@pytest.mark.parametrize("decorator", ["type", "aggregate"])
+def test_override_keyword_rejected(strawchemy: Strawchemy, decorator: str) -> None:
+    """Test that passing override to a declaration decorator raises like any unexpected keyword."""
+    with pytest.raises(TypeError, match="'override'"):
+        getattr(strawchemy, decorator)(Fruit, include=["name"], override=True)(type("FruitDeclared", (), {}))
 
 
 def test_json_column_class_body_resolver_executes() -> None:

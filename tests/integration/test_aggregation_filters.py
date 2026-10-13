@@ -70,12 +70,12 @@ _FRUIT_FARMS: list[dict[str, Any]] = [
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "color"], scope="schema")
     class FruitType: ...
 
     # The order list also filters the order inputs of `fruits`: `sweetness` is the column the sum orders by.
     @strawchemy.type(
-        Color, include=["id", "name", "fruits"], order=["id", "name", "sweetness", "fruits"], override=True
+        Color, include=["id", "name", "fruits"], order=["id", "name", "sweetness", "fruits"], scope="schema"
     )
     class ColorType: ...
 

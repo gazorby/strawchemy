@@ -13,7 +13,7 @@ class FruitType:
     name: int
 
 
-@strawchemy.order(Fruit, include="all", override=True)
+@strawchemy.order(Fruit, include="all", scope="schema")
 class FruitOrderBy:
     override: bool = True
 

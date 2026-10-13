@@ -15,7 +15,7 @@ from tests.unit.models import User
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(User, include="all", override=True, paginate="all")
+@strawchemy.type(User, include="all", scope="schema", paginate="all")
 class UserType: ...
 
 

@@ -12,11 +12,11 @@ strawchemy = Strawchemy("postgresql")
 class SQLDataTypesType: ...
 
 
-@strawchemy.type(Group, include="all")
+@strawchemy.type(Group, include="all", scope="schema")
 class GroupType: ...
 
 
-@strawchemy.type(Tag, include="all", override=True)
+@strawchemy.type(Tag, include="all", scope="schema")
 class TagType: ...
 
 

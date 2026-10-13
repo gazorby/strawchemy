@@ -7,7 +7,7 @@ An order-by type gives a list field an `orderBy` argument. Clients sort by colum
 Let clients choose the sort order of any list field: pass an order-by type to `order_by_input` and the field gains an `orderBy` argument. `@strawchemy.order` builds that type from a model:
 
 ```python
-@strawchemy.order(Post, include="all", override=True)
+@strawchemy.order(Post, include="all")
 class PostOrderBy: ...
 
 

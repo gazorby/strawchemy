@@ -84,14 +84,14 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.distinct_on(User, include=["name", "group_id"])
     class UserDistinctOn: ...
 
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color"], scope="schema")
     class FruitType: ...
 
     @strawchemy.type(Fruit, include=["name"], query_hook=_FruitOrderingHook())
     class OrderedFruitType: ...
 
     # The order list also filters the aggregation order inputs of `fruits`: `sweetness` is the column the sum orders by.
-    @strawchemy.type(Color, include=["id", "name", "fruits"], order=["name", "sweetness", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], order=["name", "sweetness", "fruits"], scope="schema")
     class ColorType: ...
 
     # `id` keeps the fruit count fields of `fruitsAggregate` from being empty.

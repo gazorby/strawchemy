@@ -55,10 +55,10 @@ class _Types:
 
 @functools.cache
 def _types(strawchemy: Strawchemy) -> _Types:
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
-    @strawchemy.type(Fruit, include=["id", "name", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "color"], scope="schema")
     class FruitType: ...
 
     @strawchemy.type(User, include=["name"])

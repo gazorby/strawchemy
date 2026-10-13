@@ -397,6 +397,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
         self._unresolved_refs: defaultdict[str, list[type[DTOBaseT]]] = defaultdict(list)
         self._scoped_dto_names: dict[Hashable, str] = {}
+        self._scoped_dtos: dict[Hashable, type[DTOBaseT]] = {}
         # Ancestors, as (model, name), that the forward refs of a DTO and its relations point to outside of it.
         self._external_refs: dict[type[DTOBaseT], frozenset[tuple[type[Any], str]]] = {}
         self._root_names: set[str] = set()
@@ -446,7 +447,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         type_hint = self.type_map.get(field.type_hint, field.type_)
         relation_model = self.inspector.relation_model(field.model_field)
         dto_name = self._scoped_dto_names.get(
-            self._scoped_cache_key(relation_model, dto_config), self.dto_name(relation_model.__name__, dto_config, node)
+            self._scope_key(relation_model, dto_config, **factory_kwargs),
+            self.dto_name(relation_model.__name__, dto_config, node),
         )
         relation_child = Relation(relation_model, name=dto_name)
         parent = node.find_parent(lambda parent: parent.value == relation_child)
@@ -509,9 +511,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             ]
         )
 
-    def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
-        # Under unrestricted global rules, a root "include all" config has the shape of the
-        # nested defaults: dropping ALL shares their cache entry, letting relations reuse user-defined types.
+    def _root_cache_key(self, dto_config: DTOConfig, *, declared: bool) -> Hashable:
+        # Under unrestricted global rules, a generated root "include all" config has the shape of the
+        # nested defaults: dropping ALL shares their cache entry. A declaration never shares it.
         global_all = not dto_config.global_exclude and (
             dto_config.global_include is None or FieldGroup.ALL in FieldSet(dto_config.global_include).field_set
         )
@@ -520,15 +522,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             frozenset(FieldSet(dto_config.exclude)),
             frozenset(dto_config.aliases.items()),
             frozenset(dto_config.annotation_overrides.items()),
+            frozenset({"declared"}) if declared else frozenset(),
         ]
         return frozenset(key for key in root_key if key)
 
-    def _scoped_cache_key(self, model: type[Any], dto_config: DTOConfig) -> Hashable:
-        return frozenset(
-            [
-                (model, self._base_cache_key(dto_config), frozenset()),
-            ]
-        )
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
+        """Identify the schema-scoped declaration standing in for the types this factory generates for `model`."""
+        return (type(self), model, self._base_cache_key(dto_config))
 
     def _cache_key(
         self,
@@ -536,12 +536,13 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto_config: DTOConfig,
         node: Node[Relation[Any, DTOBaseT], None],
         *_: Any,
+        declared: bool = False,
         **factory_kwargs: Any,
     ) -> Hashable:
         base_key = self._base_cache_key(dto_config)
         node_key = frozenset()
         if node.is_root:
-            node_key = self._root_cache_key(dto_config)
+            node_key = self._root_cache_key(dto_config, declared=declared)
         return (model, base_key, node_key)
 
     def _factory(
@@ -683,6 +684,18 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self.backend.update_forward_refs(dto, self.type_hint_namespace())
         return dto
 
+    def _scoped_stand_in(
+        self, scope_key: Hashable, dto_config: DTOConfig, name: str, *, declared: bool
+    ) -> type[DTOBaseT] | None:
+        """Return the schema-scoped declaration standing in for a generated DTO, declarations keeping their own config."""
+        if declared:
+            if dto_config.scope == "global":
+                self._scoped_dto_names[scope_key] = name
+            return None
+        if dto_config.exclude_from_scope:
+            return None
+        return self._scoped_dtos.get(scope_key)
+
     def type_hint_namespace(self) -> dict[str, Any]:
         return TYPING_NS | self.dtos
 
@@ -761,20 +774,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             name = base.__name__ if base else self.root_dto_name(model, dto_config, current_node)
         node = self._node_or_root(model, name, current_node)
 
-        # The schema-scoped type stands in for relations only: root declarations keep their own config.
-        scoped_cache_key = (
-            self._scoped_cache_key(model, dto_config)
-            if not node.is_root and not dto_config.exclude_from_scope
-            else DTOUnset
-        )
-        cache_key = self._cache_key(model, dto_config, node, **kwargs)
+        declared = node.is_root and base is not None
+        scope_key = self._scope_key(model, dto_config, **kwargs)
+        cache_key = self._cache_key(model, dto_config, node, declared=declared, **kwargs)
 
         if node.is_root:
             self._root_names.add(name)
-        if node.is_root and dto_config.scope == "global":
-            self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
-
-        cached = None if no_cache else (self._dto_cache.get(cache_key) or self._dto_cache.get(scoped_cache_key))
+        if (scoped := self._scoped_stand_in(scope_key, dto_config, name, declared=declared)) is not None:
+            return scoped
+        cached = None if no_cache else self._dto_cache.get(cache_key)
         if cached is not None and (dto := self._cached_for_path(cached, cache_key, node, name)) is not None:
             if not node.is_root:
                 return dto
@@ -801,7 +809,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self._track_external_refs(dto, name)
 
         self.dtos[name] = dto
-        if node.is_root and base is not None:
+        if declared:
             self.dtos[base.__name__] = dto
         node.value.dto = dto
 
@@ -816,8 +824,8 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
 
         self._cache_built(dto, cache_key, node, rebuilt=cached is not None)
 
-        if node.is_root and dto_config.scope is not None:
-            self._dto_cache[self._scoped_cache_key(model, dto_config)] = dto
+        if declared and dto_config.scope == "global":
+            self._scoped_dtos[scope_key] = dto
 
         return dto
 

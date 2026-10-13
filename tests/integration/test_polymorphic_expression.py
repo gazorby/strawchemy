@@ -53,10 +53,10 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.order(ExprBike, include=["id", "name"])
     class ExprBikeOrderBy: ...
 
-    @strawchemy.type(ExprBike, include=["id", "name", "garage"], override=True)
+    @strawchemy.type(ExprBike, include=["id", "name", "garage"], scope="schema")
     class ExprBikeType: ...
 
-    @strawchemy.type(ExprGarage, include=["name", "vehicles", "bikes"], override=True)
+    @strawchemy.type(ExprGarage, include=["name", "vehicles", "bikes"], scope="schema")
     class ExprGarageType: ...
 
     @strawberry.type

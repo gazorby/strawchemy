@@ -13,7 +13,7 @@ class FruitType:
     name: int  # override
 
 
-@strawchemy.type(Color, include="all", override=True)
+@strawchemy.type(Color, include="all", scope="schema")
 class ColorType:
     fruits: list[FruitType]
 

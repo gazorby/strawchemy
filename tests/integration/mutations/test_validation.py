@@ -35,10 +35,10 @@ def _check_lower_case(value: str) -> str:
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["name", "farms", "product"], override=True)
+    @strawchemy.type(Fruit, include=["name", "farms", "product"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
     # Generated primary keys are optional on create inputs, nested ones included, only under include="all".

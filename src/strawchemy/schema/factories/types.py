@@ -316,8 +316,6 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         default_pagination = kwargs.get("default_pagination")
         description = kwargs.get("description")
         directives = kwargs.get("directives", ())
-        override_ = kwargs.get("override", False)
-        user_defined = kwargs.get("user_defined", False)
         register_type = kwargs.get("register_type", True)
         kwargs["register_type"] = False
         kwargs["aggregations"] = aggregations if dto_config.purpose is Purpose.READ else False
@@ -341,8 +339,6 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 dto_config=dto_config,
                 description=description,
                 directives=directives,
-                override=override_,
-                user_defined=user_defined,
                 default_pagination=default_pagination,
                 order=order,
                 distinct_on=distinct_on,
@@ -350,6 +346,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
                 current_node=kwargs.get("current_node"),
                 declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
+                scope_key=self._scope_key(model, dto_config, **kwargs),
             )
         return dto
 
@@ -607,7 +604,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         related_model = field.related_model
         assert related_model
         prefix = f"{node.root.value.model.__name__}{snake_to_camel(field.name)}"
-        existing = self._mapper.registry.get(graphql_type, f"{prefix}{suffix}", None)
+        existing = self._mapper.registry.get(graphql_type, f"{prefix}{suffix}")
         if existing is not None and existing.model is not related_model:
             return f"{prefix}{related_model.__name__}{suffix}"
         return f"{prefix}{suffix}"
@@ -636,7 +633,7 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
                 raise EmptyDTOError(msg) from error
 
         return self._mapper.registry.register_type(
-            base, graphql_type="input", dto_config=dto_config, description="Identifier input", user_defined=False
+            base, graphql_type="input", dto_config=dto_config, description="Identifier input"
         )
 
     def _upsert_udpate_fields(
@@ -738,6 +735,12 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
             node.root.value.model,
             mode,
         )
+
+    @override
+    def _scope_key(
+        self, model: type[Any], dto_config: DTOConfig, *, mode: GraphQLPurpose | None = None, **_: Any
+    ) -> Hashable:
+        return (super()._scope_key(model, dto_config), mode)
 
     @override
     def type_description(self) -> str:

@@ -75,10 +75,10 @@ _TOPICS: RawRecordData = [
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color", "farms", "product"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "color", "farms", "product"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.type(User, include=["id", "name", "bio", "group", "departments"])

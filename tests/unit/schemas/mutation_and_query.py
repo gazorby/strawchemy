@@ -8,11 +8,11 @@ from tests.unit.models import Color, Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, include="all")
+@strawchemy.type(Fruit, include="all", scope="schema")
 class FruitType: ...
 
 
-@strawchemy.type(Color, include="all", override=True)
+@strawchemy.type(Color, include="all", scope="schema")
 class ColorType: ...
 
 
@@ -20,7 +20,7 @@ class ColorType: ...
 class FruitInput: ...
 
 
-@strawchemy.create_input(Color, include="all", override=True)
+@strawchemy.create_input(Color, include="all")
 class ColorInput: ...
 
 

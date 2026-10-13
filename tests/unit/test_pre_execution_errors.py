@@ -25,10 +25,10 @@ def _schema(dialect: SupportedDialect, mode: Mode) -> tuple[type[Any], type[Any]
     strawchemy = Strawchemy(dialect)
     repository_type = StrawchemySyncRepository if mode == "sync" else StrawchemyAsyncRepository
 
-    @strawchemy.type(Color, include="all", override=True)
+    @strawchemy.type(Color, include="all", scope="schema")
     class ColorType: ...
 
-    @strawchemy.type(Fruit, include="all", override=True)
+    @strawchemy.type(Fruit, include="all", scope="schema")
     class FruitType: ...
 
     @strawchemy.type(User, include="all")

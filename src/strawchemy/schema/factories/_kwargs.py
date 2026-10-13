@@ -74,7 +74,6 @@ class RegistrationKwargs(TypedDict, total=False):
 
     description: str | None
     directives: Sequence[object] | None
-    override: bool
 
 
 class TypeWrapperKwargs(TypedDict, total=False):

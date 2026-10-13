@@ -63,11 +63,11 @@ class ColoredFruitHook(QueryHook[Fruit]):
         return statement.join(color, color.id == alias.color_id).where(color.name != "hidden")
 
 
-@strawchemy.type(Fruit, include="all", override=True)
+@strawchemy.type(Fruit, include="all", scope="schema")
 class FruitType: ...
 
 
-@strawchemy.type(Color, include="all", order="all", override=True)
+@strawchemy.type(Color, include="all", order="all", scope="schema")
 class ColorType: ...
 
 
@@ -131,7 +131,7 @@ class NameOrderedColorType: ...
 class FirstColorType: ...
 
 
-@strawchemy.type(Group, include="all", override=True)
+@strawchemy.type(Group, include="all", scope="schema")
 class GroupType: ...
 
 

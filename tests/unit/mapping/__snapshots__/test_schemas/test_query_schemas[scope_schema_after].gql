@@ -74,12 +74,22 @@ type GraphQLGroup {
   tag: TagType!
   usersAggregate: UserAggregate!
 
-  """Fetch objects from the GraphQLUser collection"""
-  users: [GraphQLUser!]!
+  """Fetch objects from the UserType collection"""
+  users: [UserType!]!
   color: ColorType!
   name: String!
   tagId: UUID!
   colorId: UUID!
+  id: UUID!
+}
+
+"""GraphQL type"""
+type GraphQLGroupDepartmentType {
+  usersAggregate: UserAggregate!
+
+  """Fetch objects from the UserType collection"""
+  users: [UserType!]!
+  name: String
   id: UUID!
 }
 
@@ -149,5 +159,19 @@ type UserAggregate {
 """GraphQL type"""
 type UserMinMaxFields {
   name: String
+}
+
+"""GraphQL type"""
+type UserType {
+  group: GraphQLGroup!
+  tag: TagType!
+  departmentsAggregate: DepartmentAggregate!
+
+  """Fetch objects from the GraphQLGroupDepartmentType collection"""
+  departments: [GraphQLGroupDepartmentType!]!
+  name: String!
+  groupId: UUID
+  tagId: UUID
+  id: UUID!
 }
 '''

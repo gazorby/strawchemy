@@ -5,19 +5,20 @@ from collections import defaultdict
 from copy import copy
 from enum import Enum
 from functools import partial
-from typing import TYPE_CHECKING, Any, ForwardRef, NewType, TypeVar, cast, overload
+from typing import TYPE_CHECKING, Any, ForwardRef, TypeVar, cast
 
 import strawberry
 from strawberry import LazyType
 from strawberry.annotation import StrawberryAnnotation
 from strawberry.types import get_object_definition
 from strawberry.types.base import StrawberryContainer
+from strawberry.types.enum import StrawberryEnumDefinition
 from strawberry.types.field import StrawberryField
 from strawberry.types.union import StrawberryUnion
 
 from strawchemy.dto.strawberry import EnumDTO, MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import FieldSet
-from strawchemy.exceptions import TypeNameConflictError
+from strawchemy.exceptions import ScopeConflictError, TypeNameConflictError
 from strawchemy.schema.field import RegistryAnnotation
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
@@ -47,11 +48,8 @@ if TYPE_CHECKING:
 
 __all__ = ("RegistryTypeInfo", "StrawberryRegistry")
 
-T = TypeVar("T")
 EnumT = TypeVar("EnumT", bound=Enum)
 StrawchemyDTOT = TypeVar("StrawchemyDTOT", bound="StrawchemyObject")
-
-_RegistryMissing = NewType("_RegistryMissing", object)
 
 
 @dataclasses.dataclass(frozen=True, slots=True)
@@ -148,20 +146,14 @@ class RegistryTypeInfo:
     name: str
     graphql_type: GraphQLType
     default_name: str | None = None
-    user_defined: bool = False
-    override: bool = False
     pagination: DefaultOffsetPagination | None = None
     order: FieldSet | type[OrderByDTO] = dataclasses.field(default_factory=frozenset)
     distinct_on: FieldSet | type[EnumDTO] = dataclasses.field(default_factory=frozenset)
     paginate: FieldSet = dataclasses.field(default_factory=frozenset)
     scope: DTOScope | None = None
     model: type[DeclarativeBase] | None = None
-    tags: frozenset[str] = dataclasses.field(default_factory=frozenset)
-    exclude_from_scope: bool = False
-
-    @property
-    def scoped_id(self) -> Hashable:
-        return self.model, self.graphql_type, self.tags
+    scope_key: Hashable | None = dataclasses.field(default=None, compare=False)
+    """Shared by the types a schema-scoped declaration stands in for; `None` keeps the type out of any scope."""
 
 
 def _type_origin(type_: type[Any]) -> str:
@@ -234,25 +226,25 @@ class StrawberryRegistry:
             graphql_type: The graphql type of the field.
         """
         for inner_type in strawberry_contained_types(field.type, resolve_lazy=False):
+            target, inner_graphql_type = inner_type, graphql_type
             if isinstance(inner_type, LazyType):
                 field_type_name: str | None = inner_type.type_name
+            elif isinstance(inner_type, StrawberryEnumDefinition):
+                field_type_name, target, inner_graphql_type = inner_type.name, inner_type.wrapped_cls, "enum"
             else:
                 field_type_name = self._get_field_type_name(field, inner_type, graphql_type)
             if not field_type_name:
                 continue
 
-            type_ref = _TypeReference(field, target=inner_type, target_name=field_type_name)
-            type_info = self.get(graphql_type, field_type_name, None)
+            type_ref = _TypeReference(field, target=target, target_name=field_type_name)
+            type_info = self.get(inner_graphql_type, field_type_name)
 
-            if type_info and not type_info.exclude_from_scope:
-                self._type_refs[type_info.scoped_id].append(type_ref)
-                if scoped_type := self._scoped_types.get(type_info.scoped_id):
+            if type_info and type_info.scope_key is not None:
+                self._type_refs[type_info.scope_key].append(type_ref)
+                if scoped_type := self._scoped_types.get(type_info.scope_key):
                     type_ref.update_type(scoped_type)
 
-            if type_info is None or not type_info.override:
-                self._forward_type_refs[graphql_type][field_type_name].append(type_ref)
-            else:
-                type_ref.update_type(self._type_map[type_info])
+            self._forward_type_refs[inner_graphql_type][field_type_name].append(type_ref)
 
             if get_object_definition(inner_type):
                 self._track_references(inner_type, graphql_type)
@@ -261,7 +253,6 @@ class StrawberryRegistry:
         self,
         strawberry_type: type[WithStrawberryObjectDefinition | StrawberryTypeFromPydantic[PydanticModel]],
         graphql_type: GraphQLType,
-        force: bool = False,
     ) -> None:
         """Track the references of a strawberry type.
 
@@ -270,17 +261,16 @@ class StrawberryRegistry:
         Args:
             strawberry_type: The type to track the references of.
             graphql_type: The graphql type of the type.
-            force: Whether to force tracking the references even if the type has already been tracked.
         """
         object_definition = get_object_definition(strawberry_type, strict=True)
         schema_name = self.strawberry_config.name_converter.get_name_from_type(strawberry_type)
-        if not force and schema_name in self._tracked_type_names[graphql_type]:
+        if schema_name in self._tracked_type_names[graphql_type]:
             return
         self._tracked_type_names[graphql_type].add(schema_name)
         for field in object_definition.fields:
             for argument in field.arguments:
                 if any(
-                    get_object_definition(inner_type) is not None
+                    get_object_definition(inner_type) is not None or isinstance(inner_type, StrawberryEnumDefinition)
                     for inner_type in strawberry_contained_types(argument.type, resolve_lazy=False)
                 ):
                     self._update_references(argument, "input")
@@ -296,40 +286,36 @@ class StrawberryRegistry:
             strawberry_type: The type to register.
         """
         self.namespace(type_info.graphql_type)[type_info.name] = strawberry_type
-        if type_info.override or type_info.scope == "global":
+        if type_info.scope == "global":
             for reference in self._forward_type_refs[type_info.graphql_type][type_info.name]:
                 reference.update_type(strawberry_type)
         if type_info.graphql_type != "enum":
-            self._track_references(strawberry_type, type_info.graphql_type, force=type_info.override)
-        if type_info.scope == "global" and type_info.model:
-            if type_info.default_name:
+            self._track_references(strawberry_type, type_info.graphql_type)
+        if type_info.scope == "global" and type_info.scope_key is not None:
+            if type_info.default_name and type_info.default_name not in self._declared_names[type_info.graphql_type]:
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
-            for reference in self._type_refs[type_info.scoped_id]:
+            for reference in self._type_refs[type_info.scope_key]:
                 reference.update_type(strawberry_type)
-            self._scoped_types[type_info.scoped_id] = strawberry_type
+            self._retarget_root_defaults(type_info.scope_key, strawberry_type)
+            self._scoped_types[type_info.scope_key] = strawberry_type
         self._names_map[type_info.graphql_type][type_info.name] = type_info
         self._type_map[type_info] = strawberry_type
 
-    def _get(self, type_info: RegistryTypeInfo) -> type[Any] | None:
-        """Get a type from the registry.
-
-        This will return the type if it exists and is an override, or if it is not an override and a non-override type with the same info exists.
-
-        Args:
-            type_info: The type info of the type to get.
-
-        Returns:
-            The type if it exists, otherwise None.
-        """
-        if (
-            not type_info.override
-            and (existing := self.get(type_info.graphql_type, type_info.name, None))
-            and existing.override
-        ):
-            return self._type_map[existing]
-        if not type_info.override and (existing := self._type_map.get(type_info)):
-            return existing
-        return None
+    def _retarget_root_defaults(self, scope_key: Hashable, scoped_type: type[Any]) -> None:
+        """Point the root-field defaults generated for `scope_key` at the schema-scoped declaration taking them."""
+        generated = [
+            type_
+            for info, type_ in self._type_map.items()
+            if info.scope_key == scope_key and info not in self._declared
+        ]
+        for type_ in self._type_map.values():
+            if not issubclass(type_, MappedStrawberryGraphQLDTO):
+                continue
+            definition = type_.__strawchemy_definition__
+            if definition.order_by in generated:
+                definition.order_by = scoped_type
+            if definition.distinct_on in generated:
+                definition.distinct_on = scoped_type
 
     def _check_conflicts(self, type_info: RegistryTypeInfo, new_type: type[Any], *, declared: bool) -> None:
         """Check for conflicts in the registry.
@@ -343,11 +329,7 @@ class StrawberryRegistry:
             TypeNameConflictError: If another type is already registered under the same name.
         """
         existing = None
-        if (
-            self.non_override_exists(type_info)
-            or self._name_clash(type_info)
-            or (declared and not type_info.override and type_info in self._declared)
-        ):
+        if self._name_clash(type_info) or (declared and type_info in self._declared):
             existing = self.namespace(type_info.graphql_type)[type_info.name]
         elif type_info.graphql_type != "enum":
             existing = self.namespace("enum").get(type_info.name)
@@ -363,26 +345,27 @@ class StrawberryRegistry:
 
         Raises:
             TypeNameConflictError: If another type is already registered under the same name.
+            ScopeConflictError: If another declaration already holds the schema scope `type_info` declares.
         """
-        owns_name = declared and not type_info.user_defined and not type_info.override
-        if owns_name:
+        scoped = self._scoped_types.get(type_info.scope_key) if type_info.scope == "global" else None
+        if scoped is not None:
+            msg = (
+                f"{_type_origin(new_type)} cannot declare the schema scope: "
+                f"{_type_origin(scoped)} already declares it for the same model and kind"
+            )
+            raise ScopeConflictError(msg)
+        if declared:
             self._displace(type_info.graphql_type, type_info.name)
         self._check_conflicts(type_info, new_type, declared=declared)
         if declared:
             self._declared.add(type_info)
-        if owns_name:
             self._declared_names[type_info.graphql_type].add(type_info.name)
 
     def __contains__(self, type_info: RegistryTypeInfo) -> bool:
         return type_info in self._type_map
 
     def _name_clash(self, type_info: RegistryTypeInfo) -> bool:
-        return (
-            type_info not in self
-            and (existing := self.get(type_info.graphql_type, type_info.name, None)) is not None
-            and not existing.override
-            and not type_info.override
-        )
+        return type_info not in self and self.get(type_info.graphql_type, type_info.name) is not None
 
     def _type_info(
         self,
@@ -391,14 +374,13 @@ class StrawberryRegistry:
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, Any], None] | None,
         *,
-        override: bool = False,
-        user_defined: bool = False,
         paginate: FieldSpec | None = None,
         order: FieldSpec | type[OrderByDTO] | None = None,
         distinct_on: FieldSpec | type[EnumDTO] | None = None,
         default_pagination: DefaultOffsetPagination | None = None,
         default_name: str | None = None,
         declared: bool = False,
+        scope_key: Hashable | None = None,
     ) -> RegistryTypeInfo:
         model: type[DeclarativeBase] | None = (
             cast("type[DeclarativeBase]", dto.__dto_model__)
@@ -409,15 +391,15 @@ class StrawberryRegistry:
             name=dto.__name__,
             default_name=default_name,
             graphql_type=graphql_type,
-            override=override,
-            user_defined=user_defined,
             pagination=default_pagination,
             order=order if isinstance(order, type) else FieldSet(order),
             distinct_on=distinct_on if isinstance(distinct_on, type) else FieldSet(distinct_on),
             paginate=FieldSet(paginate),
-            scope=dto_config.scope if current_node is None else None,
+            scope=dto_config.scope if declared else None,
             model=model,
-            exclude_from_scope=dto_config.exclude_from_scope,
+            scope_key=None
+            if dto_config.exclude_from_scope or (declared and dto_config.scope != "global")
+            else scope_key,
         )
         path_name = (
             "".join(node.value.name for node in current_node.path_from_root()) if current_node is not None else None
@@ -442,10 +424,10 @@ class StrawberryRegistry:
     def _displace(self, graphql_type: GraphQLType, name: str) -> None:
         """Rename the generated type registered under `name`, so that a declaration can take it."""
         info = self._names_map[graphql_type].get(name)
-        if info is None or info.user_defined or info.override or info in self._declared:
+        if info is None or info in self._declared:
             return
         path_name = self._path_names.get(info)
-        if path_name is None or self.get(graphql_type, path_name, None) is not None:
+        if path_name is None or self.get(graphql_type, path_name) is not None:
             path_name = self._displaced_name(graphql_type, name)
         new_info = dataclasses.replace(info, name=path_name)
         type_ = self._type_map.pop(info)
@@ -473,34 +455,13 @@ class StrawberryRegistry:
 
     def uniquify_name(self, graphql_type: GraphQLType, name: str) -> str:
         """Return a type name guaranteed to be unique within the registry."""
-        while self.get(graphql_type, name, None):
+        while self.get(graphql_type, name):
             self._unique_names[name] += 1
             name = f"{name}{self._unique_names[name]}"
         return name
 
-    @overload
-    def get(self, graphql_type: GraphQLType, name: str, default: _RegistryMissing) -> RegistryTypeInfo: ...
-
-    @overload
-    def get(self, graphql_type: GraphQLType, name: str) -> RegistryTypeInfo: ...
-
-    @overload
-    def get(self, graphql_type: GraphQLType, name: str, default: T) -> RegistryTypeInfo | T: ...
-
-    def get(
-        self, graphql_type: GraphQLType, name: str, default: T | type[_RegistryMissing] = _RegistryMissing
-    ) -> RegistryTypeInfo | T:
-        if default is _RegistryMissing:
-            return self._names_map[graphql_type][name]
-        return self._names_map[graphql_type].get(name, default)
-
-    def non_override_exists(self, type_info: RegistryTypeInfo) -> bool:
-        # A user defined type with the same name, that is not marked as override already exists
-        return dataclasses.replace(type_info, user_defined=True, override=False) in self or (
-            dataclasses.replace(type_info, user_defined=False, override=False) in self
-            and not type_info.override
-            and type_info.user_defined
-        )
+    def get(self, graphql_type: GraphQLType, name: str) -> RegistryTypeInfo | None:
+        return self._names_map[graphql_type].get(name)
 
     def namespace(self, graphql_type: GraphQLType) -> dict[str, type[Any]]:
         return self._namespaces[graphql_type]
@@ -512,8 +473,6 @@ class StrawberryRegistry:
         graphql_type: GraphQLType,
         dto_config: DTOConfig,
         current_node: Node[Relation[Any, Any], None] | None = None,
-        override: bool = False,
-        user_defined: bool = False,
         declared: bool = False,
         paginate: FieldSpec | None = None,
         order: FieldSpec | type[OrderByDTO] | None = None,
@@ -522,25 +481,25 @@ class StrawberryRegistry:
         default_name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
+        scope_key: Hashable | None = None,
     ) -> type[StrawchemyDTOT]:
         type_info = self._type_info(
             dto=dto,
             graphql_type=graphql_type,
             dto_config=dto_config,
             current_node=current_node,
-            override=override,
-            user_defined=user_defined,
             paginate=paginate,
             order=order,
             distinct_on=distinct_on,
             default_pagination=default_pagination,
             default_name=default_name,
             declared=declared,
+            scope_key=scope_key,
         )
         self._claim(type_info, dto, declared=declared)
         if "__strawberry_definition__" in vars(dto):
             return dto
-        if existing := self._get(type_info):
+        if existing := self._type_map.get(type_info):
             return existing
 
         strawberry_type = cast(
@@ -565,25 +524,25 @@ class StrawberryRegistry:
         enum_type: type[EnumT],
         *,
         dto_config: DTOConfig,
-        override: bool = False,
-        user_defined: bool = False,
         declared: bool = False,
         default_name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] = (),
+        scope_key: Hashable | None = None,
     ) -> type[EnumT]:
+        if enum_type in self.namespace("enum").values():
+            return enum_type
         type_info = self._type_info(
             dto=enum_type,
             graphql_type="enum",
             dto_config=dto_config,
-            override=override,
-            user_defined=user_defined,
             default_name=default_name,
             current_node=None,
             declared=declared,
+            scope_key=scope_key,
         )
         self._claim(type_info, enum_type, declared=declared)
-        if existing := self._get(type_info):
+        if existing := self._type_map.get(type_info):
             return cast("type[EnumT]", existing)
 
         strawberry_type = strawberry.enum(

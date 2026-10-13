@@ -20,7 +20,7 @@ class TicketOrder: ...
 class TicketFilter: ...
 
 
-@strawchemy.type(Ticket, include="all", filter_input=TicketFilter, order=TicketOrder, override=True)
+@strawchemy.type(Ticket, include="all", filter_input=TicketFilter, order=TicketOrder, scope="schema")
 class TicketType: ...
 
 
@@ -55,7 +55,7 @@ class ProjectOrder: ...
 class ProjectFilter: ...
 
 
-@strawchemy.type(Project, include="all", filter_input=ProjectFilter, order=ProjectOrder, override=True)
+@strawchemy.type(Project, include="all", filter_input=ProjectFilter, order=ProjectOrder, scope="schema")
 class ProjectType: ...
 
 
@@ -66,22 +66,22 @@ class ProjectCreate: ...
 # Milestone
 
 
-@strawchemy.type(Milestone, include={"name"}, override=True, distinct_on=["age"], paginate=["projects"])
+@strawchemy.type(Milestone, include={"name"}, scope="schema", distinct_on=["age"], paginate=["projects"])
 class MilestoneType: ...
 
 
-@strawchemy.create_input(Milestone, include="all", override=True)
+@strawchemy.create_input(Milestone, include="all", scope="schema")
 class MilestoneCreate: ...
 
 
 # Customer
 
 
-@strawchemy.type(Customer, include="all", override=True)
+@strawchemy.type(Customer, include="all", scope="schema")
 class CustomerType: ...
 
 
-@strawchemy.create_input(Customer, include="all", override=True)
+@strawchemy.create_input(Customer, include="all", scope="schema")
 class CustomerCreate: ...
 
 

@@ -92,40 +92,22 @@ A decorated method may return any type, a plain `@strawberry.type` included; a `
 
 See [query hooks](/learn/query-hooks) for what `QueryHook` can do, and [custom resolvers](/learn/resolvers) for the other options `@strawchemy.field` accepts.
 
-## Overriding generated types
+## Replacing generated types
 
-Mapping `UserType` with `include="all"` doesn't stop at `User`: it walks the `posts` relationship and auto-generates a default `PostType`. Declaring your own `PostType` afterward gives you a second type over the same model — but only with `override=True`:
+Mapping `UserType` with `include="all"` doesn't stop at `User`: it walks the `posts` relationship and generates a default `PostType`. Declaring your own `PostType` afterward gives you a second type over the same model: the declaration keeps the name, the generated type is renamed, and `UserType.posts` still returns the generated one.
+
+To have your type stand in for every type Strawchemy generates for its model and kind (a `type`, `filter`, `order`, `input`, `distinct_on`, …), declare it with `scope="schema"`. Declaration order does not matter: relations and root field arguments built before or after it resolve to your type. A type you pass explicitly, such as `order_by_input=FruitOrderBy`, is kept.
 
 ```python
-@strawchemy.type(Post, include="all")  # [!code error]
+@strawchemy.type(User, include="all")
+class UserType: ...
+
+
+@strawchemy.type(Post, include="all", scope="schema")
 class PostType: ...
 ```
 
-Without `override=True`, this raises at class-decoration time:
-
-```
-strawchemy.exceptions.StrawchemyError: Type `PostType` is already registered
-```
-
-```python
-@strawchemy.type(Post, include="all", override=True)
-class PostType: ...
-```
-
-`override=True` tells Strawchemy to use your definition instead of the generated one.
-
-## Reusing the same type
-
-`scope="schema"` is an alternative to `override=True`, not an addition to it: instead of overriding the auto-generated type after the fact, it registers your type as the canonical one for a model and purpose (a `type`, `filter`, `input`, …) up front, so nothing auto-generates one to override. Declare `TagType` as schema-scoped before anything maps `Post`, and its `tags` field picks it up automatically. Include only `SCALARS`, not `"all"` — a relationship field on a schema-scoped type would still walk into its target model and auto-register a type for it, the same collision `override=True` exists to solve:
-
-```python
-@strawchemy.type(Tag, include=SCALARS, scope="schema")
-class TagType: ...
-
-
-@strawchemy.type(Post, include=["id", "title", "tags"])
-class PostType: ...
-```
+`UserType.posts` now returns `PostType`. Without the schema scope, a relation never resolves to another declaration: a nested back reference points to the declaration it is reached from. Only one declaration per model and kind can declare the schema scope; a second one raises `ScopeConflictError`.
 
 ## Mapping strictness
 

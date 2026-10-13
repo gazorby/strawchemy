@@ -9,13 +9,13 @@ from tests.unit.models import Color, Fruit
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Fruit, override=True)
+@strawchemy.type(Fruit)
 class FruitTypeCustomName:
     name: int
     color: auto
 
 
-@strawchemy.type(Color, include="all", override=True)
+@strawchemy.type(Color, include="all", scope="schema")
 class ColorType:
     fruits: auto
     name: int

@@ -11,14 +11,17 @@ from typing_extensions import Unpack, override
 from strawchemy.dto.base import DTOBackend, DTOBase, DTOFactory, DTOFieldDefinition, Relation
 from strawchemy.dto.strawberry import EnumDTO, GraphQLFieldDefinition
 from strawchemy.dto.types import DTOConfig, Purpose
+from strawchemy.dto.utils import config
 from strawchemy.utils.text import snake_to_lower_camel_case
 
 if TYPE_CHECKING:
-    from collections.abc import Callable, Generator, Iterable
+    from collections.abc import Callable, Generator, Hashable, Iterable, Mapping
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
-    from strawchemy.schema.factories._kwargs import DecoratorKwargs, FactoryMethodKwargs
+    from strawchemy.dto.types import FieldSpec
+    from strawchemy.schema.factories._kwargs import DecoratorKwargs, FactoryMethodKwargs, RegistrationKwargs
+    from strawchemy.schema.factories.base import TypeScope
     from strawchemy.utils.graph import Node
 
 T = TypeVar("T")
@@ -121,6 +124,10 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         return f"{base_name}Fields"
 
     @override
+    def _scope_key(self, model: type[Any], dto_config: DTOConfig, **_: Any) -> Hashable:
+        return (type(self), model)
+
+    @override
     def should_exclude_field(
         self,
         field: DTOFieldDefinition[Any, QueryableAttribute[Any]],
@@ -152,13 +159,37 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
         self,
         model: type[DeclarativeBase],
         purpose: Purpose = Purpose.READ,
-        **kwargs: Unpack[DecoratorKwargs],
+        *,
+        include: FieldSpec | None = None,
+        exclude: FieldSpec | None = None,
+        partial: bool | None = None,
+        type_map: Mapping[Any, Any] | None = None,
+        scope: TypeScope | None = None,
+        **kwargs: Unpack[RegistrationKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
-        return super().decorator(model, purpose, **kwargs)
+        def wrapper(class_: type[Any]) -> type[EnumDTO]:
+            return self.factory(
+                model=model,
+                dto_config=config(
+                    purpose=purpose,
+                    include=include,
+                    exclude=exclude,
+                    partial=partial,
+                    type_map=type_map,
+                    scope="global" if scope else None,
+                ),
+                base=class_,
+                name=class_.__name__,
+                **kwargs,
+            )
+
+        return wrapper
 
     def input(
         self,
         model: type[DeclarativeBase],
+        *,
+        scope: TypeScope | None = None,
         **kwargs: Unpack[DecoratorKwargs],
     ) -> Callable[[type[Any]], type[EnumDTO]]:
         """Decorate a class into an enum of the write fields of ``model``.
@@ -167,7 +198,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
             ReadOnlyModelError: If ``model`` maps a join or a selectable.
         """
         self.inspector.check_writable(model)
-        return super().decorator(model, Purpose.WRITE, **kwargs)
+        return self.decorator(model, Purpose.WRITE, scope=scope, **kwargs)
 
     def upsert_conflict_fields(
         self,
@@ -200,8 +231,7 @@ class EnumFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], EnumDTO])
                 dto_config=dto_config,
                 description=kwargs.get("description"),
                 directives=kwargs.get("directives") or (),
-                override=kwargs.get("override", False),
-                user_defined=kwargs.get("user_defined", False),
                 declared=base is not None,
+                scope_key=self._scope_key(model, dto_config),
             )
         return dto

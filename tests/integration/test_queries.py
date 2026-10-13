@@ -68,10 +68,10 @@ _VISIBLE_COLOR_NAMES = ["Red", "Green", "Pink"]
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "color"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "color"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.type(User, include=["id", "name", "greeting", "departments"])

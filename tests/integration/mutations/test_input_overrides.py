@@ -24,10 +24,10 @@ pytestmark = [pytest.mark.integration]
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["name", "color"], override=True)
+    @strawchemy.type(Fruit, include=["name", "color"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["name", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.create_input(Fruit, include=["name", "sweetness", "water_percent"])
