@@ -373,6 +373,9 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     fields to convert.
     """
 
+    root_bound_relations: ClassVar[bool] = False
+    """Rebuild, under a root-prefixed name, a related DTO whose back-references point to another root."""
+
     def __init__(
         self,
         inspector: ModelInspector[ModelT, ModelFieldT],
@@ -394,6 +397,12 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self._dto_cache: dict[Hashable, type[DTOBaseT]] = {}
         self._unresolved_refs: defaultdict[str, list[type[DTOBaseT]]] = defaultdict(list)
         self._scoped_dto_names: dict[Hashable, str] = {}
+        # Ancestors, as (model, name), that the forward refs of a DTO and its relations point to outside of it.
+        self._external_refs: dict[type[DTOBaseT], frozenset[tuple[type[Any], str]]] = {}
+        self._root_names: set[str] = set()
+        self._self_referencing: set[type[DTOBaseT]] = set()
+        self._rebuilt_names: set[str] = set()
+        self._path_variants: defaultdict[Hashable, list[type[DTOBaseT]]] = defaultdict(list)
 
     def should_exclude_field(
         self,
@@ -583,6 +592,59 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
     def _finalize_base(self, base: type[Any]) -> None:
         """Adjust ``base`` once the fields of the DTO built on it are known."""
 
+    def _track_external_refs(self, dto: type[DTOBaseT], name: str) -> None:
+        if not self.root_bound_relations:
+            return
+        refs: set[tuple[type[Any], str]] = set()
+        for field_def in dto.__dto_field_definitions__.values():
+            related = field_def.related_dto
+            if isinstance(related, ForwardRef) and field_def.related_model is not None:
+                refs.add((field_def.related_model, related.__forward_arg__))
+            elif related is not None:
+                refs |= self._external_refs.get(related, frozenset())
+        closed = {ref for ref in refs if ref[1] == name}
+        if any(ref_name in self._root_names for _, ref_name in closed):
+            self._self_referencing.add(dto)
+        self._external_refs[dto] = frozenset(refs - closed)
+
+    def _fits_path(self, dto: type[DTOBaseT], node: Node[Relation[Any, DTOBaseT], None]) -> bool:
+        """Whether the back-references of ``dto`` point to the ancestors of ``node`` that share their model."""
+        for model, name in self._external_refs.get(dto, frozenset()):
+            ancestor = node.find_parent(lambda parent, model=model: parent.value.model is model)
+            if ancestor is None or ancestor.value.name == name:
+                continue
+            # A nested ancestor of another name is a mismatch only when one of them was rebuilt for a later root.
+            if name in self._root_names or {name, ancestor.value.name} & self._rebuilt_names:
+                return False
+        return True
+
+    def _cached_for_path(
+        self, cached: type[DTOBaseT], cache_key: Hashable, node: Node[Relation[Any, DTOBaseT], None], name: str
+    ) -> type[DTOBaseT] | None:
+        """Return the cached DTO to reuse at ``node``, or ``None`` when one must be built for its path."""
+        if not self.root_bound_relations:
+            return cached
+        if node.is_root:
+            return None if cached in self._self_referencing and cached.__name__ != name else cached
+        return next((dto for dto in (cached, *self._path_variants[cache_key]) if self._fits_path(dto, node)), None)
+
+    def _name_for_build(self, node: Node[Relation[Any, DTOBaseT], None], name: str, *, rebuilt: bool) -> str:
+        """Prefix with the root name a related DTO rebuilt next to a cached one, so both keep their own name."""
+        if not rebuilt or node.is_root:
+            return name
+        node.value.name = f"{node.root.value.name}{name}"
+        self._rebuilt_names.add(node.value.name)
+        return node.value.name
+
+    def _cache_built(
+        self, dto: type[DTOBaseT], cache_key: Hashable, node: Node[Relation[Any, DTOBaseT], None], *, rebuilt: bool
+    ) -> None:
+        """Cache ``dto``, keeping the entry it was rebuilt next to, if any, for the DTOs declared before it."""
+        if not rebuilt:
+            self._dto_cache[cache_key] = dto
+        elif not node.is_root:
+            self._path_variants[cache_key].append(dto)
+
     def _build_from_cached(
         self,
         cached: type[DTOBaseT],
@@ -707,15 +769,19 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         )
         cache_key = self._cache_key(model, dto_config, node, **kwargs)
 
+        if node.is_root:
+            self._root_names.add(name)
         if node.is_root and dto_config.scope == "global":
             self._scoped_dto_names[self._scoped_cache_key(model, dto_config)] = name
 
-        if not no_cache and ((dto := self._dto_cache.get(cache_key)) or (dto := self._dto_cache.get(scoped_cache_key))):
+        cached = None if no_cache else (self._dto_cache.get(cache_key) or self._dto_cache.get(scoped_cache_key))
+        if cached is not None and (dto := self._cached_for_path(cached, cache_key, node, name)) is not None:
             if not node.is_root:
                 return dto
             if base is None:
                 return self.backend.copy(dto, name)
             return self._build_from_cached(dto, name, base, dto_config, tags=tags, backend_kwargs=backend_kwargs)
+        name = self._name_for_build(node, name, rebuilt=cached is not None)
 
         dto = self._factory(
             name,
@@ -732,6 +798,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         dto.__dto_config__ = dto_config
         dto.__dto_model__ = model
         dto.__dto_tags__ = tags or set()
+        self._track_external_refs(dto, name)
 
         self.dtos[name] = dto
         if node.is_root and base is not None:
@@ -747,7 +814,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         for ref in node.value.forward_refs:
             self._unresolved_refs[ref.name].append(dto)
 
-        self._dto_cache[cache_key] = dto
+        self._cache_built(dto, cache_key, node, rebuilt=cached is not None)
 
         if node.is_root and dto_config.scope is not None:
             self._dto_cache[self._scoped_cache_key(model, dto_config)] = dto
