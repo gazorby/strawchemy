@@ -371,7 +371,7 @@ class StrawberryRegistry:
         )
         if declared:
             return type_info
-        if self.get(graphql_type, type_info.name) is not None or type_info.name in self._declared_names[graphql_type]:
+        if type_info.name in self.namespace(graphql_type) or type_info.name in self._declared_names[graphql_type]:
             return dataclasses.replace(type_info, name=self._free_name(graphql_type, type_info.name, path_name))
         if path_name is not None:
             self._path_names[graphql_type, type_info.name] = path_name
@@ -379,14 +379,17 @@ class StrawberryRegistry:
 
     def _free_name(self, graphql_type: GraphQLType, name: str, path_name: str | None) -> str:
         """Return the name a generated type takes when another type holds `name`: its path name if free."""
-        if path_name is not None and self.get(graphql_type, path_name) is None:
+        if path_name is not None and path_name not in self.namespace(graphql_type):
             return path_name
         return self.uniquify_name(graphql_type, name)
 
     def _displace(self, graphql_type: GraphQLType, name: str) -> None:
-        """Rename the generated type registered under `name`, so that a declaration can take it."""
+        """Free `name` for a declaration: rename the generated type holding it, drop a schema scope alias of it."""
         info = self._names_map[graphql_type].get(name)
-        if info is None or name in self._declared_names[graphql_type]:
+        if info is None:
+            self.namespace(graphql_type).pop(name, None)
+            return
+        if name in self._declared_names[graphql_type]:
             return
         new_info = dataclasses.replace(
             info, name=self._free_name(graphql_type, name, self._path_names.get((graphql_type, name)))
@@ -407,7 +410,7 @@ class StrawberryRegistry:
 
     def uniquify_name(self, graphql_type: GraphQLType, name: str) -> str:
         """Return a type name guaranteed to be unique within the registry."""
-        while self.get(graphql_type, name):
+        while name in self.namespace(graphql_type):
             self._unique_names[name] += 1
             name = f"{name}{self._unique_names[name]}"
         return name
