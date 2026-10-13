@@ -541,6 +541,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         node: Node[Relation[Any, DTOBaseT], None],
         *_: Any,
         declared: bool = False,
+        registration: Hashable = None,
         **factory_kwargs: Any,
     ) -> Hashable:
         base_key = self._base_cache_key(dto_config)
@@ -552,7 +553,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             dto_config.unset_sentinel,
             dto_config.exclude_defaults,
         )
-        return (type(self), self.backend, model, base_key, node_key, config_key)
+        return (type(self), self.backend, model, base_key, node_key, config_key, registration)
 
     def _factory(
         self,
