@@ -11,7 +11,7 @@ from strawberry.types.base import StrawberryList, has_object_definition
 
 from strawchemy import Strawchemy, StrawchemyConfig
 from strawchemy.utils.strawberry import strawberry_contained_user_type
-from tests.unit.models import Color, Fruit, Tag, User
+from tests.unit.models import Color, Container, Fruit, Tag, User
 
 TYPE_DECORATOR_NAMES: list[str] = ["type", "aggregate", "filter", "aggregate_filter", "order"]
 
@@ -223,6 +223,22 @@ def test_nested_back_reference_to_rebuilt_ancestor_follows_its_root(strawchemy: 
     assert "users: [UserType!]!" not in schema
     assert "departments: [TagDetailDepartmentType!]!" in schema
     assert "users: [TagDetailUserType!]!" in schema
+
+
+def test_nested_back_reference_to_nested_ancestor_is_shared_with_later_root(strawchemy: Strawchemy) -> None:
+    """Test that a later root reuses a nested type whose back-reference points to a plain nested ancestor."""
+
+    @strawchemy.type(Container, include="all")
+    class ContainerType: ...
+
+    @strawchemy.type(Fruit, include=["name", "color"])
+    class FruitDetail: ...
+
+    schema = _print_schema(container=ContainerType, fruit=FruitDetail)
+
+    assert "type FruitDetail {\n  color: ColorType!" in schema
+    assert "fruits: [FruitType!]!" in schema
+    assert "FruitDetailColorType" not in schema
 
 
 def test_nested_filter_back_reference_keeps_plain_name(strawchemy: Strawchemy) -> None:
