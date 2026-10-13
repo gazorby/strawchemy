@@ -75,6 +75,10 @@ class _HasModeKwargs(TypedDict, total=False):
     mode: GraphQLPurpose
 
 
+def _spec_key(spec: FieldSpec | type[Any] | None) -> Hashable:
+    return spec if isinstance(spec, type) else FieldSet(spec)
+
+
 class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
     root_bound_relations: ClassVar[bool] = True
 
@@ -301,6 +305,25 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
             yield field
 
     @override
+    def _cache_key(
+        self,
+        model: type[Any],
+        dto_config: DTOConfig,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        *args: Any,
+        field_arguments: Hashable = None,
+        **factory_kwargs: Any,
+    ) -> Hashable:
+        return (super()._cache_key(model, dto_config, node, *args, **factory_kwargs), field_arguments)
+
+    @override
+    def _shape_kind(
+        self, dto: type[MappedGraphQLDTOT], *, field_arguments: Hashable = None, **factory_kwargs: Any
+    ) -> Hashable:
+        takes_arguments = any(field.is_relation and field.uselist for field in dto.__dto_field_definitions__.values())
+        return (super()._shape_kind(dto, **factory_kwargs), field_arguments if takes_arguments else None)
+
+    @override
     def factory(
         self,
         model: type[DeclarativeT],
@@ -322,6 +345,7 @@ class ObjectTypeFactory(StrawchemyMappedFactory[MappedGraphQLDTOT]):
         kwargs["paginate"] = paginate if paginate == "all" else self._mapper.config.pagination
         kwargs["order"] = order if order == "all" else self._mapper.config.order_by
         kwargs["distinct_on"] = distinct_on if distinct_on == "all" else self._mapper.config.distinct_on
+        kwargs["field_arguments"] = (_spec_key(paginate), _spec_key(order), _spec_key(distinct_on), default_pagination)
         dto = super().factory(model, dto_config, base, name, **kwargs)
         if self.graphql_type(dto_config) == "object":
             dto = self._add_fields_arguments(

@@ -134,3 +134,4 @@ class FactoryMethodKwargs(ForwardedFactoryKwargs, RegistrationKwargs, TypeWrappe
     mode: GraphQLPurpose | None
     aggregations: bool
     registration: Hashable
+    field_arguments: Hashable

@@ -81,11 +81,10 @@ def shape_key(type_: type[Any]) -> Hashable:
 def _class_key(class_: type[Any]) -> Hashable:
     # Generated types compare by name: registered ones hold a unique name, and the type a cycle
     # points back to is not registered yet, so it compares by the name it was requested under.
-    if definition := vars(class_).get("__strawberry_definition__") or vars(class_).get("_enum_definition"):
-        return ("named", definition.name)
-    if "__dto_model__" in vars(class_):
-        return ("named", class_.__name__)
-    return ("class", id(class_))
+    if "__dto_model__" not in vars(class_):
+        return ("class", id(class_))
+    definition = vars(class_).get("__strawberry_definition__") or vars(class_).get("_enum_definition")
+    return ("named", definition.name if definition else class_.__name__)
 
 
 def _type_key(annotation: Any) -> Hashable:

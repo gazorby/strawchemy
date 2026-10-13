@@ -684,7 +684,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         self.backend.update_forward_refs(dto, self.type_hint_namespace())
         return dto
 
-    def _shape_kind(self, *, registration: Hashable = None, **factory_kwargs: Any) -> Hashable:
+    def _shape_kind(self, dto: type[DTOBaseT], *, registration: Hashable = None, **factory_kwargs: Any) -> Hashable:
         """Identify what, beside its name and shape, a generated DTO must share with another to be reused for it."""
         return (type(self), type(self.backend), getattr(self.backend, "dto_base", None), registration)
 
@@ -697,7 +697,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         **kwargs: Any,
     ) -> type[DTOBaseT]:
         """Return the generated DTO of the same name and shape built before ``dto``, caching it under ``cache_key``."""
-        shared = self._identities.canonical(self._shape_kind(**kwargs), name, dto)
+        shared = self._identities.canonical(self._shape_kind(dto, **kwargs), name, dto)
         if shared is not dto:
             node.value.dto = shared
             self._identities.set(cache_key, shared)

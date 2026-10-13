@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import Enum
-from typing import Any, ForwardRef, Optional
+from typing import Any, ClassVar, ForwardRef, Optional
 
 import pytest
 import strawberry
@@ -17,6 +17,7 @@ def _generated(type_name: str, annotations: dict[str, Any], /, **attributes: Any
 
 @strawberry.type(name="RegisteredType")
 class _Registered:
+    __dto_model__: ClassVar[type[Any]] = Fruit
     name: str
 
 

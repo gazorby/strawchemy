@@ -2434,3 +2434,49 @@ def test_nested_create_payload_has_create_shape(roots: tuple[str, ...]) -> None:
         assert isinstance(payload, GraphQLInputObjectType)
         assert str(payload.fields["name"].type) == "String!", input_type.__name__
         assert str(payload.fields["id"].type) == "UUID", input_type.__name__
+
+
+_FIELD_ARGUMENT_NAMES = {"paginate": {"limit", "offset"}, "order": {"orderBy"}, "distinct_on": {"distinctOn"}}
+
+
+@pytest.mark.parametrize("option", sorted(_FIELD_ARGUMENT_NAMES))
+@pytest.mark.parametrize("configured_first", [True, False])
+def test_nested_relation_arguments_follow_their_root(option: str, configured_first: bool) -> None:
+    """Test that nested relations get the field arguments of the root they are reached from, in either order (#518)."""
+    strawchemy = Strawchemy("postgresql")
+
+    def plain() -> type[Any]:
+        return strawchemy.type(Container, include="all")(type("ContainerPlain", (), {}))
+
+    def configured() -> type[Any]:
+        return strawchemy.type(
+            Container,
+            include="all",
+            paginate="all" if option == "paginate" else None,
+            order="all" if option == "order" else None,
+            distinct_on="all" if option == "distinct_on" else None,
+        )(type("ContainerConfigured", (), {}))
+
+    if configured_first:
+        configured_type, plain_type = configured(), plain()
+    else:
+        plain_type, configured_type = plain(), configured()
+
+    query = strawberry.type(
+        type(
+            "Query",
+            (),
+            {
+                "__annotations__": {"plain": list[plain_type], "configured": list[configured_type]},  # ty: ignore[invalid-type-form]
+                "plain": strawchemy.field(),
+                "configured": strawchemy.field(),
+            },
+        )
+    )
+    graphql_schema = build_schema(str(strawberry.Schema(query=query)))
+    expected = _FIELD_ARGUMENT_NAMES[option]
+
+    for root, has_arguments in (("ContainerPlain", False), ("ContainerConfigured", True)):
+        nested_color = _field_named_type(graphql_schema, root, "fruits", "color")
+        assert isinstance(nested_color, GraphQLObjectType)
+        assert (expected <= set(nested_color.fields["fruits"].args)) is has_arguments, root
