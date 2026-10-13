@@ -281,6 +281,11 @@ class DTOConfig:
             msg = f"Fields are both explicitly included and excluded; exclude takes precedence: {names}"
             warnings.warn(msg, stacklevel=2)
 
+    @property
+    def declares_selection(self) -> bool:
+        """Whether `include` or `exclude` is set; without either, the root selects fields by the global rules."""
+        return self.include is not None or self.exclude is not None
+
     def __or__(self, other: DTOConfig) -> DTOConfig:
         return self.union(other)
 
@@ -381,9 +386,11 @@ class DTOConfig:
         )
 
     def for_related_model(self) -> DTOConfig:
-        """Create a copy including every field, without the settings keyed by this DTO's own field names."""
-        return self.copy_with(
-            include="all",
+        """Create a copy selecting fields by the global rules, without the settings keyed by this DTO's own field names."""
+        return dataclasses.replace(
+            self,
+            include=None,
+            exclude=None,
             annotation_overrides={},
             aliases={},
             type_overrides={key: value for key, value in self.type_overrides.items() if not isinstance(key, str)},
@@ -434,6 +441,8 @@ class DTOConfig:
 
         `field` is a field name or a `DTOFieldDefinition`. A bare `str` is treated as a non-relation field name.
         """
+        if scope == "local" and not self.declares_selection:
+            scope = "global"
         if scope == "local":
             return field in FieldSet(self.include) and field not in FieldSet(self.exclude)
         if scope == "global":

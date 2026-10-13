@@ -314,11 +314,7 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 order_by_input = self._mapper.order_by_factory.make_input(
                     model=model,
                     mode="order_by",
-                    dto_config=DTOConfig(
-                        Purpose.READ,
-                        partial=True,
-                        include=order_include,
-                    ),
+                    dto_config=self._mapper.config.field_config.copy_with(partial=True, include=order_include),
                     if_no_fields="raise",
                     no_cache=True,
                 )

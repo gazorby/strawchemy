@@ -510,14 +510,14 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         )
 
     def _root_cache_key(self, dto_config: DTOConfig) -> Hashable:
-        # Under an unrestricted global include, a root "include all" config has the shape of the
+        # Under unrestricted global rules, a root "include all" config has the shape of the
         # nested defaults: dropping ALL shares their cache entry, letting relations reuse user-defined types.
-        global_all = (
+        global_all = not dto_config.global_exclude and (
             dto_config.global_include is None or FieldGroup.ALL in FieldSet(dto_config.global_include).field_set
         )
         root_key = [
-            frozenset(dto_config.included_fields) - ({FieldGroup.ALL} if global_all else set()),
-            frozenset(dto_config.excluded_fields),
+            frozenset(FieldSet(dto_config.include)) - ({FieldGroup.ALL} if global_all else set()),
+            frozenset(FieldSet(dto_config.exclude)),
             frozenset(dto_config.aliases.items()),
             frozenset(dto_config.annotation_overrides.items()),
         ]
