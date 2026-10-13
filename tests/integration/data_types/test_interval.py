@@ -3,7 +3,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-import msgspec
 import pytest
 import strawberry
 from sqlalchemy import Insert, MetaData, insert
@@ -73,10 +72,6 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         )
 
     return Operations(query=Query)
-
-
-def _encode(value: timedelta) -> str:
-    return msgspec.json.encode(value).decode()
 
 
 @pytest.fixture
@@ -150,12 +145,35 @@ async def test_timedelta_output(
     assert result.data
     assert len(result.data["intervals"]) == len(_INTERVALS)
 
-    for interval in result.data["intervals"]:
-        expected_interval = next(f for f in _INTERVALS if f["id"] == interval["id"])
-        assert interval["timeDeltaCol"] == msgspec.json.encode(expected_interval["time_delta_col"]).decode()
+    assert {interval["id"]: interval["timeDeltaCol"] for interval in result.data["intervals"]} == {
+        1: "P2DT86399S",
+        2: "P10DT43200S",
+        3: "PT1S",
+    }
 
     assert query_tracker.query_count == 1
     assert query_tracker[0].statement_formatted == sql_snapshot
+
+
+@pytest.mark.parametrize(
+    ("query", "variables"),
+    [
+        pytest.param('{ intervals(filter: { timeDeltaCol: { gt: "P5D" } }) { id } }', None, id="literal"),
+        pytest.param(
+            "query ($duration: Interval!) { intervals(filter: { timeDeltaCol: { gt: $duration } }) { id } }",
+            {"duration": "P5D"},
+            id="variable",
+        ),
+    ],
+)
+async def test_timedelta_filter_accepts_iso_duration(
+    query: str, variables: dict[str, str] | None, any_async_query: AnyQueryExecutor
+) -> None:
+    """Test that an interval input given as a plain ISO 8601 duration filters on the whole value."""
+    result = await maybe_async(any_async_query(query, variables))
+    assert not result.errors
+    assert result.data
+    assert [row["id"] for row in result.data["intervals"]] == [2]
 
 
 @pytest.mark.parametrize(
@@ -192,12 +210,10 @@ async def test_sum_output(any_async_query: AnyQueryExecutor) -> None:
     result = await maybe_async(any_async_query(query))
     assert not result.errors
     assert result.data
-    assert result.data["intervalAggregations"]["aggregations"]["sum"]["timeDeltaCol"] == _encode(
-        timedelta(days=13, hours=12)
-    )
+    assert result.data["intervalAggregations"]["aggregations"]["sum"]["timeDeltaCol"] == "P13DT43200S"
     assert {
         parent["id"]: parent["childrenAggregate"]["sum"]["timeDeltaCol"] for parent in result.data["intervalParents"]
-    } == {1: _encode(timedelta(days=10, hours=12)), 2: _encode(timedelta(days=3))}
+    } == {1: "P10DT43200S", 2: "P3D"}
 
 
 @pytest.mark.usefixtures("native_interval")
@@ -213,7 +229,7 @@ async def test_sum_interval_order_by(any_async_query: AnyQueryExecutor) -> None:
 @pytest.mark.parametrize(
     "predicate",
     [
-        pytest.param(f"{{ gt: {msgspec.json.encode(_encode(timedelta(days=5))).decode()} }}", id="duration"),
+        pytest.param('{ gt: "P5D" }', id="duration"),
         pytest.param("{ days: { gt: 5 } }", id="days"),
     ],
 )
