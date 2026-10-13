@@ -109,6 +109,8 @@ class PostType: ...
 
 `UserType.posts` now returns `PostType`. Without the schema scope, a relation never resolves to another declaration: a nested back reference points to the declaration it is reached from. Only one declaration per model and kind can declare the schema scope; a second one raises `ScopeConflictError`.
 
+Generated types are shared when they expose the same fields under the same name, whichever declaration or field asked for them. A generated type that differs from the one already holding its name, such as a nested type carrying other `paginate` arguments or an enum listing other columns, gets a name of its own, prefixed with the path it is reached from or numbered. These names follow from everything mapped on the `Strawchemy` instance, so they can change as you add declarations: when clients depend on the name of a type, declare it.
+
 ## Mapping strictness
 
 By default (`strict=True`), a column with no GraphQL mapping fails only when `strawberry.Schema(...)` builds the schema; the class itself decorates without complaint. A `complex` column stored through SQLAlchemy's `PickleType` is one such column:
