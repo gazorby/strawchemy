@@ -1862,6 +1862,29 @@ def test_schema_scope_declaration_takes_over_generated_name(kind: _DeclarationKi
     assert "sweetness" not in declared.fields
 
 
+def test_generated_type_outside_schema_scope_avoids_its_default_name() -> None:
+    """Test that a type generated outside a schema scope takes another name than the default one the scope holds."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"], partial=True, scope="schema")(type("FruitScoped", (), {}))
+    root = strawchemy.type(Color, include="all")(type("ColorRoot", (), {}))
+
+    schema = _query_schema(strawchemy, root)
+    generated = build_schema(str(schema)).get_type(_relation_type_name(schema, _DECLARATION_KINDS["type"]))
+
+    assert isinstance(generated, GraphQLObjectType)
+    assert generated.name not in {"FruitScoped", "FruitType"}
+    assert "sweetness" in generated.fields
+
+
+def test_declaration_takes_default_name_of_schema_scope() -> None:
+    """Test that a declaration named like the default name of another shape's schema scope keeps that name."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"], partial=True, scope="schema")(type("FruitScoped", (), {}))
+    declared = strawchemy.type(Fruit, include="all")(type("FruitType", (), {}))
+
+    assert build_schema(str(_query_schema(strawchemy, declared))).get_type("FruitType") is not None
+
+
 @pytest.mark.parametrize("declared_first", [True, False])
 @pytest.mark.parametrize("kind", ["type", "filter", "order"])
 def test_relation_back_reference_points_to_its_declaration(kind: str, declared_first: bool) -> None:
