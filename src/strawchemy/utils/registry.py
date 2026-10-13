@@ -423,9 +423,9 @@ class StrawberryRegistry:
             "".join(node.value.name for node in current_node.path_from_root()) if current_node is not None else None
         )
         if not declared and type_info.name in self._declared_names[graphql_type]:
-            type_info = dataclasses.replace(
-                type_info, name=path_name or self._displaced_name(graphql_type, type_info.name)
-            )
+            if path_name is None or path_name in self._declared_names[graphql_type]:
+                path_name = self._displaced_name(graphql_type, type_info.name)
+            type_info = dataclasses.replace(type_info, name=path_name)
         elif self._name_clash(type_info) and path_name is not None:
             type_info = dataclasses.replace(type_info, name=path_name)
         elif path_name is not None:
@@ -444,9 +444,10 @@ class StrawberryRegistry:
         info = self._names_map[graphql_type].get(name)
         if info is None or info.user_defined or info.override or info in self._declared:
             return
-        new_info = dataclasses.replace(
-            info, name=self._path_names.get(info) or self._displaced_name(graphql_type, name)
-        )
+        path_name = self._path_names.get(info)
+        if path_name is None or self.get(graphql_type, path_name, None) is not None:
+            path_name = self._displaced_name(graphql_type, name)
+        new_info = dataclasses.replace(info, name=path_name)
         type_ = self._type_map.pop(info)
         del self._names_map[graphql_type][name]
         del self.namespace(graphql_type)[name]
@@ -454,6 +455,13 @@ class StrawberryRegistry:
         self._names_map[graphql_type][new_info.name] = new_info
         self.namespace(graphql_type)[new_info.name] = type_
         type_.__strawberry_definition__.name = new_info.name
+        self._displaced_names.update(
+            {
+                key: new_info.name
+                for key, displaced in self._displaced_names.items()
+                if (key[0], displaced) == (graphql_type, name)
+            }
+        )
         tracked_names = self._tracked_type_names[graphql_type]
         if name in tracked_names:
             tracked_names.remove(name)
