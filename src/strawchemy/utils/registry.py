@@ -292,7 +292,7 @@ class StrawberryRegistry:
         if type_info.graphql_type != "enum":
             self._track_references(strawberry_type, type_info.graphql_type)
         if type_info.scope == "global" and type_info.scope_key is not None:
-            if type_info.default_name:
+            if type_info.default_name and type_info.default_name not in self._declared_names[type_info.graphql_type]:
                 self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
             for reference in self._type_refs[type_info.scope_key]:
                 reference.update_type(strawberry_type)
@@ -397,7 +397,9 @@ class StrawberryRegistry:
             paginate=FieldSet(paginate),
             scope=dto_config.scope if declared else None,
             model=model,
-            scope_key=None if dto_config.exclude_from_scope else scope_key,
+            scope_key=None
+            if dto_config.exclude_from_scope or (declared and dto_config.scope != "global")
+            else scope_key,
         )
         path_name = (
             "".join(node.value.name for node in current_node.path_from_root()) if current_node is not None else None
