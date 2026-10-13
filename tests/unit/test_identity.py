@@ -5,8 +5,11 @@ from typing import Any, ClassVar, ForwardRef, Optional
 
 import pytest
 import strawberry
+from strawberry.types import get_object_definition
 
+from strawchemy import Strawchemy
 from strawchemy.dto.identity import TypeIdentityCache, shape_key
+from strawchemy.dto.types import DTOConfig, Purpose
 from strawchemy.exceptions import ScopeConflictError
 from tests.unit.models import Color, Fruit
 
@@ -121,3 +124,20 @@ def test_second_scope_claim_raises() -> None:
     assert cache.scoped_name("scope") == "ColorType"
     with pytest.raises(ScopeConflictError, match="cannot declare the schema scope"):
         cache.claim_scope("scope", "OtherColorType", _Plain, Color)
+
+
+@pytest.mark.parametrize("no_cache", [False, True])
+def test_generated_request_of_another_description_is_kept(no_cache: bool) -> None:
+    """Test that a generated input requested again with another description is a type of its own."""
+    strawchemy = Strawchemy("postgresql")
+    config = DTOConfig(Purpose.READ, include=["name"])
+
+    def make_input(description: str) -> type[Any]:
+        return strawchemy.filter_factory.make_input(
+            Fruit, mode="filter", dto_config=config, description=description, no_cache=no_cache
+        )
+
+    first, second = make_input("first"), make_input("second")
+
+    assert first is not second
+    assert get_object_definition(second, strict=True).description == "second"
