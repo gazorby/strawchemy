@@ -217,15 +217,15 @@ async def test_delete_filter_on_unselected_column(
     ],
 )
 async def test_delete_restricted_by_repository_statement(
-    field: str, arguments: str, deleted_names: list[str], any_async_query: AnyQueryExecutor
+    field: str, arguments: str, deleted_names: list[str], any_query: AnyQueryExecutor
 ) -> None:
     """A delete whose repository statement keeps only Bob deletes at most Bob, whatever the statement and filter."""
-    result = await maybe_async(any_async_query(f"mutation {{ {field}{arguments} {{ name }} }}"))
+    result = await maybe_async(any_query(f"mutation {{ {field}{arguments} {{ name }} }}"))
     assert not result.errors
     assert result.data
     assert [user["name"] for user in result.data[field]] == deleted_names
 
-    result = await maybe_async(any_async_query("{ users { name } }"))
+    result = await maybe_async(any_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == sorted(
@@ -234,17 +234,15 @@ async def test_delete_restricted_by_repository_statement(
 
 
 async def test_delete_restricted_by_repository_statement_on_composite_primary_key(
-    any_async_query: AnyQueryExecutor,
+    any_query: AnyQueryExecutor,
 ) -> None:
     """A delete whose limited repository statement keeps one composite-key row deletes that row alone."""
-    result = await maybe_async(
-        any_async_query("mutation { deleteUserDepartmentsRestrictedLimit { userId departmentId } }")
-    )
+    result = await maybe_async(any_query("mutation { deleteUserDepartmentsRestrictedLimit { userId departmentId } }"))
     assert not result.errors
     assert result.data
     assert result.data["deleteUserDepartmentsRestrictedLimit"] == [{"userId": 1, "departmentId": 1}]
 
-    result = await maybe_async(any_async_query("{ userDepartments { userId departmentId } }"))
+    result = await maybe_async(any_query("{ userDepartments { userId departmentId } }"))
     assert not result.errors
     assert result.data
     assert sorted((row["userId"], row["departmentId"]) for row in result.data["userDepartments"]) == sorted(

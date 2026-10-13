@@ -1299,17 +1299,15 @@ async def test_update_filter_counting_the_table_next_to_two_to_many_paths(
     ],
 )
 async def test_update_restricted_by_repository_statement(
-    field: str, dto_filter: str, updated_names: list[str], any_async_query: AnyQueryExecutor
+    field: str, dto_filter: str, updated_names: list[str], any_query: AnyQueryExecutor
 ) -> None:
     """An update whose repository statement keeps only Bob updates at most Bob, whatever the statement and filter."""
-    result = await maybe_async(
-        any_async_query(f'mutation {{ {field}(data: {{ name: "Updated" }}{dto_filter}) {{ name }} }}')
-    )
+    result = await maybe_async(any_query(f'mutation {{ {field}(data: {{ name: "Updated" }}{dto_filter}) {{ name }} }}'))
     assert not result.errors
     assert result.data
     assert result.data[field] == [{"name": "Updated"} for _ in updated_names]
 
-    result = await maybe_async(any_async_query("{ users { name } }"))
+    result = await maybe_async(any_query("{ users { name } }"))
     assert not result.errors
     assert result.data
     assert sorted(user["name"] for user in result.data["users"]) == sorted(
