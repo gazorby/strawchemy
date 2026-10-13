@@ -38,6 +38,7 @@ _LabelFields = Enum("_LabelFields", [("name", _Field("label"))])
     ("first", "second"),
     [
         pytest.param({"name": str}, {"name": str}, id="same-annotation"),
+        pytest.param({"__dto_config__": ClassVar[object], "name": str}, {"name": str}, id="dunder-annotations-ignored"),
         pytest.param({"color": ForwardRef("ColorType")}, {"color": "ColorType"}, id="forward-ref-and-string"),
         pytest.param(
             {"color": Optional[ForwardRef("ColorType")]},  # ty: ignore[invalid-type-form]
