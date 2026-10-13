@@ -36,7 +36,6 @@ type DepartmentAggregate {
   count: Int
   max: DepartmentMinMaxFields!
   min: DepartmentMinMaxFields!
-  sum: DepartmentSumFields!
 }
 
 """
@@ -46,7 +45,6 @@ input DepartmentAggregateBoolExp {
   count: DepartmentAggregateBoolExpCount
   maxString: DepartmentAggregateBoolExpMaxstring
   minString: DepartmentAggregateBoolExpMinstring
-  sum: DepartmentAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -67,13 +65,6 @@ input DepartmentAggregateBoolExpMaxstring {
 input DepartmentAggregateBoolExpMinstring {
   arguments: [DepartmentMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input DepartmentAggregateBoolExpSum {
-  arguments: [DepartmentSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
@@ -101,15 +92,6 @@ type DepartmentMinMaxFields {
 }
 
 enum DepartmentMinMaxStringFieldsEnum {
-  name
-}
-
-"""GraphQL type"""
-type DepartmentSumFields {
-  name: String
-}
-
-enum DepartmentSumFieldsEnum {
   name
 }
 
@@ -291,12 +273,10 @@ enum FruitNumericFieldsEnum {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 
 enum FruitSumFieldsEnum {
-  name
   sweetness
 }
 
@@ -314,7 +294,6 @@ type GroupAggregate {
   count: Int
   max: GroupMinMaxFields!
   min: GroupMinMaxFields!
-  sum: GroupSumFields!
 }
 
 """
@@ -324,7 +303,6 @@ input GroupAggregateBoolExp {
   count: GroupAggregateBoolExpCount
   maxString: GroupAggregateBoolExpMaxstring
   minString: GroupAggregateBoolExpMinstring
-  sum: GroupAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -345,13 +323,6 @@ input GroupAggregateBoolExpMaxstring {
 input GroupAggregateBoolExpMinstring {
   arguments: [GroupMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input GroupAggregateBoolExpSum {
-  arguments: [GroupSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
@@ -512,15 +483,6 @@ input GroupPartial {
   color: GroupColorIdFieldsInputGroupColorInputGroupColorUpdateFieldsGroupColorConflictFieldsRequiredToOneInput
   name: String
   id: UUID
-}
-
-"""GraphQL type"""
-type GroupSumFields {
-  name: String
-}
-
-enum GroupSumFieldsEnum {
-  name
 }
 
 """Conflict fields enum"""
@@ -1024,7 +986,6 @@ type UserAggregate {
   count: Int
   max: UserMinMaxFields!
   min: UserMinMaxFields!
-  sum: UserSumFields!
 }
 
 """
@@ -1034,7 +995,6 @@ input UserAggregateBoolExp {
   count: UserAggregateBoolExpCount
   maxString: UserAggregateBoolExpMaxstring
   minString: UserAggregateBoolExpMinstring
-  sum: UserAggregateBoolExpSum
 }
 
 """Boolean expression to compare count aggregation."""
@@ -1055,13 +1015,6 @@ input UserAggregateBoolExpMaxstring {
 input UserAggregateBoolExpMinstring {
   arguments: [UserMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
-  distinct: Boolean = false
-}
-
-"""Boolean expression to compare sum aggregation."""
-input UserAggregateBoolExpSum {
-  arguments: [UserSumFieldsEnum!]!
-  predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
@@ -1095,15 +1048,6 @@ type UserMinMaxFields {
 }
 
 enum UserMinMaxStringFieldsEnum {
-  name
-}
-
-"""GraphQL type"""
-type UserSumFields {
-  name: String
-}
-
-enum UserSumFieldsEnum {
   name
 }
 

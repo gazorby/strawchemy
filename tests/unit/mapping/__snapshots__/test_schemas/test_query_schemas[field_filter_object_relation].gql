@@ -173,7 +173,6 @@ enum FruitNumericFieldsEnum {
 }
 
 enum FruitSumFieldsEnum {
-  name
   sweetness
 }
 

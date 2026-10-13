@@ -212,6 +212,20 @@ class Container(UUIDBase):
     colors: Mapped[list[Color]] = relationship("Color", primaryjoin="Container.id == foreign(Color.id)", viewonly=True)
 
 
+class Track(UUIDBase):
+    __tablename__ = "track"
+
+    album_id: Mapped[UUID | None] = mapped_column(ForeignKey("album.id"))
+    duration: Mapped[timedelta]
+    rating: Mapped[int]
+
+
+class Album(UUIDBase):
+    __tablename__ = "album"
+
+    tracks: Mapped[list[Track]] = relationship("Track")
+
+
 class SQLDefaultBase(DeclarativeBase):
     __abstract__ = True
 

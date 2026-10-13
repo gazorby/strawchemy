@@ -190,12 +190,10 @@ enum FruitNumericFieldsEnum {
 
 """GraphQL type"""
 type FruitSumFields {
-  name: String
   sweetness: Int
 }
 
 enum FruitSumFieldsEnum {
-  name
   sweetness
 }
 

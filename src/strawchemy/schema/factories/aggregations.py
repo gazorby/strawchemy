@@ -195,7 +195,7 @@ class _TypeFilteredFunctionArgFactory(_FunctionArgFactory):
 class AggregationInspector:
     _aggregation_type_filters: ClassVar[dict[str, _TypeFilterConfig]] = {
         "numeric": _TypeFilterConfig("NumericFields", frozenset({int, float, Decimal})),
-        "sum": _TypeFilterConfig("SumFields", frozenset({int, float, str, Decimal, timedelta})),
+        "sum": _TypeFilterConfig("SumFields", frozenset({int, float, Decimal, timedelta})),
         "min_max": _TypeFilterConfig("MinMaxFields", frozenset({int, float, str, Decimal, date, datetime, time})),
         "min_max_numeric": _TypeFilterConfig("MinMaxNumericFields", frozenset({int, float, Decimal})),
         "min_max_datetime": _TypeFilterConfig("MinMaxDateTimeFields", frozenset({datetime})),
@@ -441,13 +441,7 @@ class AggregationInspector:
             # happens to collide on that key.
             dto = self._count_fields_factory.factory(model=model, dto_config=narrowed, name=name, no_cache=True)
         else:
-            # `sum`'s own `FilterFunctionInfo.aggregation_type` is "numeric" (matching its float
-            # comparison), but its *candidate columns* are built from the wider "sum" type filter
-            # (which also allows `str`/`timedelta`); narrowing must use that same wider filter, not
-            # the comparison-oriented "numeric" one, or a legitimately narrowed str/timedelta column
-            # gets wrongly rejected.
-            type_filter = "sum" if aggregation.function == "sum" else aggregation.aggregation_type
-            dto = self.arguments_type(model, narrowed, type_filter, name=name)
+            dto = self.arguments_type(model, narrowed, aggregation.aggregation_type, name=name)
         kept = {field.name for field in dto.__field_definitions__.values()} if dto is not None else set()
         missing = sorted(set(columns) - kept)
         if not kept and not missing:
@@ -556,7 +550,7 @@ class AggregationInspector:
                 FilterFunctionInfo(
                     enum_fields=sum_arg_fields,
                     function="sum",
-                    aggregation_type="numeric",
+                    aggregation_type="sum",
                     comparison_type=self._inspector.get_type_comparison(float),
                     comparison_data_type=float,
                 )
