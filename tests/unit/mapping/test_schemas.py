@@ -1742,6 +1742,72 @@ def test_schema_scope_substitutes_generated_type(kind: _DeclarationKind, declare
     assert _relation_type_name(kind.schema(strawchemy, root), kind) == "FruitScoped"
 
 
+def _root_argument_type_name(
+    strawchemy: Strawchemy, fruit_type: type[Any], field_kwargs: dict[str, Any], argument: str
+) -> str:
+    query = strawberry.type(
+        type("Query", (), {"__annotations__": {"fruits": list[fruit_type]}, "fruits": strawchemy.field(**field_kwargs)})  # ty: ignore[invalid-type-form]
+    )
+    query_type = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES))).query_type
+    assert query_type is not None
+    return get_named_type(query_type.fields["fruits"].args[argument].type).name
+
+
+@pytest.mark.parametrize("declared_first", [True, False])
+@pytest.mark.parametrize(
+    ("decorator", "argument", "config", "type_kwargs", "field_kwargs"),
+    [
+        pytest.param("order", "orderBy", {}, {}, {"order_by_input": "all"}, id="field-order-by"),
+        pytest.param("filter", "filter", {}, {}, {"filter_input": True}, id="field-filter"),
+        pytest.param("distinct_on", "distinctOn", {}, {}, {"distinct_on": "all"}, id="field-distinct-on"),
+        pytest.param("order", "orderBy", {"order_by": "all"}, {}, {}, id="config-order-by"),
+        pytest.param("distinct_on", "distinctOn", {"distinct_on": "all"}, {}, {}, id="config-distinct-on"),
+        pytest.param("order", "orderBy", {}, {"order": "all"}, {}, id="type-order-by"),
+        pytest.param("distinct_on", "distinctOn", {}, {"distinct_on": "all"}, {}, id="type-distinct-on"),
+    ],
+)
+def test_schema_scope_substitutes_generated_root_argument(
+    decorator: str,
+    argument: str,
+    config: dict[str, Any],
+    type_kwargs: dict[str, Any],
+    field_kwargs: dict[str, Any],
+    declared_first: bool,
+) -> None:
+    """Test that a schema-scoped declaration replaces the argument type generated for a root field, in either order."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", **config))
+
+    def declare() -> type[Any]:
+        return getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    scoped = declare() if declared_first else None
+    fruit_type = strawchemy.type(Fruit, include="all", **type_kwargs)(type("FruitNode", (), {}))
+    if scoped is None:
+        declare()
+
+    assert _root_argument_type_name(strawchemy, fruit_type, field_kwargs, argument) == "FruitScoped"
+
+
+@pytest.mark.parametrize(
+    ("decorator", "argument", "kwarg", "on_type"),
+    [
+        pytest.param("order", "orderBy", "order_by_input", False, id="field-order-by"),
+        pytest.param("filter", "filter", "filter_input", False, id="field-filter"),
+        pytest.param("distinct_on", "distinctOn", "distinct_on", False, id="field-distinct-on"),
+        pytest.param("order", "orderBy", "order", True, id="type-order-by"),
+        pytest.param("distinct_on", "distinctOn", "distinct_on", True, id="type-distinct-on"),
+    ],
+)
+def test_schema_scope_keeps_explicit_root_argument(decorator: str, argument: str, kwarg: str, on_type: bool) -> None:
+    """Test that a root field argument given a declaration explicitly keeps it over a schema-scoped declaration."""
+    strawchemy = Strawchemy("postgresql")
+    getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+    explicit = {kwarg: getattr(strawchemy, decorator)(Fruit, include=["id"])(type("FruitExplicit", (), {}))}
+    fruit_type = strawchemy.type(Fruit, include="all", **(explicit if on_type else {}))(type("FruitNode", (), {}))
+
+    assert _root_argument_type_name(strawchemy, fruit_type, {} if on_type else explicit, argument) == "FruitExplicit"
+
+
 @pytest.mark.parametrize(
     ("kind", "name"),
     [
