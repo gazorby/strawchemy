@@ -1885,6 +1885,33 @@ def test_declaration_takes_default_name_of_schema_scope() -> None:
     assert build_schema(str(_query_schema(strawchemy, declared))).get_type("FruitType") is not None
 
 
+@pytest.mark.parametrize("partial", [None, True])
+def test_declaration_takes_name_of_generated_type_after_schema_scope(partial: bool | None) -> None:
+    """Test that a declaration named like a type generated before a schema scope of that default name displaces it."""
+    strawchemy = Strawchemy("postgresql")
+    root = strawchemy.type(Color, include="all")(type("ColorRoot", (), {}))
+    scoped = strawchemy.type(Fruit, include=["name"], partial=partial, scope="schema")(type("FruitScoped", (), {}))
+    declared = strawchemy.type(Fruit, include=["id"])(type("FruitType", (), {}))
+    query = strawberry.type(
+        type(
+            "Query",
+            (),
+            {
+                "__annotations__": {"colors": list[root], "fruits": list[declared]},  # ty: ignore[invalid-type-form]
+                "colors": strawchemy.field(),
+                "fruits": strawchemy.field(),
+            },
+        )
+    )
+
+    graphql_schema = build_schema(str(strawberry.Schema(query=query, scalar_overrides=SCALAR_OVERRIDES)))
+    fruit_type = graphql_schema.get_type("FruitType")
+
+    assert isinstance(fruit_type, GraphQLObjectType)
+    assert get_object_definition(scoped, strict=True).name == "FruitScoped"
+    assert list(fruit_type.fields) == ["id"]
+
+
 @pytest.mark.parametrize("declared_first", [True, False])
 @pytest.mark.parametrize("kind", ["type", "filter", "order"])
 def test_relation_back_reference_points_to_its_declaration(kind: str, declared_first: bool) -> None:
