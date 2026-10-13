@@ -32,6 +32,7 @@ from strawchemy.exceptions import (
     EmptyDTOError,
     QueryHookError,
     ReadOnlyModelError,
+    ScopeConflictError,
     StrawchemyError,
     StrawchemyFieldError,
     TypeNameConflictError,
@@ -1788,6 +1789,16 @@ def test_relation_back_reference_points_to_its_declaration(kind: str, declared_f
 
     assert nested_name != "FruitDeclared"
     assert get_named_type(nested.fields["color"].type).name == "ColorRoot"
+
+
+@pytest.mark.parametrize("decorator", sorted({kind.decorator for kind in _DECLARATION_KINDS.values()}))
+def test_second_schema_scoped_declaration_error(decorator: str) -> None:
+    """Test that a schema-scoped declaration of a model and kind already scoped by another declaration raises."""
+    strawchemy = Strawchemy("postgresql")
+    getattr(strawchemy, decorator)(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    with pytest.raises(ScopeConflictError, match=r"^`[\w.]+` \(model `Fruit`\) cannot declare the schema scope"):
+        getattr(strawchemy, decorator)(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
 
 
 @pytest.mark.parametrize("decorator", ["type", "aggregate"])

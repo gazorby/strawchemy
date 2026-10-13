@@ -16,6 +16,7 @@ __all__ = (
     "QueryHookError",
     "QueryResultError",
     "ReadOnlyModelError",
+    "ScopeConflictError",
     "SessionNotFoundError",
     "StrawchemyError",
     "StrawchemyFieldError",
@@ -66,6 +67,10 @@ class StrawchemyFieldError(StrawchemyError):
 
 class TypeNameConflictError(StrawchemyError):
     """Raised when two different types are registered under the same GraphQL name."""
+
+
+class ScopeConflictError(StrawchemyError):
+    """Raised when two declarations of the same model and kind both declare the schema scope."""
 
 
 class DTOError(StrawchemyError):

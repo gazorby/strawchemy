@@ -18,7 +18,7 @@ from strawberry.types.union import StrawberryUnion
 
 from strawchemy.dto.strawberry import EnumDTO, MappedStrawberryGraphQLDTO
 from strawchemy.dto.types import FieldSet
-from strawchemy.exceptions import TypeNameConflictError
+from strawchemy.exceptions import ScopeConflictError, TypeNameConflictError
 from strawchemy.schema.field import RegistryAnnotation
 from strawchemy.utils.annotation import inner_types
 from strawchemy.utils.strawberry import strawberry_contained_types
@@ -328,7 +328,15 @@ class StrawberryRegistry:
 
         Raises:
             TypeNameConflictError: If another type is already registered under the same name.
+            ScopeConflictError: If another declaration already holds the schema scope `type_info` declares.
         """
+        scoped = self._scoped_types.get(type_info.scope_key) if type_info.scope == "global" else None
+        if scoped is not None:
+            msg = (
+                f"{_type_origin(new_type)} cannot declare the schema scope: "
+                f"{_type_origin(scoped)} already declares it for the same model and kind"
+            )
+            raise ScopeConflictError(msg)
         if declared:
             self._displace(type_info.graphql_type, type_info.name)
         self._check_conflicts(type_info, new_type, declared=declared)
