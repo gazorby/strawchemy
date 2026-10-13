@@ -89,14 +89,14 @@ input TableMappedFruitAggregateBoolExp {
   avg: TableMappedFruitAggregateBoolExpAvg
   count: TableMappedFruitAggregateBoolExpCount
   max: TableMappedFruitAggregateBoolExpMax
-  maxString: TableMappedFruitAggregateBoolExpMaxstring
+  maxString: TableMappedFruitAggregateBoolExpMaxString
   min: TableMappedFruitAggregateBoolExpMin
-  minString: TableMappedFruitAggregateBoolExpMinstring
-  stddevPop: TableMappedFruitAggregateBoolExpStddevpop
-  stddevSamp: TableMappedFruitAggregateBoolExpStddevsamp
+  minString: TableMappedFruitAggregateBoolExpMinString
+  stddevPop: TableMappedFruitAggregateBoolExpStddevPop
+  stddevSamp: TableMappedFruitAggregateBoolExpStddevSamp
   sum: TableMappedFruitAggregateBoolExpSum
-  varPop: TableMappedFruitAggregateBoolExpVarpop
-  varSamp: TableMappedFruitAggregateBoolExpVarsamp
+  varPop: TableMappedFruitAggregateBoolExpVarPop
+  varSamp: TableMappedFruitAggregateBoolExpVarSamp
 }
 
 """Boolean expression to compare avg aggregation."""
@@ -121,7 +121,7 @@ input TableMappedFruitAggregateBoolExpMax {
 }
 
 """Boolean expression to compare max aggregation."""
-input TableMappedFruitAggregateBoolExpMaxstring {
+input TableMappedFruitAggregateBoolExpMaxString {
   arguments: [TableMappedFruitMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
@@ -135,21 +135,21 @@ input TableMappedFruitAggregateBoolExpMin {
 }
 
 """Boolean expression to compare min aggregation."""
-input TableMappedFruitAggregateBoolExpMinstring {
+input TableMappedFruitAggregateBoolExpMinString {
   arguments: [TableMappedFruitMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare stddev_pop aggregation."""
-input TableMappedFruitAggregateBoolExpStddevpop {
+input TableMappedFruitAggregateBoolExpStddevPop {
   arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare stddev_samp aggregation."""
-input TableMappedFruitAggregateBoolExpStddevsamp {
+input TableMappedFruitAggregateBoolExpStddevSamp {
   arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
@@ -157,20 +157,20 @@ input TableMappedFruitAggregateBoolExpStddevsamp {
 
 """Boolean expression to compare sum aggregation."""
 input TableMappedFruitAggregateBoolExpSum {
-  arguments: [TableMappedFruitSumFieldsEnum!]!
+  arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare var_pop aggregation."""
-input TableMappedFruitAggregateBoolExpVarpop {
+input TableMappedFruitAggregateBoolExpVarPop {
   arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare var_samp aggregation."""
-input TableMappedFruitAggregateBoolExpVarsamp {
+input TableMappedFruitAggregateBoolExpVarSamp {
   arguments: [TableMappedFruitNumericFieldsEnum!]!
   predicate: FloatOrderComparison!
   distinct: Boolean = false
@@ -361,13 +361,6 @@ type TableMappedFruitSumFields {
   sweetness: Int
   colorId: Int
   requiredColorId: Int
-}
-
-enum TableMappedFruitSumFieldsEnum {
-  id
-  sweetness
-  colorId
-  requiredColorId
 }
 
 """Create input"""

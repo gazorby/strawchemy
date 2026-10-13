@@ -11,8 +11,8 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input CustomerAggregateBoolExp {
   count: CustomerAggregateBoolExpCount
-  maxString: CustomerAggregateBoolExpMaxstring
-  minString: CustomerAggregateBoolExpMinstring
+  maxString: CustomerAggregateBoolExpMaxString
+  minString: CustomerAggregateBoolExpMinString
 }
 
 """Boolean expression to compare count aggregation."""
@@ -23,14 +23,14 @@ input CustomerAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input CustomerAggregateBoolExpMaxstring {
+input CustomerAggregateBoolExpMaxString {
   arguments: [CustomerMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare min aggregation."""
-input CustomerAggregateBoolExpMinstring {
+input CustomerAggregateBoolExpMinString {
   arguments: [CustomerMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
@@ -194,8 +194,8 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input MilestoneAggregateBoolExp {
   count: MilestoneAggregateBoolExpCount
-  maxString: MilestoneAggregateBoolExpMaxstring
-  minString: MilestoneAggregateBoolExpMinstring
+  maxString: MilestoneAggregateBoolExpMaxString
+  minString: MilestoneAggregateBoolExpMinString
 }
 
 """Boolean expression to compare count aggregation."""
@@ -206,14 +206,14 @@ input MilestoneAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input MilestoneAggregateBoolExpMaxstring {
+input MilestoneAggregateBoolExpMaxString {
   arguments: [MilestoneMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare min aggregation."""
-input MilestoneAggregateBoolExpMinstring {
+input MilestoneAggregateBoolExpMinString {
   arguments: [MilestoneMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
@@ -510,8 +510,8 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input TicketAggregateBoolExp {
   count: TicketAggregateBoolExpCount
-  maxString: TicketAggregateBoolExpMaxstring
-  minString: TicketAggregateBoolExpMinstring
+  maxString: TicketAggregateBoolExpMaxString
+  minString: TicketAggregateBoolExpMinString
 }
 
 """Boolean expression to compare count aggregation."""
@@ -522,14 +522,14 @@ input TicketAggregateBoolExpCount {
 }
 
 """Boolean expression to compare max aggregation."""
-input TicketAggregateBoolExpMaxstring {
+input TicketAggregateBoolExpMaxString {
   arguments: [TicketMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false
 }
 
 """Boolean expression to compare min aggregation."""
-input TicketAggregateBoolExpMinstring {
+input TicketAggregateBoolExpMinString {
   arguments: [TicketMinMaxStringFieldsEnum!]!
   predicate: TextComparison!
   distinct: Boolean = false

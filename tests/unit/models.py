@@ -8,7 +8,20 @@ from decimal import Decimal
 from typing import Any
 from uuid import UUID, uuid4
 
-from sqlalchemy import VARCHAR, Column, DateTime, Enum, ForeignKey, Integer, Table, Text, UniqueConstraint, func
+from sqlalchemy import (
+    VARCHAR,
+    Column,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Interval,
+    Table,
+    Text,
+    TypeDecorator,
+    UniqueConstraint,
+    func,
+)
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import DeclarativeBase, Mapped, column_property, mapped_column, relationship
@@ -212,11 +225,18 @@ class Container(UUIDBase):
     colors: Mapped[list[Color]] = relationship("Color", primaryjoin="Container.id == foreign(Color.id)", viewonly=True)
 
 
+class DurationType(TypeDecorator[timedelta]):
+    impl = Interval
+    cache_ok = True
+
+
 class Track(UUIDBase):
     __tablename__ = "track"
 
     album_id: Mapped[UUID | None] = mapped_column(ForeignKey("album.id"))
     duration: Mapped[timedelta]
+    emulated_duration: Mapped[timedelta] = mapped_column(Interval(native=False))
+    wrapped_duration: Mapped[timedelta] = mapped_column(DurationType)
     rating: Mapped[int]
 
 

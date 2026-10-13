@@ -268,6 +268,16 @@ class IntervalModel(IntervalBase):
     __tablename__ = "interval_model"
 
     time_delta_col: Mapped[timedelta] = mapped_column(Interval)
+    emulated_time_delta_col: Mapped[timedelta | None] = mapped_column(
+        Interval(native=False), nullable=True, default=None
+    )
+    parent_id: Mapped[int | None] = mapped_column(ForeignKey("interval_parent_model.id"), nullable=True, default=None)
+
+
+class IntervalParentModel(IntervalBase):
+    __tablename__ = "interval_parent_model"
+
+    children: Mapped[list[IntervalModel]] = relationship(IntervalModel)
 
 
 class JSONModel(JSONBase):

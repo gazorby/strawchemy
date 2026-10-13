@@ -179,7 +179,8 @@ class _TypeFilteredFunctionArgFactory(_FunctionArgFactory):
         return (
             super(_FunctionArgFactory, self).should_exclude_field(field, dto_config, node, has_override)
             or field.is_relation
-            or self.inspector.model_field_type(field) not in self._filter_types
+            or (field_type := self.inspector.model_field_type(field)) not in self._filter_types
+            or (field_type is timedelta and not self.inspector.is_native_interval(field))
         )
 
     @override
@@ -196,6 +197,7 @@ class AggregationInspector:
     _aggregation_type_filters: ClassVar[dict[str, _TypeFilterConfig]] = {
         "numeric": _TypeFilterConfig("NumericFields", frozenset({int, float, Decimal})),
         "sum": _TypeFilterConfig("SumFields", frozenset({int, float, Decimal, timedelta})),
+        "sum_interval": _TypeFilterConfig("SumIntervalFields", frozenset({timedelta})),
         "min_max": _TypeFilterConfig("MinMaxFields", frozenset({int, float, str, Decimal, date, datetime, time})),
         "min_max_numeric": _TypeFilterConfig("MinMaxNumericFields", frozenset({int, float, Decimal})),
         "min_max_datetime": _TypeFilterConfig("MinMaxDateTimeFields", frozenset({datetime})),
@@ -208,7 +210,6 @@ class AggregationInspector:
         self._inspector = mapper.config.inspector
         self._count_fields_factory = _CountFieldsFactory(mapper)
 
-        # Create type-filtered factories from configuration
         self._type_filtered_factories: dict[str, _TypeFilteredFunctionArgFactory] = {
             key: _TypeFilteredFunctionArgFactory(mapper, config)
             for key, config in self._aggregation_type_filters.items()
@@ -433,7 +434,7 @@ class AggregationInspector:
         """
         self._validate_columns_in_scope(scope_config, model, aggregation, columns)
         narrowed = dto_config.copy_with(include=set(columns))
-        name = f"{dto_name}{snake_to_camel(aggregation.field_name).capitalize()}FieldsEnum"
+        name = f"{dto_name}{snake_to_camel(aggregation.field_name)}FieldsEnum"
         if aggregation.function == "count":
             # `_count_fields_factory.factory` goes through the shared DTO cache, whose cache key
             # conflates `include`/`exclude` (see `DTOFactory._root_cache_key`); `no_cache=True`
@@ -530,7 +531,7 @@ class AggregationInspector:
         dto_config = dto_config.copy_with(scope=None)
         count_fields = self._count_fields_factory.factory(model=model, dto_config=dto_config)
         numeric_arg_fields = self.arguments_type(model, dto_config, "numeric")
-        sum_arg_fields = self.arguments_type(model, dto_config, "sum")
+        sum_interval_arg_fields = self.arguments_type(model, dto_config, "sum_interval")
 
         aggregations: list[FilterFunctionInfo] = []
 
@@ -545,14 +546,25 @@ class AggregationInspector:
                     require_arguments=False,
                 )
             )
-        if self._supports_aggregations("sum") and sum_arg_fields:
+        if self._supports_aggregations("sum") and numeric_arg_fields:
             aggregations.append(
                 FilterFunctionInfo(
-                    enum_fields=sum_arg_fields,
+                    enum_fields=numeric_arg_fields,
                     function="sum",
-                    aggregation_type="sum",
+                    aggregation_type="numeric",
                     comparison_type=self._inspector.get_type_comparison(float),
                     comparison_data_type=float,
+                )
+            )
+        if self._supports_aggregations("sum") and sum_interval_arg_fields:
+            aggregations.append(
+                FilterFunctionInfo(
+                    enum_fields=sum_interval_arg_fields,
+                    function="sum",
+                    aggregation_type="sum_interval",
+                    comparison_type=self._inspector.get_type_comparison(timedelta),
+                    comparison_data_type=timedelta,
+                    field_name_="sum_interval",
                 )
             )
 

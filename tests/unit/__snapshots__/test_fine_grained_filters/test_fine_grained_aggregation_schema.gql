@@ -105,7 +105,7 @@ Boolean expression to compare aggregated fields. All fields are combined with lo
 """
 input TicketAggregateFilter {
   count: TicketAggregateFilterCount
-  maxDatetime: TicketAggregateFilterMaxdatetime
+  maxDatetime: TicketAggregateFilterMaxDatetime
 }
 
 """Boolean expression to compare count aggregation."""
@@ -120,7 +120,7 @@ enum TicketAggregateFilterCountFieldsEnum {
 }
 
 """Boolean expression to compare max aggregation."""
-input TicketAggregateFilterMaxdatetime {
+input TicketAggregateFilterMaxDatetime {
   arguments: [_TicketMinMaxDateTimeFieldsEnum!]!
   predicate: DateTimeComparison!
   distinct: Boolean = false

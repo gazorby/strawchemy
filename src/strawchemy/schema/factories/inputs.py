@@ -716,7 +716,7 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
     ) -> type[AggregationFunctionFilterDTO]:
         dto_config = DTOConfig(Purpose.WRITE)
         dto = self._filter_function_builder.build(
-            name=f"{dto_name}{snake_to_camel(aggregation.field_name).capitalize()}",
+            name=f"{dto_name}{snake_to_camel(aggregation.field_name)}",
             model=model,
             field_definitions=[
                 FunctionArgFieldDefinition(

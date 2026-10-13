@@ -12,14 +12,21 @@ from uuid import UUID
 
 import pytest
 import strawberry
-from graphql import GraphQLEnumType, GraphQLInputField, GraphQLInputObjectType, build_schema, get_named_type
+from graphql import (
+    GraphQLEnumType,
+    GraphQLInputField,
+    GraphQLInputObjectType,
+    GraphQLObjectType,
+    build_schema,
+    get_named_type,
+)
 from strawberry import auto, relay
 from strawberry.scalars import JSON
 from strawberry.schema.types.scalar import DEFAULT_SCALAR_REGISTRY
 from strawberry.types import get_object_definition
 from strawberry.types.object_type import StrawberryObjectDefinition
 
-from strawchemy import RELATIONSHIPS, SCALARS
+from strawchemy import RELATIONSHIPS, SCALARS, Strawchemy
 from strawchemy.exceptions import (
     EmptyDTOError,
     QueryHookError,
@@ -42,8 +49,8 @@ if TYPE_CHECKING:
     from typing_extensions import Self
 
     from strawchemy.dto.types import FieldSpec
-    from strawchemy.mapper import Strawchemy
     from strawchemy.schema.factories.base import TypeScope
+    from strawchemy.typing import SupportedDialect
 
 SCALAR_OVERRIDES: dict[object, Any] = {dict[str, Any]: DEFAULT_SCALAR_REGISTRY[JSON], timedelta: Interval}
 JOIN_MAPPED_ERROR_TEMPLATE = (
@@ -1389,7 +1396,7 @@ def test_relay_node_id_annotation_does_not_leak_into_related_types(strawchemy: S
 
 def _sdl_type_fields(schema: strawberry.Schema, type_name: str) -> dict[str, str]:
     graphql_type = build_schema(str(schema)).get_type(type_name)
-    assert isinstance(graphql_type, (GraphQLInputObjectType, GraphQLEnumType))
+    assert isinstance(graphql_type, (GraphQLInputObjectType, GraphQLObjectType, GraphQLEnumType))
     if isinstance(graphql_type, GraphQLEnumType):
         return dict.fromkeys(graphql_type.values, "")
     return {name: str(get_named_type(field.type)) for name, field in graphql_type.fields.items()}
@@ -1405,12 +1412,11 @@ def _assert_fruit_aggregate_order_by(schema: strawberry.Schema) -> None:
         "minString": "FruitAggregateMinMaxStringFieldsOrderBy",
         "stddevPop": "FruitAggregateNumericFieldsOrderBy",
         "stddevSamp": "FruitAggregateNumericFieldsOrderBy",
-        "sum": "FruitAggregateSumFieldsOrderBy",
+        "sum": "FruitAggregateNumericFieldsOrderBy",
         "varPop": "FruitAggregateNumericFieldsOrderBy",
         "varSamp": "FruitAggregateNumericFieldsOrderBy",
     }
     assert set(_sdl_type_fields(schema, "FruitAggregateNumericFieldsOrderBy")) == {"sweetness"}
-    assert set(_sdl_type_fields(schema, "FruitAggregateSumFieldsOrderBy")) == {"sweetness"}
     assert set(_sdl_type_fields(schema, "FruitAggregateMinMaxStringFieldsOrderBy")) == {"name"}
 
 
@@ -1567,25 +1573,53 @@ def test_aggregate_numeric_order_by_holds_numeric_columns_only(container_aggrega
     assert build_schema(str(container_aggregates_schema)).get_type("VegetableAggregateNumericFieldsOrderBy") is None
 
 
-def test_aggregate_order_by_sum_keeps_columns_other_functions_reject(strawchemy: Strawchemy) -> None:
-    """Test that sum orders by interval and numeric columns while avg orders by numeric columns only (#483)."""
+def _album_schema(strawchemy: Strawchemy) -> strawberry.Schema:
+    @strawchemy.filter(Album, include="all")
+    class AlbumFilter: ...
 
     @strawchemy.type(Album, include="all", order=["tracks"])
     class AlbumType: ...
 
     @strawberry.type
     class Query:
-        albums: list[AlbumType] = strawchemy.field()
+        albums: list[AlbumType] = strawchemy.field(filter_input=AlbumFilter)
 
-    schema = strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+    return strawberry.Schema(query=Query, scalar_overrides=SCALAR_OVERRIDES)
+
+
+def test_aggregate_order_by_sum_interval_holds_interval_columns(strawchemy: Strawchemy) -> None:
+    """Test that sum and avg order by numeric columns while sumInterval orders by interval columns (#483, #486)."""
+    schema = _album_schema(strawchemy)
 
     order_by = _sdl_type_fields(schema, "TrackAggregateOrderBy")
-    assert (order_by["sum"], order_by["avg"]) == (
-        "TrackAggregateSumFieldsOrderBy",
+    assert (order_by["sum"], order_by["avg"], order_by["sumInterval"]) == (
         "TrackAggregateNumericFieldsOrderBy",
+        "TrackAggregateNumericFieldsOrderBy",
+        "TrackAggregateSumIntervalFieldsOrderBy",
     )
-    assert set(_sdl_type_fields(schema, "TrackAggregateSumFieldsOrderBy")) == {"duration", "rating"}
     assert set(_sdl_type_fields(schema, "TrackAggregateNumericFieldsOrderBy")) == {"rating"}
+    assert set(_sdl_type_fields(schema, "TrackAggregateSumIntervalFieldsOrderBy")) == {"duration", "wrappedDuration"}
+    assert _sdl_type_fields(schema, "TrackAggregateBoolExp")["sumInterval"] == "TrackAggregateBoolExpSumInterval"
+    assert _sdl_type_fields(schema, "TrackAggregateBoolExpSumInterval")["predicate"] == "IntervalComparison"
+
+
+@pytest.mark.parametrize(
+    ("dialect", "sum_fields", "sums_intervals"),
+    [
+        pytest.param("postgresql", {"duration", "wrappedDuration", "rating"}, True, id="postgresql"),
+        pytest.param("mysql", {"rating"}, False, id="mysql"),
+        pytest.param("sqlite", {"rating"}, False, id="sqlite"),
+    ],
+)
+def test_sum_over_interval_columns_follows_native_interval_support(
+    dialect: SupportedDialect, sum_fields: set[str], sums_intervals: bool
+) -> None:
+    """Test that interval columns are summed only on dialects storing intervals natively (#486)."""
+    schema = _album_schema(Strawchemy(dialect))
+
+    assert set(_sdl_type_fields(schema, "TrackSumFields")) == sum_fields
+    assert ("sumInterval" in _sdl_type_fields(schema, "TrackAggregateBoolExp")) is sums_intervals
+    assert ("sumInterval" in _sdl_type_fields(schema, "TrackAggregateOrderBy")) is sums_intervals
 
 
 def test_default_order_by_on_non_list_field_raises() -> None:
