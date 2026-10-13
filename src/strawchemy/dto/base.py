@@ -446,7 +446,7 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
             self._scope_key(relation_model, dto_config, **factory_kwargs)
         ) or self.dto_name(relation_model.__name__, dto_config, node)
         relation_child = Relation(relation_model, name=dto_name)
-        parent = node.find_parent(lambda parent: parent.value == relation_child)
+        parent = self._relation_ancestor(node, relation_child, **factory_kwargs)
 
         if relation_model is node.value.model:
             dto = Self
@@ -476,6 +476,15 @@ class DTOFactory(Generic[ModelT, ModelFieldT, DTOBaseT]):
         if (is_type_hint_optional(type_hint) and not field.complete) or field.partial:
             return Optional[dto]  # ty: ignore[invalid-type-form]
         return dto
+
+    def _relation_ancestor(
+        self,
+        node: Node[Relation[Any, DTOBaseT], None],
+        relation: Relation[Any, DTOBaseT],
+        **factory_kwargs: Any,
+    ) -> Node[Relation[Any, DTOBaseT], None] | None:
+        """Return the ancestor of ``node`` a relation to ``relation`` points back to instead of nesting a new DTO."""
+        return node.find_parent(lambda parent: parent.value == relation)
 
     def _resolve_type(
         self,

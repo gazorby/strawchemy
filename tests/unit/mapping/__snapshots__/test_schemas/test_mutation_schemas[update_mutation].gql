@@ -850,17 +850,23 @@ input TagTagIdFieldsInput {
 }
 
 """Add a new or existing object"""
-input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput {
+input TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneInput {
   set: TagTagIdFieldsInput
-  create: TagUpdate
-  upsert: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput
+  create: TagTagInput
+  upsert: TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput
 }
 
 """Add new object or update if existing"""
-input TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput {
-  create: TagUpdate!
+input TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneUpsertInput {
+  create: TagTagInput!
   conflictFields: TagTagConflictFields
   updateFields: [TagTagUpdateFields!]
+}
+
+"""Create input"""
+input TagTagInput {
+  name: String!
+  id: UUID
 }
 
 """Update fields enum"""
@@ -888,7 +894,7 @@ input TagUpdate {
 
 """Create input"""
 input TagUserInput {
-  tag: TagTagIdFieldsInputTagUpdateTagTagUpdateFieldsTagTagConflictFieldsToOneInput = null
+  tag: TagTagIdFieldsInputTagTagInputTagTagUpdateFieldsTagTagConflictFieldsToOneInput = null
   departments: TagDepartmentsIdFieldsInputTagDepartmentInputTagDepartmentsUpdateFieldsTagDepartmentsConflictFieldsToManyCreateInput
   name: String!
   id: UUID

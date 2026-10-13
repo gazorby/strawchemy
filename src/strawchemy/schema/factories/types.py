@@ -748,12 +748,14 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[Any, MappedGraphQLDTOT], None],
         *,
         mode: GraphQLPurpose,
+        under_update_root: bool = False,
         **factory_kwargs: Any,
     ) -> Hashable:
         return (
             super()._cache_key(model, dto_config, node, **factory_kwargs),
             node.root.value.model,
             mode,
+            under_update_root,
         )
 
     @override
@@ -761,6 +763,18 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         self, model: type[Any], dto_config: DTOConfig, *, mode: GraphQLPurpose | None = None, **_: Any
     ) -> Hashable:
         return (super()._scope_key(model, dto_config), mode)
+
+    @override
+    def _relation_ancestor(
+        self,
+        node: Node[Relation[Any, MappedGraphQLDTOT], None],
+        relation: Relation[Any, MappedGraphQLDTOT],
+        *,
+        under_update_root: bool = False,
+        **factory_kwargs: Any,
+    ) -> Node[Relation[Any, MappedGraphQLDTOT], None] | None:
+        # An update root input does not have the create shape a nested `create` payload points back to.
+        return node.find_parent(lambda parent: parent.value == relation and not (under_update_root and parent.is_root))
 
     @override
     def type_description(self) -> str:
@@ -813,15 +827,19 @@ class MutationInputFactory(ObjectTypeFactory[MappedGraphQLDTOT]):
         node: Node[Relation[DeclarativeBase, MappedGraphQLDTOT], None],
         *,
         mode: GraphQLPurpose,
+        under_update_root: bool = False,
         **factory_kwargs: Any,
     ) -> Any:
         if not field.is_relation:
             return super()._resolve_basic_type(field, dto_config)
+        under_update_root = under_update_root or mode != "create_input"
         # The related input is the payload of `create`, so it takes the create shape under every root mode.
         create_config = (
             dto_config if mode == "create_input" else dto_config.copy_with(partial=None, exclude_defaults=False)
         )
-        self._resolve_relation_type(field, create_config, node, mode="create_input", **factory_kwargs)
+        self._resolve_relation_type(
+            field, create_config, node, mode="create_input", under_update_root=under_update_root, **factory_kwargs
+        )
         identifier_input = self._identifier_input(field, node)
         field_required = self.inspector.required(field.model_field)
         upsert_update_fields = self._upsert_udpate_fields(field, node, dto_config)

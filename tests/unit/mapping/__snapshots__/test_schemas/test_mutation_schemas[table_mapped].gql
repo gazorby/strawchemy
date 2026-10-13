@@ -187,20 +187,6 @@ input TableMappedFruitColorIdFieldsInput {
 }
 
 """Add a new or existing object"""
-input TableMappedFruitColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput {
-  set: TableMappedFruitColorIdFieldsInput
-  create: TableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInput
-  upsert: TableMappedFruitColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneUpsertInput
-}
-
-"""Add new object or update if existing"""
-input TableMappedFruitColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneUpsertInput {
-  create: TableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInput!
-  conflictFields: TableMappedFruitColorConflictFields
-  updateFields: [TableMappedFruitColorUpdateFields!]
-}
-
-"""Add a new or existing object"""
 input TableMappedFruitColorIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput {
   set: TableMappedFruitColorIdFieldsInput
   create: TableMappedFruitPkUpdateTableMappedFruitTableMappedColorInput
@@ -269,18 +255,11 @@ input TableMappedFruitFilter {
 
 """Filter update input"""
 input TableMappedFruitFilterUpdate {
-  color: TableMappedFruitColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput
-  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput
+  color: TableMappedFruitColorIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitTableMappedColorInputTableMappedFruitColorUpdateFieldsTableMappedFruitColorConflictFieldsToOneInput
+  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput
   id: Int
   name: String
   sweetness: Int
-}
-
-"""Create input"""
-input TableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInput {
-  requiredFruit: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput = null
-  id: Int!
-  name: String = null
 }
 
 """GraphQL type"""
@@ -329,7 +308,7 @@ input TableMappedFruitPkUpdate {
 
 """Create input"""
 input TableMappedFruitPkUpdateTableMappedFruitTableMappedColorInput {
-  requiredFruit: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput = null
+  requiredFruit: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitTableMappedFruitInputTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput = null
   id: Int!
   name: String = null
 }
@@ -342,20 +321,6 @@ enum TableMappedFruitRequiredColorConflictFields {
 """Identifier input"""
 input TableMappedFruitRequiredColorIdFieldsInput {
   id: Int!
-}
-
-"""Add a new or existing object"""
-input TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput {
-  set: TableMappedFruitRequiredColorIdFieldsInput
-  create: TableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInput
-  upsert: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsToOneUpsertInput
-}
-
-"""Add new object or update if existing"""
-input TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsToOneUpsertInput {
-  create: TableMappedFruitFilterUpdateTableMappedFruitTableMappedColorInput!
-  conflictFields: TableMappedFruitRequiredColorConflictFields
-  updateFields: [TableMappedFruitRequiredColorUpdateFields!]
 }
 
 """Add a new or existing object"""
@@ -417,29 +382,15 @@ input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappe
 }
 
 """Add a new or existing object"""
-input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput {
+input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitTableMappedFruitInputTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput {
   set: TableMappedFruitRequiredFruitIdFieldsInput
-  create: TableMappedFruitFilterUpdate
-  upsert: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput
+  create: TableMappedFruitTableMappedFruitInput
+  upsert: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitTableMappedFruitInputTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput
 }
 
 """Add new object or update if existing"""
-input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitFilterUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput {
-  create: TableMappedFruitFilterUpdate!
-  conflictFields: TableMappedFruitRequiredFruitConflictFields
-  updateFields: [TableMappedFruitRequiredFruitUpdateFields!]
-}
-
-"""Add a new or existing object"""
-input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput {
-  set: TableMappedFruitRequiredFruitIdFieldsInput
-  create: TableMappedFruitPkUpdate
-  upsert: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput
-}
-
-"""Add new object or update if existing"""
-input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitPkUpdateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput {
-  create: TableMappedFruitPkUpdate!
+input TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitTableMappedFruitInputTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneUpsertInput {
+  create: TableMappedFruitTableMappedFruitInput!
   conflictFields: TableMappedFruitRequiredFruitConflictFields
   updateFields: [TableMappedFruitRequiredFruitUpdateFields!]
 }
@@ -466,6 +417,14 @@ input TableMappedFruitTableMappedColorInput {
   requiredFruit: TableMappedFruitRequiredFruitIdFieldsInputTableMappedFruitCreateTableMappedFruitRequiredFruitUpdateFieldsTableMappedFruitRequiredFruitConflictFieldsToOneInput = null
   id: Int!
   name: String = null
+}
+
+"""Create input"""
+input TableMappedFruitTableMappedFruitInput {
+  requiredColor: TableMappedFruitRequiredColorIdFieldsInputTableMappedFruitTableMappedColorInputTableMappedFruitRequiredColorUpdateFieldsTableMappedFruitRequiredColorConflictFieldsRequiredToOneInput!
+  id: Int!
+  name: String = null
+  sweetness: Int!
 }
 
 """GraphQL type"""

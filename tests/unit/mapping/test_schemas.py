@@ -41,7 +41,7 @@ from strawchemy.exceptions import (
 from strawchemy.schema.scalars import Interval
 from strawchemy.utils.strawberry import strawberry_contained_user_type
 from tests.fixtures import DefaultQuery
-from tests.unit.models import Album, Color, Container, Department, Fruit, Group, Tag, User
+from tests.unit.models import Album, Color, Container, Department, Fruit, Group, TableMappedFruit, Tag, User
 from tests.unit.models import Book as BookModel
 from tests.unit.schemas.join_mapped import JoinedAB, JoinOwner
 from tests.unit.schemas.join_mapped_columns import ColumnJoinOwner
@@ -2480,6 +2480,32 @@ def test_nested_relation_arguments_follow_their_root(option: str, configured_fir
         nested_color = _field_named_type(graphql_schema, root, "fruits", "color")
         assert isinstance(nested_color, GraphQLObjectType)
         assert (expected <= set(nested_color.fields["fruits"].args)) is has_arguments, root
+
+
+@pytest.mark.parametrize("decorator", ["create_input", "pk_update_input", "filter_update_input"])
+def test_nested_create_payload_back_reference_is_a_create_input(decorator: str) -> None:
+    """Test that a nested `create` payload relating back to the root model nests a create input, not the root (#494)."""
+    strawchemy = Strawchemy("postgresql")
+    root = getattr(strawchemy, decorator)(TableMappedFruit, include="all")(type("FruitRoot", (), {}))
+
+    @strawchemy.type(TableMappedFruit, include="all")
+    class FruitType: ...
+
+    @strawchemy.filter(TableMappedFruit, include="all")
+    class FruitFilter: ...
+
+    if decorator == "create_input":
+        field: Any = strawchemy.create(root)
+    elif decorator == "pk_update_input":
+        field = strawchemy.update_by_ids(root)
+    else:
+        field = strawchemy.update(root, FruitFilter)
+    mutation = strawberry.type(type("Mutation", (), {"__annotations__": {"mutate": list[FruitType]}, "mutate": field}))
+    graphql_schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=mutation)))
+    back_reference = _field_named_type(graphql_schema, "FruitRoot", "color", "create", "requiredFruit", "create")
+
+    assert back_reference.description == "Create input"
+    assert back_reference.name != "FruitRoot" or decorator == "create_input"
 
 
 def test_generated_aggregate_count_enum_ignores_narrowed_declaration(strawchemy: Strawchemy) -> None:
