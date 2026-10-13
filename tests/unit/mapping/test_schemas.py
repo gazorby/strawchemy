@@ -1896,6 +1896,27 @@ def test_second_schema_scoped_declaration_error(decorator: str) -> None:
         getattr(strawchemy, decorator)(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
 
 
+def test_schema_scoped_declaration_after_unscoped_one_of_same_fields() -> None:
+    """Test that a schema-scoped declaration of the fields an unscoped one declared stands in and holds the scope."""
+    strawchemy = Strawchemy("postgresql")
+    strawchemy.type(Fruit, include=["name"])(type("FruitPlain", (), {}))
+    strawchemy.type(Fruit, include=["name"], scope="schema")(type("FruitScoped", (), {}))
+
+    @strawchemy.type(Color, include="all")
+    class ColorNode: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorNode] = strawchemy.field()
+
+    color_node = build_schema(str(strawberry.Schema(query=Query))).get_type("ColorNode")
+    assert isinstance(color_node, GraphQLObjectType)
+
+    assert get_named_type(color_node.fields["fruits"].type).name == "FruitScoped"
+    with pytest.raises(ScopeConflictError):
+        strawchemy.type(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
+
+
 def test_schema_scoped_update_inputs_of_each_mode() -> None:
     """Test that a model takes a schema-scoped declaration for each update input mode without conflict."""
     strawchemy = Strawchemy("postgresql")
