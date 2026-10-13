@@ -285,11 +285,21 @@ class StrawberryRegistry:
             self._track_references(strawberry_type, type_info.graphql_type)
         if type_info.scope == "global" and type_info.scope_key is not None:
             self._retarget_root_defaults(type_info.scope_key, strawberry_type)
-            if type_info.default_name and type_info.default_name not in self._declared_names[type_info.graphql_type]:
-                self._namespaces[type_info.graphql_type][type_info.default_name] = strawberry_type
+            if type_info.default_name:
+                self._take_default_name(type_info, type_info.default_name, strawberry_type)
             for reference in self._type_refs[type_info.scope_key]:
                 reference.update_type(strawberry_type)
         self._names_map[type_info.graphql_type][type_info.name] = type_info
+
+    def _take_default_name(self, type_info: RegistryTypeInfo, default_name: str, scoped_type: type[Any]) -> None:
+        """Resolve `default_name` to a schema-scoped declaration, keeping the namespace entry of a type holding it."""
+        graphql_type = type_info.graphql_type
+        holder = self.get(graphql_type, default_name)
+        if holder is None:
+            self.namespace(graphql_type).setdefault(default_name, scoped_type)
+        elif holder.scope_key == type_info.scope_key and default_name not in self._declared_names[graphql_type]:
+            for reference in self._forward_type_refs[graphql_type][default_name]:
+                reference.update_type(scoped_type)
 
     def _retarget_root_defaults(self, scope_key: Hashable, scoped_type: type[Any]) -> None:
         """Point the root-field defaults generated for `scope_key` at the schema-scoped declaration taking them."""
