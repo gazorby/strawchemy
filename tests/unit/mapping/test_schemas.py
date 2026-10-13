@@ -475,6 +475,83 @@ def test_nested_generated_input_displaced_by_declaration(
     assert _member_names(nested) == relation_fields
 
 
+@pytest.mark.parametrize("declared_first", [True, False])
+def test_nested_generated_input_displaced_onto_a_declared_path_name(declared_first: bool) -> None:
+    """Test that a nested input displaced by a declaration skips its path name when another declaration holds it."""
+    strawchemy = Strawchemy("postgresql")
+
+    @strawchemy.create_input(Color, include=["name"])
+    class FruitCreateFruitColorInput: ...
+
+    def declare() -> type[Any]:
+        return strawchemy.create_input(Color, include=["name"])(type("FruitColorInput", (), {}))
+
+    declared = declare() if declared_first else None
+
+    @strawchemy.create_input(Fruit, include="all")
+    class FruitCreate: ...
+
+    if declared is None:
+        declared = declare()
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitNode: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorNode: ...
+
+    @strawberry.type
+    class Mutation:
+        create_fruit: FruitNode = strawchemy.create(FruitCreate)
+        create_color: ColorNode = strawchemy.create(declared)
+        create_path_color: ColorNode = strawchemy.create(FruitCreateFruitColorInput)
+
+    schema = build_schema(str(strawberry.Schema(query=DefaultQuery, mutation=Mutation)))
+    fruit_create = schema.get_type("FruitCreate")
+    assert isinstance(fruit_create, GraphQLInputObjectType)
+    color_relation = get_named_type(fruit_create.fields["color"].type)
+    assert isinstance(color_relation, GraphQLInputObjectType)
+    nested = get_named_type(color_relation.fields["create"].type)
+
+    assert _member_names(schema.get_type("FruitColorInput")) == {"name"}
+    assert _member_names(schema.get_type("FruitCreateFruitColorInput")) == {"name"}
+    assert nested.name not in {"FruitColorInput", "FruitCreateFruitColorInput"}
+    assert _member_names(nested) == {"id", "name"}
+
+
+def test_generated_enum_displaced_twice_keeps_following_its_name() -> None:
+    """Test that a generated enum displaced onto a numbered name a later declaration claims is reused under its new name."""
+    strawchemy = Strawchemy(StrawchemyConfig("postgresql", distinct_on="all"))
+
+    @strawchemy.distinct_on(Fruit, include=["id"])
+    class FruitDistinctOnFields: ...
+
+    @strawchemy.type(Color, include="all")
+    class ColorType: ...
+
+    @strawchemy.distinct_on(Fruit, include=["name"])
+    class FruitDistinctOnFields1: ...
+
+    @strawchemy.type(Fruit, include="all")
+    class FruitNode: ...
+
+    @strawberry.type
+    class Query:
+        colors: list[ColorType] = strawchemy.field()
+        fruits: list[FruitNode] = strawchemy.field()
+        fruits_by_id: list[FruitNode] = strawchemy.field(distinct_on=FruitDistinctOnFields)
+        fruits_by_name: list[FruitNode] = strawchemy.field(distinct_on=FruitDistinctOnFields1)
+
+    schema = build_schema(str(strawberry.Schema(query=Query)))
+    query = schema.query_type
+    assert query is not None
+    generated = get_named_type(query.fields["fruits"].args["distinctOn"].type)
+
+    assert _member_names(schema.get_type("FruitDistinctOnFields1")) == {"name"}
+    assert generated.name not in {"FruitDistinctOnFields", "FruitDistinctOnFields1"}
+    assert _member_names(generated) == {"id", "name", "sweetness", "colorId"}
+
+
 def test_declaration_named_like_a_builtin_type_error(strawchemy: Strawchemy) -> None:
     """Test that a declaration taking the name of a built-in strawchemy enum raises, naming the built-in by origin."""
     with pytest.raises(
