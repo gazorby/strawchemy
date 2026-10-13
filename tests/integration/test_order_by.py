@@ -64,7 +64,7 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.order(User, include=["id", "bio"])
     class UserOrderBy: ...
 
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "water_percent"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness", "water_percent"], scope="schema")
     class FruitType: ...
 
     # The order list also filters the order inputs of `fruits` (nested ordering and aggregations) and of their `color`.
@@ -72,7 +72,7 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         Color,
         include=["id", "name", "fruits"],
         order=["id", "name", "sweetness", "water_percent", "fruits"],
-        override=True,
+        scope="schema",
     )
     class ColorType: ...
 

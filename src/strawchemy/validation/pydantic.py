@@ -91,7 +91,6 @@ class StrawchemyMutationInputValidationFactory(MutationInputFactory[MappedPydant
             name: str | None = None,
             description: str | None = None,
             directives: Sequence[object] | None = (),
-            override: bool = False,
             purpose: Purpose = Purpose.WRITE,
             **kwargs: Any,
         ) -> Callable[[type[Any]], type[MappedPydanticGraphQLDTO[DeclarativeT]]]: ...

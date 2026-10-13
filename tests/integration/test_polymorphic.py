@@ -57,13 +57,13 @@ def seed_insert_statements() -> list[Insert]:
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Vehicle, include=["id", "name"], override=True)
+    @strawchemy.type(Vehicle, include=["id", "name"], scope="schema")
     class VehicleType: ...
 
-    @strawchemy.type(Car, include=["id", "name", "doors"], override=True)
+    @strawchemy.type(Car, include=["id", "name", "doors"], scope="schema")
     class CarType: ...
 
-    @strawchemy.type(Bike, include=["id", "name", "gears", "garage"], override=True)
+    @strawchemy.type(Bike, include=["id", "name", "gears", "garage"], scope="schema")
     class BikeType: ...
 
     @strawchemy.type(
@@ -72,11 +72,11 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         paginate=["vehicles", "cars", "bikes"],
         # `id` keeps the bike count fields of `bikesAggregate` from being empty.
         order=["id", "bikes"],
-        override=True,
+        scope="schema",
     )
     class GarageType: ...
 
-    @strawchemy.type(Driver, include=["id", "vehicle"], override=True)
+    @strawchemy.type(Driver, include=["id", "vehicle"], scope="schema")
     class DriverType: ...
 
     @strawberry.type

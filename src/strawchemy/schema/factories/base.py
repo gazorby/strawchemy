@@ -366,7 +366,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         description: str | None = None,
         directives: Sequence[object] | None = (),
         query_hook: QueryHook[T] | list[QueryHook[T]] | None = None,
-        override: bool = False,
         purpose: Purpose = Purpose.READ,
         scope: DTOScope | None = None,
     ) -> Callable[[type[Any]], type[GraphQLDTOT]]:
@@ -396,7 +395,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 description=description,
                 directives=directives,
                 query_hook=query_hook,
-                override=override,
                 user_defined=True,
                 mode=mode,
                 paginate=self._mapper.config.pagination if paginate is None else paginate,
@@ -433,7 +431,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         name: str | None = None,
         description: str | None = None,
         directives: Sequence[object] | None = (),
-        override: bool = False,
         purpose: Purpose = Purpose.WRITE,
         scope: DTOScope | None = None,
         **kwargs: Any,
@@ -459,7 +456,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 name=name,
                 description=description,
                 directives=directives,
-                override=override,
                 base=class_,
                 **kwargs,
             )
@@ -531,7 +527,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         no_cache: bool = False,
         description: str | None = None,
         directives: Sequence[object] | None = (),
-        override: bool = False,
         register_type: bool = True,
         user_defined: bool = False,
         **kwargs: Any,
@@ -566,10 +561,9 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 current_node=current_node,
                 description=description,
                 directives=directives,
-                override=override,
-                user_defined=user_defined,
                 declared=base is not None,
                 default_name=self.root_dto_name(model, dto_config),
+                scope_key=self._scope_key(model, dto_config),
             )
         return dto
 

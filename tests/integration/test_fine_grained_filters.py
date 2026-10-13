@@ -38,10 +38,10 @@ def _fruit_sweeter_than(statement: SelectOf[Fruit], value: int, **_ctx: Any) -> 
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id"], override=True)
+    @strawchemy.type(Fruit, include=["id"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id"], override=True)
+    @strawchemy.type(Color, include=["id"], scope="schema")
     class ColorType: ...
 
     @strawchemy.filter(Fruit, include=["id", "name", "sweetness"], name="FruitFineGrainedFilter")

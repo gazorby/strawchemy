@@ -39,11 +39,11 @@ class Book(_Base):
 strawchemy = Strawchemy("postgresql")
 
 
-@strawchemy.type(Author, include="all", override=True)
+@strawchemy.type(Author, include="all", scope="schema")
 class AuthorType: ...
 
 
-@strawchemy.type(Book, include="all", override=True)
+@strawchemy.type(Book, include="all", scope="schema")
 class BookType: ...
 
 

@@ -190,7 +190,7 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.distinct_on(Fruit, include=["color_id"])
     class FruitDistinctOn: ...
 
-    @strawchemy.type(Fruit, include=["id", "sweetness", "water_percent", "color", "farms"], override=True)
+    @strawchemy.type(Fruit, include=["id", "sweetness", "water_percent", "color", "farms"], scope="schema")
     class FruitType: ...
 
     @strawchemy.type(Fruit, include=["id", "farms"], query_hook=_FruitOrderingHook())
@@ -199,7 +199,7 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.aggregate(Fruit, include=["id", "sweetness", "water_percent", "color", "farms"])
     class FruitAggregationType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], order=["id", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], order=["id", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.type(Color, include=["id", "fruits"], paginate=["fruits"])

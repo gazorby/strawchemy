@@ -45,7 +45,7 @@ class TestIsTypeOf:
         assert backend_on.auto_is_type_of is True
 
     def test_generated_matches_model(self, strawchemy: Strawchemy) -> None:
-        @strawchemy.type(Fruit, include="all", override=True)
+        @strawchemy.type(Fruit, include="all")
         class FruitType: ...
 
         obj_def = get_object_definition(FruitType, strict=True)
@@ -53,7 +53,7 @@ class TestIsTypeOf:
         assert obj_def.is_type_of(self._make(Fruit), self._resolve_info) is True
 
     def test_generated_rejects_other_model(self, strawchemy: Strawchemy) -> None:
-        @strawchemy.type(Fruit, include="all", override=True)
+        @strawchemy.type(Fruit, include="all")
         class FruitType: ...
 
         obj_def = get_object_definition(FruitType, strict=True)
@@ -61,7 +61,7 @@ class TestIsTypeOf:
         assert obj_def.is_type_of(self._make(Tomato), self._resolve_info) is False
 
     def test_generated_accepts_strawberry_instance(self, strawchemy: Strawchemy) -> None:
-        @strawchemy.type(Fruit, include="all", override=True)
+        @strawchemy.type(Fruit, include="all")
         class FruitType: ...
 
         obj_def = get_object_definition(FruitType, strict=True)
@@ -72,7 +72,7 @@ class TestIsTypeOf:
     def test_user_defined_preserved(self, strawchemy: Strawchemy) -> None:
         sentinel = object()
 
-        @strawchemy.type(Fruit, include="all", override=True)
+        @strawchemy.type(Fruit, include="all")
         class FruitType:
             @classmethod
             def is_type_of(cls, obj, info):  # noqa: ANN001, ANN206, ARG003
@@ -86,7 +86,7 @@ class TestIsTypeOf:
     def test_flag_off_generates_no_is_type_of(self) -> None:
         sc = Strawchemy(StrawchemyConfig("postgresql", auto_is_type_of=False))
 
-        @sc.type(Fruit, include="all", override=True)
+        @sc.type(Fruit, include="all")
         class FruitType: ...
 
         obj_def = get_object_definition(FruitType, strict=True)
@@ -101,10 +101,10 @@ class TestIsTypeOf:
 
     def test_union_resolves_via_generated_is_type_of(self, strawchemy: Strawchemy) -> None:
         # include only a scalar field to avoid relationship forward references.
-        @strawchemy.type(Fruit, include=["name"], override=True)
+        @strawchemy.type(Fruit, include=["name"])
         class FruitType: ...
 
-        @strawchemy.type(Tomato, include=["name"], override=True)
+        @strawchemy.type(Tomato, include=["name"])
         class TomatoType: ...
 
         FruitOrTomato = Annotated[Union[FruitType, TomatoType], strawberry.union("FruitOrTomato")]  # noqa: N806
@@ -131,10 +131,10 @@ class TestIsTypeOf:
         class Named:
             name: str
 
-        @strawchemy.type(Fruit, include=["name"], override=True)
+        @strawchemy.type(Fruit, include=["name"])
         class FruitType(Named): ...
 
-        @strawchemy.type(Tomato, include=["name"], override=True)
+        @strawchemy.type(Tomato, include=["name"])
         class TomatoType(Named): ...
 
         _fruit = Fruit(name="Apple")

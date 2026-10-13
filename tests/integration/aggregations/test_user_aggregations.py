@@ -41,10 +41,10 @@ _USER_DEPARTMENTS: RawRecordData = [
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Department, include=["id", "users"], override=True)
+    @strawchemy.type(Department, include=["id", "users"], scope="schema")
     class DepartmentType: ...
 
-    @strawchemy.type(User, include=["id", "departments", "filtered_departments"], override=True)
+    @strawchemy.type(User, include=["id", "departments", "filtered_departments"], scope="schema")
     class UserType: ...
 
     @strawberry.type

@@ -37,7 +37,7 @@ _FRUIT_FARMS: list[dict[str, Any]] = [
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "sweetness"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "sweetness"], scope="schema")
     class FruitType: ...
 
     @strawchemy.type(Fruit, include=["id", "name", "farms"], paginate="all")

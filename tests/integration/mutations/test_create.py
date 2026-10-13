@@ -31,10 +31,10 @@ _DEPARTMENTS: RawRecordData = [{"id": 1, "name": "IT"}]
 
 
 def _schema(strawchemy: Strawchemy) -> Operations:
-    @strawchemy.type(Fruit, include=["id", "name", "color", "farms", "product"], override=True)
+    @strawchemy.type(Fruit, include=["id", "name", "color", "farms", "product"], scope="schema")
     class FruitType: ...
 
-    @strawchemy.type(Color, include=["id", "name", "fruits"], override=True)
+    @strawchemy.type(Color, include=["id", "name", "fruits"], scope="schema")
     class ColorType: ...
 
     @strawchemy.type(User, include=["name", "bio", "group", "departments"])
