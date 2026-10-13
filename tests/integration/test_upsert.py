@@ -607,6 +607,18 @@ async def test_to_many_upsert_update_existing(
             ["Apple", "Cherry"],
             id="conflict-in-scope",
         ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 5, waterPercent: 0.5 }]',
+            [{"name": "Green apple", "sweetness": 5}],
+            ["Cherry", "Green apple"],
+            id="conflict-moved-out",
+        ),
+        pytest.param(
+            '[{ name: "Grape", sweetness: 7, waterPercent: 0.85 }]',
+            [{"name": "Grape", "sweetness": 7}],
+            ["Apple", "Cherry", "Grape"],
+            id="insert-out-of-scope",
+        ),
     ],
 )
 async def test_upsert_restricted_by_repository_statement(
