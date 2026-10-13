@@ -52,7 +52,7 @@ from strawchemy.utils.annotation import get_annotations, get_type_hints_partial,
 
 if TYPE_CHECKING:
     import builtins
-    from collections.abc import Callable, Generator, Mapping, Sequence
+    from collections.abc import Callable, Generator, Hashable, Mapping, Sequence
 
     from strawchemy import Strawchemy
     from strawchemy.dto.inspectors import SQLAlchemyGraphQLInspector
@@ -89,6 +89,10 @@ class ChildOptions:
     order_by: bool = False
 
 
+def _registration_key(description: str | None, directives: Sequence[object] | None) -> Hashable:
+    return (description, tuple(repr(directive) for directive in directives or ()))
+
+
 class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQLDTOT]):
     inspector: SQLAlchemyGraphQLInspector
 
@@ -101,7 +105,14 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         type_map: dict[Any, Any] | None = None,
         **kwargs: Any,
     ) -> None:
-        super().__init__(mapper.config.inspector, backend, handle_cycles=handle_cycles, type_map=type_map, **kwargs)
+        super().__init__(
+            mapper.config.inspector,
+            backend,
+            handle_cycles=handle_cycles,
+            type_map=type_map,
+            identities=mapper.identities,
+            **kwargs,
+        )
         self._mapper = mapper
 
     def _check_model_instance_attribute(self, base: type[Any]) -> None:
@@ -395,7 +406,6 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 description=description,
                 directives=directives,
                 query_hook=query_hook,
-                user_defined=True,
                 mode=mode,
                 paginate=self._mapper.config.pagination if paginate is None else paginate,
                 order=self._mapper.config.order_by if order is None else order,
@@ -528,12 +538,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
         description: str | None = None,
         directives: Sequence[object] | None = (),
         register_type: bool = True,
-        user_defined: bool = False,
         **kwargs: Any,
     ) -> type[GraphQLDTOT]:
-        if not user_defined and no_cache:
-            name = self.root_dto_name(model, dto_config, current_node) if name is None else name
-            name = self._mapper.registry.uniquify_name(self.graphql_type(dto_config), name)
         if base:
             self._check_model_instance_attribute(base)
             dto_config = self._resolve_config(dto_config, base)
@@ -549,7 +555,8 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
             tags=tags,
             backend_kwargs=backend_kwargs,
             no_cache=no_cache,
-            **kwargs,
+            registration=_registration_key(description, directives),
+            **{key: value for key, value in kwargs.items() if key != "registration"},
         )
         dto.__strawchemy_definition__.description = self.type_description()
 
@@ -566,6 +573,27 @@ class GraphQLFactory(DTOFactory[DeclarativeBase, QueryableAttribute[Any], GraphQ
                 scope_key=self._scope_key(model, dto_config),
             )
         return dto
+
+    def _register_built(
+        self,
+        dto: type[StrawchemyDTOT],
+        *,
+        graphql_type: GraphQLType,
+        dto_config: DTOConfig,
+        description: str | None = None,
+        default_name: str | None = None,
+    ) -> type[StrawchemyDTOT]:
+        """Register a DTO built outside of `factory`, reusing a generated one of the same name and shape."""
+        shared = self._identities.canonical(
+            (type(self), graphql_type, _registration_key(description, ())), dto.__name__, dto
+        )
+        return self._mapper.registry.register_type(
+            shared,
+            graphql_type=graphql_type,
+            dto_config=dto_config,
+            description=description,
+            default_name=default_name,
+        )
 
 
 class StrawchemyMappedFactory(GraphQLFactory[MappedGraphQLDTOT]):

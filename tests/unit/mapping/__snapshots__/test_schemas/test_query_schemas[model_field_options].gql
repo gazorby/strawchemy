@@ -32,7 +32,7 @@ type FruitNumericFields {
 }
 
 """Ordering input."""
-input FruitOrderBy1 {
+input FruitOrderBy {
   name: OrderByEnum
   id: OrderByEnum
 }
@@ -82,7 +82,7 @@ type Query {
 """GraphQL type"""
 type RenamedColorType {
   """Renamed relation field."""
-  items(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy1!] = null): [FruitType!]!
+  items(limit: Int = 100, offset: Int! = 0, orderBy: [FruitOrderBy!] = null): [FruitType!]!
   itemsAggregate: FruitAggregate!
   id: UUID!
 }

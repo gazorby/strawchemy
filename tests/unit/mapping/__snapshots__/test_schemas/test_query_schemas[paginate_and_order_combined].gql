@@ -41,12 +41,6 @@ input ContainerOrderBy1 {
   fruits: FruitOrderBy
 }
 
-"""Ordering input."""
-input ContainerOrderBy2 {
-  fruitsAggregate: FruitAggregateOrderBy
-  fruits: FruitOrderBy
-}
-
 """GraphQL type"""
 type ContainerType1 {
   fruitsAggregate: FruitAggregate!
@@ -190,7 +184,7 @@ type Query {
   container2(orderBy: [ContainerOrderBy1!] = null): [ContainerType2!]!
 
   """Fetch objects from the ContainerType3 collection"""
-  container3(orderBy: [ContainerOrderBy2!] = null): [ContainerType3!]!
+  container3(orderBy: [ContainerOrderBy1!] = null): [ContainerType3!]!
 }
 
 scalar UUID

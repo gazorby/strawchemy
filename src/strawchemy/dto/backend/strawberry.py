@@ -80,24 +80,6 @@ class StrawberrryDTOBackend(DTOBackend[AnnotatedDTOT]):
         return name.startswith(("__strawchemy", "__dto"))
 
     @override
-    def copy(self, dto: type[AnnotatedDTOT], name: str) -> type[AnnotatedDTOT]:
-        annotations = get_annotations(dto)
-        attributes = {name: getattr(dto, name) for name in annotations if hasattr(dto, name)}
-        attributes |= {
-            name: value
-            for name, value in dto.__dict__.items()
-            if isinstance(value, StrawberryField) or self._is_private_attribute(name)
-        }
-
-        def _exec_body(namespace: dict[str, Any]) -> dict[str, Any]:
-            namespace["__module__"] = dto.__module__
-            namespace["__annotations__"] = annotations
-            namespace.update(attributes)
-            return namespace
-
-        return cast("type[AnnotatedDTOT]", new_class(name, (self.dto_base,), exec_body=_exec_body))
-
-    @override
     def build(
         self,
         name: str,

@@ -1,7 +1,6 @@
 '''
-enum ColorDistinctOnFields {
+enum ColorDistinctOnFields1 {
   name
-  id
 }
 
 """GraphQL type"""
@@ -61,7 +60,7 @@ type FruitType {
 
 type Query {
   """Fetch objects from the ColorType collection"""
-  colors(distinctOn: [ColorDistinctOnFields!] = null): [ColorType!]!
+  colors(distinctOn: [ColorDistinctOnFields1!] = null): [ColorType!]!
 }
 
 scalar UUID

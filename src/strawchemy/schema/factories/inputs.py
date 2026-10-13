@@ -760,7 +760,7 @@ class AggregateFilterFactory(_BaseFilterFactory[AggregateFilterDTO]):
         )
         dto.__strawchemy_definition__.description = "Field filtering information"
         dto.__dto_function_info__ = aggregation
-        return self._mapper.registry.register_type(
+        return self._register_built(
             dto,
             dto_config=dto_config,
             graphql_type="input",
@@ -891,7 +891,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
 
         name = f"{model.__name__}Aggregate{snake_to_camel(aggregation.aggregation_type)}FieldsOrderBy"
         dto = self.backend.build(name, model, field_defs)
-        return self._mapper.registry.register_type(
+        return self._register_built(
             dto,
             dto_config=dto_config,
             graphql_type="input",
@@ -923,7 +923,7 @@ class OrderByFactory(_FilterFactory[OrderByDTO]):
             )
 
         dto = self.backend.build(f"{model.__name__}AggregateOrderBy", model, field_definitions)
-        return self._mapper.registry.register_type(
+        return self._register_built(
             dto,
             dto_config=dto_config,
             graphql_type="input",

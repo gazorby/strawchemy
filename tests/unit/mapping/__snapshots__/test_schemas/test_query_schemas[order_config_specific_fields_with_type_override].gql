@@ -20,7 +20,7 @@ input ColorOrderBy {
 }
 
 """Ordering input."""
-input ColorOrderBy2 {
+input ColorOrderBy1 {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
 }
@@ -36,7 +36,7 @@ type ColorType {
 }
 
 """Ordering input."""
-input ContainerOrderBy2 {
+input ContainerOrderBy1 {
   fruitsAggregate: FruitAggregateOrderBy
   fruits: FruitOrderBy
 }
@@ -54,7 +54,7 @@ type ContainerType {
   colorsAggregate: ColorAggregate!
 
   """Fetch objects from the ColorType collection"""
-  colors(orderBy: [ColorOrderBy2!] = null): [ColorType!]!
+  colors(orderBy: [ColorOrderBy1!] = null): [ColorType!]!
   name: String!
   id: UUID!
 }
@@ -142,7 +142,7 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the ContainerType collection"""
-  container(orderBy: [ContainerOrderBy2!] = null): [ContainerType!]!
+  container(orderBy: [ContainerOrderBy1!] = null): [ContainerType!]!
 }
 
 scalar UUID

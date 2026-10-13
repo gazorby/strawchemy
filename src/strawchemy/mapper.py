@@ -10,6 +10,7 @@ from typing_extensions import Unpack
 from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.backend.strawberry import StrawberrryDTOBackend
 from strawchemy.dto.base import TYPING_NS
+from strawchemy.dto.identity import TypeIdentityCache
 from strawchemy.dto.strawberry import BooleanFilterDTO, EnumDTO, MappedStrawberryGraphQLDTO, OrderByDTO, OrderByEnum
 from strawchemy.dto.utils import read_all_config
 from strawchemy.exceptions import StrawchemyFieldError
@@ -123,7 +124,8 @@ class Strawchemy:
                 If not provided, a default StrawberryConfig will be used.
         """
         self.config = StrawchemyConfig(cast("SupportedDialect", config)) if isinstance(config, str) else config
-        self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig())
+        self.identities = TypeIdentityCache()
+        self.registry = StrawberryRegistry(strawberry_config or StrawberryConfig(), self.identities)
         self._event_registry = EventRegistry()
 
         strawberry_backend = StrawberrryDTOBackend(

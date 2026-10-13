@@ -49,13 +49,6 @@ input FruitOrderBy {
 
 """Ordering input."""
 input FruitOrderBy1 {
-  color: ColorOrderBy
-  name: OrderByEnum
-  id: OrderByEnum
-}
-
-"""Ordering input."""
-input FruitOrderBy3 {
   shade: ColorOrderBy
   name: OrderByEnum
   id: OrderByEnum
@@ -79,10 +72,10 @@ enum OrderByEnum {
 
 type Query {
   """Fetch objects from the FruitType collection"""
-  fruits(orderBy: [FruitOrderBy1!] = null): [FruitType!]!
+  fruits(orderBy: [FruitOrderBy!] = null): [FruitType!]!
 
   """Fetch objects from the AliasedFruitType collection"""
-  aliasedFruits(orderBy: [FruitOrderBy3!] = null): [AliasedFruitType!]!
+  aliasedFruits(orderBy: [FruitOrderBy1!] = null): [AliasedFruitType!]!
 }
 
 """GraphQL type"""
