@@ -65,6 +65,9 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.upsert_update_fields(Fruit, include=["name", "sweetness", "water_percent", "best_time_to_pick"])
     class FruitUpsertFields: ...
 
+    @strawchemy.upsert_update_fields(Fruit, include="all")
+    class FruitUpsertAllFields: ...
+
     @strawchemy.upsert_conflict_fields(Fruit, include=["id", "name", "sweetness", "water_percent"])
     class FruitUpsertConflictFields: ...
 
@@ -81,6 +84,9 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         )
         upsert_fruits: list[FruitType] = strawchemy.upsert(
             FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
+        )
+        upsert_fruits_all_fields: list[FruitType] = strawchemy.upsert(
+            FruitCreateInput, update_fields=FruitUpsertAllFields, conflict_fields=FruitUpsertConflictFields
         )
 
     conflict_on_id = cast("Any", FruitUpsertConflictFields).id
@@ -458,6 +464,68 @@ async def test_upsert_many_with_and_without_primary_key(
     assert sorted(stored) == names_after
     assert {name: stored[name] for name in kept_ids} == kept_ids
     assert returned == {name: stored[name] for name in returned}
+
+
+@pytest.mark.parametrize(
+    ("data", "update_fields", "written_ids", "stored"),
+    [
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[name, colorId]",
+            {2},
+            [{"id": 1, "name": "Apple", "color": {"name": "Red"}}, {"id": 2, "name": "X", "color": {"name": "Red"}}],
+            id="omitted-kept",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6, color: { set: null } }]',
+            "[name, colorId]",
+            {2},
+            [{"id": 1, "name": "Apple", "color": {"name": "Red"}}, {"id": 2, "name": "X", "color": None}],
+            id="explicit-null",
+        ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[name, colorId]",
+            {1, 2},
+            [
+                {"id": 1, "name": "Green apple", "color": {"name": "Green"}},
+                {"id": 2, "name": "X", "color": {"name": "Red"}},
+            ],
+            id="mixed",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[colorId]",
+            {2},
+            [
+                {"id": 1, "name": "Apple", "color": {"name": "Red"}},
+                {"id": 2, "name": "Cherry", "color": {"name": "Red"}},
+            ],
+            id="none-given",
+        ),
+    ],
+)
+async def test_upsert_update_fields_given_by_each_row(
+    data: str, update_fields: str, written_ids: set[int], stored: list[dict[str, Any]], any_query: AnyQueryExecutor
+) -> None:
+    """An upsert with update fields updates, on each conflicting row, only the listed fields that row gives."""
+    result = await maybe_async(
+        any_query(
+            f"mutation {{ upsertFruitsAllFields(data: {data}, conflictFields: id, updateFields: {update_fields}) "
+            "{ id name color { name } } }"
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["upsertFruitsAllFields"], key=lambda fruit: fruit["id"]) == [
+        fruit for fruit in stored if fruit["id"] in written_ids
+    ]
+
+    result = await maybe_async(any_query("{ fruits { id name color { name } } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["id"]) == stored
 
 
 @pytest.mark.parametrize(
