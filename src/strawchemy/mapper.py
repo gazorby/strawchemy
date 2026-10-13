@@ -172,7 +172,7 @@ class Strawchemy:
         self.upsert_conflict_fields = self.upsert_conflict_factory.input
 
         # Register common types
-        self.registry.register_enum(OrderByEnum, dto_config=read_all_config)
+        self.registry.register_enum(OrderByEnum, dto_config=read_all_config, declared=True)
 
     def _annotation_namespace(self) -> dict[str, Any]:
         """Provides the namespace for Strawberry annotations.

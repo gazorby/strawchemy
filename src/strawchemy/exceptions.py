@@ -20,6 +20,7 @@ __all__ = (
     "StrawchemyError",
     "StrawchemyFieldError",
     "TranspilingError",
+    "TypeNameConflictError",
 )
 
 
@@ -61,6 +62,10 @@ class SessionNotFoundError(StrawchemyError):
 
 class StrawchemyFieldError(StrawchemyError):
     """Raised when a schema field is declared with an unusable configuration."""
+
+
+class TypeNameConflictError(StrawchemyError):
+    """Raised when two different types are registered under the same GraphQL name."""
 
 
 class DTOError(StrawchemyError):
