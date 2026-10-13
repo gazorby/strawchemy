@@ -90,11 +90,11 @@ strawchemy = Strawchemy(StrawchemyConfig("sqlite", repository_type=StrawchemyAsy
 class UserType: ...
 
 
-@strawchemy.type(Post, include="all", override=True)
+@strawchemy.type(Post, include="all", scope="schema")
 class PostType: ...
 
 
-@strawchemy.type(Tag, include="all", override=True)
+@strawchemy.type(Tag, include="all", scope="schema")
 class TagType: ...
 ```
 
@@ -103,8 +103,8 @@ class TagType: ...
 - The mapper's dialect is `sqlite`.
 - `repository_type` must be `StrawchemyAsyncRepository` because the session used below is async —
   the default is `StrawchemySyncRepository`.
-- `PostType` and `TagType` need `override=True` because mapping `UserType` already generated
-  types for the related `Post` and `Tag` models.
+- `PostType` and `TagType` declare `scope="schema"` so that the `Post` and `Tag` relations of
+  `UserType`, generated before them, return them.
 
 ## Filtering and sorting
 
@@ -117,7 +117,7 @@ Add filter and order-by inputs for each model:
 class UserFilter: ...
 
 
-@strawchemy.filter(Post, include="all", override=True)
+@strawchemy.filter(Post, include="all")
 class PostFilter: ...
 
 
@@ -125,7 +125,7 @@ class PostFilter: ...
 class UserOrderBy: ...
 
 
-@strawchemy.order(Post, include="all", override=True)
+@strawchemy.order(Post, include="all")
 class PostOrderBy: ...
 ```
 
