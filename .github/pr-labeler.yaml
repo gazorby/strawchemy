@@ -6,27 +6,27 @@ labels:
 
   - label: 'feat'
     matcher:
-      title: "^feat(\\([^()\\r\\n]*\\))?:.*"
+      title: "^feat(\\([^()\\r\\n]*\\))?!?:.*"
 
   - label: 'fix'
     matcher:
-      title: "^fix(\\([^()\\r\\n]*\\))?:.*"
+      title: "^fix(\\([^()\\r\\n]*\\))?!?:.*"
 
   - label: 'chore'
     matcher:
-      title: "^chore(\\([^()\\r\\n]*\\))?:.*"
+      title: "^chore(\\([^()\\r\\n]*\\))?!?:.*"
 
   - label: 'chore'
     matcher:
-      title: "^bump(\\((deps|ci)\\))?:.*"
+      title: "^bump(\\((deps|ci)\\))?!?:.*"
 
   - label: 'docs'
     matcher:
-      title: "^docs(\\([^()\\r\\n]*\\))?:.*"
+      title: "^docs(\\([^()\\r\\n]*\\))?!?:.*"
 
   - label: 'perf'
     matcher:
-      title: "^perf(\\([^()\\r\\n]*\\))?:.*"
+      title: "^perf(\\([^()\\r\\n]*\\))?!?:.*"
 
   # Bots
 
