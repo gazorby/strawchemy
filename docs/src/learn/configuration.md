@@ -1,6 +1,6 @@
 # Configuration
 
-Pass options as a `StrawchemyConfig` to the `Strawchemy` instance; they apply to every type and field the mapper generates. A repository you build yourself in a [custom resolver](/learn/resolvers) doesn't read them: pass `session_getter`, `read_session_getter`, `deterministic_ordering` or `execution_options` to its constructor.
+Pass options as a `StrawchemyConfig` to the `Strawchemy` instance; they apply to every type and field the mapper generates. A repository you build yourself in a [custom resolver](/learn/resolvers) doesn't read them: pass `session_getter`, `deterministic_ordering` or `execution_options` to its constructor.
 
 ## Configuration options
 
@@ -8,7 +8,6 @@ Pass options as a `StrawchemyConfig` to the `Strawchemy` instance; they apply to
 |-----------------------------|---------------------------------------------------------------|----------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | `dialect`                   | `SupportedDialect`                                            |                            | Database dialect: "postgresql", "mysql" or "sqlite".                                                                                                           |
 | `session_getter`            | `Callable[[Info], Session \| AsyncSession]`                    | `default_session_getter`   | Function that retrieves the SQLAlchemy session from the strawberry `Info` object. The default reads `session` from `info.context` (attribute or key), then from `info.context.request`.            |
-| `read_session_getter`       | `Callable[[Info], Session \| AsyncSession] \| None`            | `None`                     | Function that returns a dedicated session for each read root field. Setting it enables [concurrent reads](/learn/async#concurrent-reads).                                        |
 | `auto_snake_case`           | `bool`                                                         | `True`                     | Convert snake case names to camel case in the GraphQL schema.                                                                                                                   |
 | `repository_type`           | `type[StrawchemySyncRepository \| StrawchemyAsyncRepository]` | `StrawchemySyncRepository` | Repository class to use for auto resolvers.                                                                                                                                                |
 | `filter_overrides`          | `OrderedDict[tuple[type, ...], type[GraphQLComparison]]`      | `None`                     | Replace the default filters for specific column types with custom filter implementations.                                                          |

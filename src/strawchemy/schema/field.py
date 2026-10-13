@@ -180,7 +180,6 @@ class StrawchemyField(StrawberryField):
         arguments: list[StrawberryArgument] | None = None,
         model_field: str | None = None,
         default_order_by: Sequence[OrderByExpr] | OrderByExpr | None = None,
-        read_only: bool = False,
         # Original StrawberryField args
         python_name: str | None = None,
         graphql_name: str | None = None,
@@ -204,7 +203,6 @@ class StrawchemyField(StrawberryField):
         self.root_aggregations = root_aggregations
         self.query_hook = query_hook
         self.model_field = model_field
-        self.read_only = read_only
 
         self.id_field_name = config.default_id_field_name if id_field_name is None else id_field_name
 
@@ -268,8 +266,7 @@ class StrawchemyField(StrawberryField):
     def _get_repository(self, info: Info[Any, Any]) -> StrawchemySyncRepository[Any] | StrawchemyAsyncRepository[Any]:
         return self._repository_type(
             self._strawchemy_type,
-            session_getter=self._config.session_getter,  # ty: ignore[invalid-argument-type]  # sync/async session unions are not correlated with the repository union here
-            read_session_getter=self._config.read_session_getter,  # ty: ignore[invalid-argument-type]  # sync/async session unions are not correlated with the repository union here
+            session=self._config.session_getter(info),  # ty: ignore[invalid-argument-type]  # sync/async session unions are not correlated with the repository union here
             info=info,
             auto_snake_case=self._config.auto_snake_case,
             root_aggregations=self.root_aggregations,
@@ -667,7 +664,6 @@ class StrawchemyField(StrawberryField):
             order_by_factory=self._order_by_factory,
             filter_factory=self._filter_factory,
             distinct_on_factory=self._distinct_on_factory,
-            read_only=self.read_only,
         )
         new_field._arguments = self._arguments[:] if self._arguments is not None else None  # noqa: SLF001
         return new_field

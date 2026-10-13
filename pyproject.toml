@@ -272,10 +272,6 @@ SQLAlchemyGraphQLAsyncRepository = "SQLAlchemyGraphQLSyncRepository"
 "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLAsyncRepository" = "strawchemy.repository.sqlalchemy.SQLAlchemyGraphQLSyncRepository"
 "strawchemy.repository.typing.AnyAsyncSession" = "strawchemy.repository.typing.AnySyncSession"
 "strawchemy.repository.typing.AsyncSessionGetter" = "strawchemy.repository.typing.SyncSessionGetter"
-"strawchemy.repository.strawberry._session.async_locked" = "strawchemy.repository.strawberry._session.sync_locked"
-"strawchemy.repository.strawberry._session.async_locked_write" = "strawchemy.repository.strawberry._session.sync_locked_write"
-"strawchemy.repository.strawberry._session.async_read_scope" = "strawchemy.repository.strawberry._session.sync_read_scope"
-"strawchemy.repository.strawberry._session.async_write_scope" = "strawchemy.repository.strawberry._session.sync_write_scope"
 StrawchemyAsyncRepository = "StrawchemySyncRepository"
 
 [tool.uv]

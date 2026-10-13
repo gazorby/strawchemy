@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from strawchemy.config.base import StrawchemyConfig
 from strawchemy.dto.types import ALL, RELATIONSHIPS, SCALARS, FieldGroup
-from strawchemy.execution import StrawchemyExecutionContext
 from strawchemy.instance import ModelInstance
 from strawchemy.mapper import Strawchemy
 from strawchemy.repository.strawberry import StrawchemyAsyncRepository, StrawchemySyncRepository
@@ -70,7 +69,6 @@ __all__ = (
     "Strawchemy",
     "StrawchemyAsyncRepository",
     "StrawchemyConfig",
-    "StrawchemyExecutionContext",
     "StrawchemySyncRepository",
     "TextComparison",
     "TextOperator",

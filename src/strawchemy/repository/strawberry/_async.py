@@ -6,17 +6,12 @@ pattern, built on top of SQLAlchemy's asynchronous API.
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any, TypeVar
 
 from strawchemy.repository.sqlalchemy import SQLAlchemyGraphQLAsyncRepository
-from strawchemy.repository.strawberry._session import (
-    async_locked,
-    async_locked_write,
-    async_read_scope,
-    async_write_scope,
-)
 from strawchemy.repository.strawberry.base import IS_ASYNC_REPOSITORY, GraphQLResult, StrawchemyRepository
 from strawchemy.utils.strawberry import default_session_getter, dto_model_from_type, strawberry_contained_user_type
 
@@ -35,6 +30,8 @@ __all__ = ("StrawchemyAsyncRepository",)
 
 T = TypeVar("T")
 
+_SESSION_LOCK_KEY = "strawchemy_session_lock"
+
 
 @dataclass
 class StrawchemyAsyncRepository(StrawchemyRepository[T]):
@@ -48,7 +45,6 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         info: The GraphQL resolver info object
         session_getter: Callable to get an async database session
         session: Optional explicit async database session to use
-        read_session_getter: Optional callable returning a dedicated session for concurrent reads
         filter_statement: Optional base SQLAlchemy select statement to apply to all queries
         execution_options: Optional execution options for SQLAlchemy
         deterministic_ordering: Whether to ensure deterministic ordering of results
@@ -62,13 +58,12 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
     # strawberry related settings
     session_getter: AsyncSessionGetter = default_session_getter
     session: AnyAsyncSession | None = None
-    read_session_getter: AsyncSessionGetter | None = None
     filter_statement: SelectOf[Any] | None = None
     execution_options: dict[str, Any] | None = None
     deterministic_ordering: bool = False
     default_order_by: builtins.list[OrderByExpr] = field(default_factory=list)
 
-    def graphql_repository(self, session: AnyAsyncSession | None = None) -> SQLAlchemyGraphQLAsyncRepository[Any]:
+    def graphql_repository(self) -> SQLAlchemyGraphQLAsyncRepository[Any]:
         """Create and configure the underlying async SQLAlchemy GraphQL strawberry.
 
         Returns:
@@ -76,7 +71,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         """
         return SQLAlchemyGraphQLAsyncRepository(
             model=dto_model_from_type(strawberry_contained_user_type(self.type)),
-            session=session or self.session or self.session_getter(self.info),
+            session=self.session or self.session_getter(self.info),
             statement=self.filter_statement,
             execution_options=self.execution_options,
             deterministic_ordering=self.deterministic_ordering,
@@ -84,15 +79,11 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         )
 
     @asynccontextmanager
-    async def _graphql_repository(self, *, read: bool) -> AsyncIterator[SQLAlchemyGraphQLAsyncRepository[Any]]:
-        if self.session is not None:
-            scope = async_locked(self.session) if read else async_locked_write(self.session)
-        elif read:
-            scope = async_read_scope(self.info, self.session_getter, self.read_session_getter)
-        else:
-            scope = async_write_scope(self.info, self.session_getter)
-        async with scope as session:
-            yield self.graphql_repository(session)
+    async def _graphql_repository(self) -> AsyncIterator[SQLAlchemyGraphQLAsyncRepository[Any]]:
+        # Sibling resolvers may run concurrently, and a session forbids concurrent operations.
+        repository = self.graphql_repository()
+        async with repository.session.info.setdefault(_SESSION_LOCK_KEY, asyncio.Lock()):
+            yield repository
 
     async def get_one_or_none(
         self,
@@ -114,7 +105,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the result or None
         """
-        async with self._graphql_repository(read=True) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.get_one(
                 selection=self._tree,
                 dto_filter=filter_input or None,
@@ -150,7 +141,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
             NoResultFound: If no results are found
             MultipleResultsFound: If multiple results are found
         """
-        async with self._graphql_repository(read=True) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.get_one(
                 selection=self._tree,
                 dto_filter=filter_input or None,
@@ -174,7 +165,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Raises:
             NoResultFound: If no entity with the given ID exists
         """
-        async with self._graphql_repository(read=True) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.get_by_id(selection=self._tree, query_hooks=self._query_hooks, **kwargs)
         return GraphQLResult(query_results, self._tree)
 
@@ -198,7 +189,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the list of matching entities
         """
-        async with self._graphql_repository(read=True) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.list(
                 selection=self._tree,
                 dto_filter=filter_input or None,
@@ -219,7 +210,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the created entity
         """
-        async with self._graphql_repository(read=False) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.create(data, self._tree)
         return GraphQLResult(query_results, self._tree)
 
@@ -241,7 +232,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the upserted entity
         """
-        async with self._graphql_repository(read=False) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.upsert(data, self._tree, update_fields, conflict_fields, filter_input)
         return GraphQLResult(query_results, self._tree)
 
@@ -257,7 +248,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Raises:
             NoResultFound: If no entity with the given ID exists
         """
-        async with self._graphql_repository(read=False) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.update_by_ids(data, self._tree)
         return GraphQLResult(query_results, self._tree)
 
@@ -273,7 +264,7 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the updated entities
         """
-        async with self._graphql_repository(read=False) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.update_by_filter(data, filter_input, self._tree)
         return GraphQLResult(query_results, self._tree)
 
@@ -286,6 +277,6 @@ class StrawchemyAsyncRepository(StrawchemyRepository[T]):
         Returns:
             A GraphQLResult containing the deleted entities
         """
-        async with self._graphql_repository(read=False) as repository:
+        async with self._graphql_repository() as repository:
             query_results = await repository.delete(self._tree, filter_input or None)
         return GraphQLResult(query_results, self._tree)
