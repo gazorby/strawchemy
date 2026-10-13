@@ -13,6 +13,7 @@ __all__ = (
     "FilterValueError",
     "GraphError",
     "ModelInspectorError",
+    "MutationScopeError",
     "QueryHookError",
     "QueryResultError",
     "ReadOnlyModelError",
@@ -94,6 +95,10 @@ class TranspilingError(StrawchemyError):
 
 class QueryResultError(StrawchemyError):
     """Raised when an error occurs during query result processing or mapping."""
+
+
+class MutationScopeError(QueryResultError):
+    """Raised when a mutation targets a row its filter statement does not select."""
 
 
 class QueryHookError(StrawchemyError):

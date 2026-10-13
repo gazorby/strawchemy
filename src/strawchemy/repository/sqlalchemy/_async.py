@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 from collections import defaultdict, namedtuple
-from typing import TYPE_CHECKING, Any, TypeVar
+from dataclasses import replace
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from sqlalchemy import ColumnElement, Row, and_, delete, inspect, select, update
 from sqlalchemy.orm import RelationshipProperty
@@ -33,17 +34,27 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         if self._dialect.insert_executemany_returning_sort_by_parameter_order and not (
             self._dialect.name == "postgresql" and data.is_upsert
         ):
-            results = await self.session.execute(
-                self._insert_statement(data).returning(*data.pks, sort_by_parameter_order=True),
-                data.values,
-            )
-            return results.all()
-        rows: Sequence[Row[Any]] = []
+            by_position: dict[int, Row[Any]] = {}
+            for positions, group in data.column_groups():
+                results = await self.session.execute(
+                    self._insert_statement(group).returning(*data.pks, sort_by_parameter_order=True),
+                    group.values,
+                )
+                returned = results.all()
+                self._check_all_written(group, returned)
+                by_position.update(zip(positions, returned, strict=True))
+            return [by_position[position] for position in range(len(data.values))]
+        rows: list[Row[Any]] = []
         conn = await self.session.connection()
         for value in data.values:
-            cursor = await conn.execute(self._insert_statement(data).values(**value))
-            assert cursor.inserted_primary_key is not None
-            rows.append(cursor.inserted_primary_key)
+            statement = self._insert_statement(replace(data, values=[value])).values(**value)
+            if data.conflict_where and self._dialect.insert_returning:
+                row = cast("Row[Any] | None", (await conn.execute(statement.returning(*data.pks))).first())
+            else:
+                row = (await conn.execute(statement)).inserted_primary_key
+            if row is not None:
+                rows.append(row)
+        self._check_all_written(data, rows)
         return rows
 
     async def _insert_nested(self, data: InsertData, level: LevelInput) -> None:
@@ -86,6 +97,13 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         conn = await self.session.connection()
         await conn.execute(delete_statement, execution_options=execution_options or {})
         return affected_rows
+
+    def _expire_keys(self, keys: set[tuple[Any, ...]]) -> None:
+        """Expires the session's instances of the model whose primary key is among ``keys``."""
+        for key in keys:
+            instance = self.session.identity_map.get(self.model.__mapper__.identity_key_from_primary_key(key))
+            if instance is not None:
+                self.session.expire(instance)
 
     async def _update_where(
         self,
@@ -232,26 +250,37 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
         if data.mode == "insert":
             return await self._insert_many(InsertData(self.model, values))
 
+        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
         if data.mode == "upsert":
-            return await self._insert_many(
-                InsertData(
-                    self.model,
-                    values,
-                    UpsertData(
-                        update_fields=data.upsert_update_fields or [], conflict_constraint=data.upsert_conflict_fields
-                    ),
-                )
+            upsert_data = UpsertData(
+                update_fields=data.upsert_update_fields or [], conflict_constraint=data.upsert_conflict_fields
             )
+            where = transpiler.filter_expressions(None)
+            insert_data = InsertData(self.model, values, upsert_data, conflict_where=where)
+            if where and (conflicting := self._conflicting_keys_statement(insert_data)) is not None:
+                keys = {tuple(row) for row in (await self.session.execute(conflicting)).all()}
+                in_scope = (await self.session.execute(conflicting.where(*where))).all()
+                self._check_keys_in_scope(keys, in_scope)
+            return await self._insert_many(insert_data)
 
         pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
         AsRow = namedtuple("AsRow", pks)  # noqa: PYI024
 
         if data.mode == "update_by_pks":
-            await self.session.execute(update(self.model), values)
+            if self.statement is None:
+                await self.session.execute(update(self.model), values)
+            else:
+                where = transpiler.filter_expressions(None)
+                keys = self._primary_keys(values)
+                in_scope = (await self.session.execute(self._keys_in_scope_statement(keys, where))).all()
+                self._check_keys_in_scope(keys, in_scope)
+                await self.session.execute(
+                    update(self.model).where(*where), values, execution_options={"synchronize_session": None}
+                )
+                self._expire_keys(keys)
             return [AsRow(*[instance[name] for name in pks]) for instance in values]
 
-        transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
-        where_expressions = transpiler.filter_expressions(data.dto_filter) if data.dto_filter else None
+        where_expressions = transpiler.filter_expressions(data.dto_filter)
         return await self._update_where(values[0], where_expressions)
 
     async def _mutate(self, data: MutationData[DeclarativeT]) -> Sequence[RowLike]:
@@ -285,7 +314,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
             A QueryResult containing the list of fetched records matching the
             provided IDs, structured according to the selection.
         """
-        executor = self._get_query_executor(AsyncQueryExecutor, selection=selection)
+        executor = self._get_query_executor(AsyncQueryExecutor, selection=selection, restricted=False)
         id_fields = executor.id_field_definitions
         executor.add_where(
             *[field.model_field.in_([getattr(row, field.model_field_name) for row in id_rows]) for field in id_fields]
@@ -511,7 +540,7 @@ class SQLAlchemyGraphQLAsyncRepository(SQLAlchemyGraphQLRepository[DeclarativeT,
     ) -> QueryResult[DeclarativeT]:
         async with self.session.begin_nested() as transaction:
             transpiler = Transpiler(self.model, self._dialect, statement=self.statement)
-            where_expressions = transpiler.filter_expressions(dto_filter) if dto_filter else None
+            where_expressions = transpiler.filter_expressions(dto_filter)
             to_be_deleted = await self.list(selection, dto_filter=dto_filter)
             affected_rows = await self._delete_where(where_expressions, execution_options)
             await transaction.commit()

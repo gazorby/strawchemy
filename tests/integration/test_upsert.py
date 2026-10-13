@@ -1,24 +1,30 @@
 from __future__ import annotations
 
 from datetime import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pytest
 import strawberry
-from sqlalchemy import Insert, insert
+from sqlalchemy import Insert, insert, select
 
+from strawchemy import Input, StrawchemyAsyncRepository, StrawchemySyncRepository
+from strawchemy.repository.sqlalchemy._base import SQLAlchemyGraphQLRepository
 from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
 from tests.integration.models import Color, Fruit
+from tests.integration.utils import data_argument
 from tests.typing import AnyQueryExecutor
 from tests.utils import maybe_async
 
 if TYPE_CHECKING:
+    from sqlalchemy import Select
     from syrupy.assertion import SnapshotAssertion
 
     from strawchemy import Strawchemy
     from strawchemy.typing import SupportedDialect
 
 pytestmark = [pytest.mark.integration]
+
+_OUT_OF_SCOPE = "Some rows to write do not exist or are not selected by the filter statement"
 
 _COLORS: list[dict[str, Any]] = [{"id": 1, "name": "Red"}, {"id": 2, "name": "Green"}]
 _FRUITS: list[dict[str, Any]] = [
@@ -59,6 +65,9 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.upsert_update_fields(Fruit, include=["name", "sweetness", "water_percent", "best_time_to_pick"])
     class FruitUpsertFields: ...
 
+    @strawchemy.upsert_update_fields(Fruit, include="all")
+    class FruitUpsertAllFields: ...
+
     @strawchemy.upsert_conflict_fields(Fruit, include=["id", "name", "sweetness", "water_percent"])
     class FruitUpsertConflictFields: ...
 
@@ -76,8 +85,34 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         upsert_fruits: list[FruitType] = strawchemy.upsert(
             FruitCreateInput, update_fields=FruitUpsertFields, conflict_fields=FruitUpsertConflictFields
         )
+        upsert_fruits_all_fields: list[FruitType] = strawchemy.upsert(
+            FruitCreateInput, update_fields=FruitUpsertAllFields, conflict_fields=FruitUpsertConflictFields
+        )
 
-    return Operations(query=Query, mutation=Mutation)
+    conflict_on_id = cast("Any", FruitUpsertConflictFields).id
+
+    @strawberry.type
+    class AsyncMutation(Mutation):
+        @strawchemy.field(graphql_type=list[FruitType], arguments=data_argument(list[FruitCreateInput]))
+        async def upsert_fruits_restricted(
+            self, info: strawberry.Info, data: list[FruitCreateInput]
+        ) -> list[FruitType]:
+            repo = StrawchemyAsyncRepository(FruitType, info, filter_statement=_apples())
+            return (await repo.upsert(Input(data), conflict_fields=conflict_on_id)).graphql_list()
+
+    @strawberry.type
+    class SyncMutation(Mutation):
+        @strawchemy.field(graphql_type=list[FruitType], arguments=data_argument(list[FruitCreateInput]))
+        def upsert_fruits_restricted(self, info: strawberry.Info, data: list[FruitCreateInput]) -> list[FruitType]:
+            repo = StrawchemySyncRepository(FruitType, info, filter_statement=_apples())
+            return repo.upsert(Input(data), conflict_fields=conflict_on_id).graphql_list()
+
+    is_async = issubclass(strawchemy.config.repository_type, StrawchemyAsyncRepository)
+    return Operations(query=Query, mutation=AsyncMutation if is_async else SyncMutation)
+
+
+def _apples() -> Select[Fruit]:
+    return select(Fruit).where(Fruit.name == "Apple")
 
 
 @pytest.fixture
@@ -376,6 +411,159 @@ async def test_upsert_many_new_and_existing(
     query_tracker.assert_statements(1, "select", sql_snapshot)
 
 
+@pytest.mark.parametrize(
+    ("data", "conflict_fields", "names_after", "kept_ids"),
+    [
+        pytest.param(
+            '[{ name: "Grape", sweetness: 7, waterPercent: 0.85 }, { id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }]',
+            "id",
+            ["Apple", "Grape", "X"],
+            {"Apple": 1, "X": 2},
+            id="id-conflict-new-first",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }, { name: "Grape", sweetness: 7, waterPercent: 0.85 }]',
+            "id",
+            ["Apple", "Grape", "X"],
+            {"Apple": 1, "X": 2},
+            id="id-conflict-existing-first",
+        ),
+        pytest.param(
+            '[{ id: 3, name: "Grape", sweetness: 7, waterPercent: 0.85 }, '
+            '{ name: "Cherry", sweetness: 1, waterPercent: 0.5 }]',
+            "name",
+            ["Apple", "Cherry", "Grape"],
+            {"Apple": 1, "Cherry": 2, "Grape": 3},
+            id="name-conflict-without-id",
+        ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 2, waterPercent: 0.6 }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.5 }]',
+            "id",
+            ["Green apple", "X"],
+            {"Green apple": 1, "X": 2},
+            id="all-ids",
+        ),
+    ],
+)
+async def test_upsert_many_with_and_without_primary_key(
+    data: str, conflict_fields: str, names_after: list[str], kept_ids: dict[str, int], any_query: AnyQueryExecutor
+) -> None:
+    """An upsert batch mixing rows with and without a primary key writes and returns every row, keeping existing ids."""
+    result = await maybe_async(
+        any_query(f"mutation {{ upsertFruits(data: {data}, conflictFields: {conflict_fields}) {{ id name }} }}")
+    )
+    assert not result.errors
+    assert result.data
+    returned = {fruit["name"]: fruit["id"] for fruit in result.data["upsertFruits"]}
+
+    result = await maybe_async(any_query("{ fruits { id name } }"))
+    assert not result.errors
+    assert result.data
+    stored = {fruit["name"]: fruit["id"] for fruit in result.data["fruits"]}
+    assert sorted(stored) == names_after
+    assert {name: stored[name] for name in kept_ids} == kept_ids
+    assert returned == {name: stored[name] for name in returned}
+
+
+@pytest.mark.parametrize(
+    ("data", "update_fields", "written_ids", "stored"),
+    [
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[name, colorId]",
+            {2},
+            [{"id": 1, "name": "Apple", "color": {"name": "Red"}}, {"id": 2, "name": "X", "color": {"name": "Red"}}],
+            id="omitted-kept",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6, color: { set: null } }]',
+            "[name, colorId]",
+            {2},
+            [{"id": 1, "name": "Apple", "color": {"name": "Red"}}, {"id": 2, "name": "X", "color": None}],
+            id="explicit-null",
+        ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[name, colorId]",
+            {1, 2},
+            [
+                {"id": 1, "name": "Green apple", "color": {"name": "Green"}},
+                {"id": 2, "name": "X", "color": {"name": "Red"}},
+            ],
+            id="mixed",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            "[colorId]",
+            {2},
+            [
+                {"id": 1, "name": "Apple", "color": {"name": "Red"}},
+                {"id": 2, "name": "Cherry", "color": {"name": "Red"}},
+            ],
+            id="none-given",
+        ),
+    ],
+)
+async def test_upsert_update_fields_given_by_each_row(
+    data: str, update_fields: str, written_ids: set[int], stored: list[dict[str, Any]], any_query: AnyQueryExecutor
+) -> None:
+    """An upsert with update fields updates, on each conflicting row, only the listed fields that row gives."""
+    result = await maybe_async(
+        any_query(
+            f"mutation {{ upsertFruitsAllFields(data: {data}, conflictFields: id, updateFields: {update_fields}) "
+            "{ id name color { name } } }"
+        )
+    )
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["upsertFruitsAllFields"], key=lambda fruit: fruit["id"]) == [
+        fruit for fruit in stored if fruit["id"] in written_ids
+    ]
+
+    result = await maybe_async(any_query("{ fruits { id name color { name } } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["id"]) == stored
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param(
+            '[{ id: 1, name: "Apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }, '
+            '{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }]',
+            id="extra-column-first",
+        ),
+        pytest.param(
+            '[{ id: 2, name: "X", sweetness: 1, waterPercent: 0.6 }, '
+            '{ id: 1, name: "Apple", sweetness: 5, waterPercent: 0.5, color: { set: { id: 2 } } }]',
+            id="extra-column-last",
+        ),
+    ],
+)
+async def test_upsert_many_with_heterogeneous_columns(data: str, any_query: AnyQueryExecutor) -> None:
+    """An upsert batch whose rows give different columns updates each row with the columns it gives, and no other."""
+    result = await maybe_async(
+        any_query(f"mutation {{ upsertFruits(data: {data}, conflictFields: id) {{ id name color {{ name }} }} }}")
+    )
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["upsertFruits"], key=lambda fruit: fruit["id"]) == [
+        {"id": 1, "name": "Apple", "color": {"name": "Green"}},
+        {"id": 2, "name": "X", "color": {"name": "Red"}},
+    ]
+
+    result = await maybe_async(any_query("{ fruits { id name color { name } } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["id"]) == [
+        {"id": 1, "name": "Apple", "color": {"name": "Green"}},
+        {"id": 2, "name": "X", "color": {"name": "Red"}},
+    ]
+
+
 # To-One Upsert Tests
 
 
@@ -567,6 +755,97 @@ async def test_to_many_upsert_update_existing(
 
     query_tracker.assert_statements(1, "update", sql_snapshot)  # Update color name
     query_tracker.assert_statements(1, "select", sql_snapshot)  # Fetch updated color + new fruits
+
+
+@pytest.mark.parametrize(
+    ("data", "expected", "names_after"),
+    [
+        pytest.param(
+            '[{ id: 1, name: "Apple", sweetness: 5, waterPercent: 0.5 }]',
+            [{"name": "Apple", "sweetness": 5}],
+            ["Apple", "Cherry"],
+            id="conflict-in-scope",
+        ),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 5, waterPercent: 0.5 }]',
+            [{"name": "Green apple", "sweetness": 5}],
+            ["Cherry", "Green apple"],
+            id="conflict-moved-out",
+        ),
+        pytest.param(
+            '[{ name: "Grape", sweetness: 7, waterPercent: 0.85 }]',
+            [{"name": "Grape", "sweetness": 7}],
+            ["Apple", "Cherry", "Grape"],
+            id="insert-out-of-scope",
+        ),
+    ],
+)
+async def test_upsert_restricted_by_repository_statement(
+    data: str, expected: list[dict[str, Any]], names_after: list[str], any_query: AnyQueryExecutor
+) -> None:
+    """A repository upsert under a filter statement returns the rows it wrote, even those the statement leaves out."""
+    result = await maybe_async(any_query(f"mutation {{ upsertFruitsRestricted(data: {data}) {{ name sweetness }} }}"))
+    assert not result.errors
+    assert result.data
+    assert result.data["upsertFruitsRestricted"] == expected
+
+    result = await maybe_async(any_query("{ fruits { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(fruit["name"] for fruit in result.data["fruits"]) == names_after
+
+
+@pytest.mark.parametrize(
+    "data",
+    [
+        pytest.param('[{ id: 2, name: "Hacked", sweetness: 1, waterPercent: 0.5 }]', id="one"),
+        pytest.param(
+            '[{ id: 1, name: "Green apple", sweetness: 2, waterPercent: 0.6 }, '
+            '{ id: 2, name: "Hacked", sweetness: 1, waterPercent: 0.5 }]',
+            id="mixed",
+        ),
+        pytest.param(
+            '[{ id: 3, name: "Grape", sweetness: 7, waterPercent: 0.85 }, '
+            '{ id: 2, name: "Hacked", sweetness: 1, waterPercent: 0.5 }]',
+            id="insert-and-conflict",
+        ),
+    ],
+)
+async def test_upsert_conflict_outside_repository_statement(data: str, any_query: AnyQueryExecutor) -> None:
+    """A repository upsert conflicting with a row outside its filter statement fails and writes no row."""
+    result = await maybe_async(any_query(f"mutation {{ upsertFruitsRestricted(data: {data}) {{ name }} }}"))
+    assert result.errors
+    assert result.errors[0].message == _OUT_OF_SCOPE
+
+    result = await maybe_async(any_query("{ fruits { name sweetness } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(result.data["fruits"], key=lambda fruit: fruit["name"]) == [
+        {"name": "Apple", "sweetness": 4},
+        {"name": "Cherry", "sweetness": 9},
+    ]
+
+
+async def test_upsert_conflict_update_bounded_by_repository_statement(
+    any_query: AnyQueryExecutor, dialect: SupportedDialect, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """An upsert whose conflict pre-check misses a row outside its filter statement skips its update and fails."""
+    if dialect == "mysql":
+        pytest.skip("MySQL upserts take no WHERE: the pre-check alone bounds them")
+    monkeypatch.setattr(SQLAlchemyGraphQLRepository, "_conflicting_keys_statement", lambda *_: None)
+    result = await maybe_async(
+        any_query(
+            'mutation { upsertFruitsRestricted(data: [{ id: 2, name: "Hacked", sweetness: 1, waterPercent: 0.5 }]) '
+            "{ name } }"
+        )
+    )
+    assert result.errors
+    assert result.errors[0].message == _OUT_OF_SCOPE
+
+    result = await maybe_async(any_query("{ fruits { name } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted(fruit["name"] for fruit in result.data["fruits"]) == ["Apple", "Cherry"]
 
 
 @pytest.mark.snapshot

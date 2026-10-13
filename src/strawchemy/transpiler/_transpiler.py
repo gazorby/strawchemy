@@ -94,8 +94,8 @@ class Transpiler(Generic[DeclarativeT]):
             execution_options=execution_options,
         )
 
-    def filter_expressions(self, dto_filter: BooleanFilterDTO) -> list[ColumnElement[bool]]:
-        """Returns the WHERE predicates of ``dto_filter`` on the root model's table, joining no relation."""
+    def filter_expressions(self, dto_filter: BooleanFilterDTO | None) -> list[ColumnElement[bool]]:
+        """Returns the WHERE of the statement and ``dto_filter`` on the root model's table, joining no relation."""
         request = QueryRequest(self.model, None, dto_filter, (), (), None, None, False, filter_scope="dml")
         return list(self.context.pipelines.dml.plan(Level.dml(request, self.context)).rows.where)
 

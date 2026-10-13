@@ -7,12 +7,12 @@ from inspect import isclass
 from itertools import chain
 from typing import TYPE_CHECKING, Any, Generic, Literal, NamedTuple, TypeAlias, TypeVar, cast
 
-from sqlalchemy import Column, Function, Insert, Row, Table, func, insert, inspect
+from sqlalchemy import Column, Function, Insert, Row, Table, and_, func, insert, inspect, or_, select
 from sqlalchemy.dialects import mysql, postgresql, sqlite
 from sqlalchemy.orm import RelationshipProperty
 
 from strawchemy.dto.inspectors import SQLAlchemyInspector
-from strawchemy.exceptions import StrawchemyError
+from strawchemy.exceptions import MutationScopeError, StrawchemyError
 from strawchemy.repository.typing import DeclarativeT, QueryExecutorT, SessionT
 from strawchemy.schema.mutation.types import RelationType
 from strawchemy.transpiler import Transpiler
@@ -20,6 +20,7 @@ from strawchemy.transpiler import Transpiler
 if TYPE_CHECKING:
     from collections.abc import Mapping, Sequence
 
+    from sqlalchemy import ColumnElement, Select
     from sqlalchemy.orm import DeclarativeBase
     from sqlalchemy.sql.base import ReadOnlyColumnCollection
     from sqlalchemy.sql.elements import KeyedColumnElement
@@ -38,6 +39,8 @@ T = TypeVar("T", bound=Any)
 InsertOrUpdate: TypeAlias = Literal["insert", "update_by_pks", "update_where", "upsert"]
 RowLike: TypeAlias = "Row[Any] | NamedTuple"
 _ModelOrTable: TypeAlias = "type[DeclarativeBase] | Table"
+
+_OUT_OF_SCOPE = "Some rows to write do not exist or are not selected by the filter statement"
 
 
 @dataclass
@@ -65,6 +68,25 @@ class InsertData:
     model_type: type[DeclarativeBase] | Table
     values: list[dict[str, Any]]
     upsert_data: UpsertData | None = None
+    conflict_where: Sequence[ColumnElement[bool]] = ()
+    """Bounds the rows a conflict may update, on databases whose upsert takes a WHERE."""
+
+    @property
+    def conflict_update_where(self) -> ColumnElement[bool] | None:
+        return and_(*self.conflict_where) if self.conflict_where else None
+
+    def column_groups(self) -> list[tuple[list[int], InsertData]]:
+        """Splits the values of an upsert by the columns they give, each group with the positions of its values."""
+        if not self.is_upsert:
+            return [(list(range(len(self.values))), self)]
+        # A conflict updates the columns its values give: values giving other columns need their own statement.
+        positions: dict[frozenset[str], list[int]] = {}
+        for position, value in enumerate(self.values):
+            positions.setdefault(frozenset(value), []).append(position)
+        return [
+            (group, dataclasses.replace(self, values=[self.values[position] for position in group]))
+            for group in positions.values()
+        ]
 
     @property
     def pks(self) -> tuple[Column[Any], ...]:
@@ -93,9 +115,11 @@ class InsertData:
     def upsert_set(
         self, dialect: SupportedDialect, columns: ReadOnlyColumnCollection[str, KeyedColumnElement[Any]]
     ) -> Mapping[Column[Any], KeyedColumnElement[Any] | Function[Any]]:
-        update_fields_set = {
-            dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields
-        } or {name for value_dict in self.values for name in value_dict}
+        given = {name for value_dict in self.values for name in value_dict}
+        update_fields_set = (
+            {dto_field.field_definition.model_field_name for dto_field in self.upsert_data_or_raise.update_fields}
+            or given
+        ) & given
         update_fields = {self._columns[name]: value for name, value in columns.items() if name in update_fields_set}
         if (
             dialect == "mysql"
@@ -108,7 +132,8 @@ class InsertData:
             is not None
         ):
             update_fields = {auto_increment_pk_column: func.last_insert_id(auto_increment_pk_column)} | update_fields
-        return update_fields
+        # Assigning the keys to themselves still updates the conflicting row, so that it is returned like the others.
+        return update_fields or {pk: pk for pk in self.pks}
 
 
 @dataclass(frozen=True)
@@ -176,12 +201,13 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
         allow_null: bool = False,
         query_hooks: defaultdict[QueryNodeType, list[QueryHook[DeclarativeBase]]] | None = None,
         execution_options: dict[str, Any] | None = None,
+        restricted: bool = True,
     ) -> QueryExecutorT:
         transpiler = Transpiler(
             self.model,
             self._dialect,
             query_hooks=query_hooks,
-            statement=self.statement,
+            statement=self.statement if restricted else None,
             deterministic_ordering=self.deterministic_ordering,
             default_order_by=self.default_order_by,
         )
@@ -206,12 +232,14 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
             statement = statement.on_conflict_do_update(
                 set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
+                where=data.conflict_update_where,
             )
         elif dialect_name == "sqlite":
             statement = sqlite.insert(data.model_type)
             statement = statement.on_conflict_do_update(
                 set_=data.upsert_set(dialect_name, statement.excluded),
                 index_elements=data.conflict_target_columns(),
+                where=data.conflict_update_where,
             )
         elif dialect_name == "mysql":
             statement = mysql.insert(data.model_type)
@@ -244,6 +272,49 @@ class SQLAlchemyGraphQLRepository(Generic[DeclarativeT, SessionT]):
                 state = inspect(instance)
                 if state.session is not None:
                     state.session.expire(instance, [prop.back_populates])
+
+    def _primary_keys(self, values: Sequence[dict[str, Any]]) -> set[tuple[Any, ...]]:
+        pks = [column.key for column in self.model.__mapper__.primary_key if column.key]
+        return {tuple(value[pk] for pk in pks) for value in values}
+
+    def _keys_in_scope_statement(self, keys: set[tuple[Any, ...]], where: list[ColumnElement[bool]]) -> Select[Any]:
+        """Selects, among the primary ``keys``, those of rows passing the ``where`` of the repository statement."""
+        pks = [getattr(self.model, column.key) for column in self.model.__mapper__.primary_key if column.key]
+        matched = or_(*[and_(*[pk == value for pk, value in zip(pks, key, strict=True)]) for key in keys])
+        return select(*pks).where(*where, matched)
+
+    def _conflicting_keys_statement(self, data: InsertData) -> Select[Any] | None:
+        """Selects and locks the primary keys of the rows ``data`` conflicts with, or None if no value can conflict."""
+        mapper = self.model.__mapper__
+        attribute_keys = {column: key for key, column in mapper.columns.items()}
+        columns = [(column, attribute_keys[column]) for column in data.conflict_target_columns()]
+        matches = [
+            and_(*[column == value[key] for column, key in columns])
+            for value in data.values
+            if all(value.get(key) is not None for _, key in columns)
+        ]
+        if not matches:
+            return None
+        pks = [getattr(self.model, column.key) for column in mapper.primary_key if column.key]
+        return select(*pks).where(or_(*matches)).with_for_update()
+
+    def _check_all_written(self, data: InsertData, rows: Sequence[Row[Any]]) -> None:
+        """Checks that a row was written for each value of ``data``.
+
+        Raises:
+            MutationScopeError: If the conflict update skipped a row the repository statement does not select.
+        """
+        if len(rows) < len(data.values):
+            raise MutationScopeError(_OUT_OF_SCOPE)
+
+    def _check_keys_in_scope(self, keys: set[tuple[Any, ...]], rows: Sequence[Row[Any]]) -> None:
+        """Checks that every primary key of ``keys`` is among ``rows``.
+
+        Raises:
+            MutationScopeError: If a key is missing, whether its row does not exist or the statement excludes it.
+        """
+        if keys - {tuple(row) for row in rows}:
+            raise MutationScopeError(_OUT_OF_SCOPE)
 
     def _rows_to_filter_dict(self, rows: Sequence[Row[Any]]) -> dict[str, list[Any]]:
         filter_dict = defaultdict(list)

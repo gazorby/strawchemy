@@ -7,7 +7,7 @@ import strawberry
 from sqlalchemy import Insert, insert, select
 
 from tests.integration.fixtures import Operations, QueryTracker, SchemaTypes
-from tests.integration.models import Department, Group, Topic, User, UserDepartmentJoinTable
+from tests.integration.models import Department, Group, Topic, User, UserDepartment, UserDepartmentJoinTable
 from tests.integration.typing import RawRecordData
 from tests.integration.utils import to_graphql_representation
 from tests.typing import AnyQueryExecutor
@@ -54,9 +54,13 @@ def _schema(strawchemy: Strawchemy) -> Operations:
     @strawchemy.filter(User, include=["id", "name", "bio", "group", "departments"])
     class UserFilter: ...
 
+    @strawchemy.type(UserDepartment, include="all")
+    class UserDepartmentType: ...
+
     @strawberry.type
     class Query:
         users: list[UserType] = strawchemy.field()
+        user_departments: list[UserDepartmentType] = strawchemy.field()
 
     @strawberry.type
     class Mutation:
@@ -64,6 +68,22 @@ def _schema(strawchemy: Strawchemy) -> Operations:
         delete_users_filter: list[UserType] = strawchemy.delete(UserFilter)
         delete_users_restricted: list[UserType] = strawchemy.delete(
             UserFilter, filter_statement=lambda _: select(User).where(User.id == 2)
+        )
+        delete_users_restricted_join: list[UserType] = strawchemy.delete(
+            UserFilter, filter_statement=lambda _: select(User).join(User.departments).where(Department.name == "Sales")
+        )
+        delete_users_restricted_limit: list[UserType] = strawchemy.delete(
+            UserFilter, filter_statement=lambda _: select(User).where(User.id > 1).order_by(User.id).limit(1)
+        )
+        delete_users_restricted_subquery: list[UserType] = strawchemy.delete(
+            UserFilter,
+            filter_statement=lambda _: select(User).where(User.id.in_(select(User.id).where(User.name == "Bob"))),
+        )
+        delete_users_restricted_without_filter: list[UserType] = strawchemy.delete(
+            filter_statement=lambda _: select(User).where(User.id == 2)
+        )
+        delete_user_departments_restricted_limit: list[UserDepartmentType] = strawchemy.delete(
+            filter_statement=lambda _: select(UserDepartment).order_by(*UserDepartmentJoinTable.primary_key).limit(1)
         )
 
     return Operations(query=Query, mutation=Mutation)
@@ -179,19 +199,55 @@ async def test_delete_filter_on_unselected_column(
     )
 
 
-async def test_delete_restricted_by_repository_statement(any_async_query: AnyQueryExecutor) -> None:
-    """A delete whose repository statement keeps only Bob deletes Bob alone, whatever rows the filter matches."""
-    result = await maybe_async(
-        any_async_query('mutation { deleteUsersRestricted(filter: { name: { neq: "zzz" } }) { name } }')
-    )
+@pytest.mark.parametrize(
+    ("field", "arguments", "deleted_names"),
+    [
+        pytest.param("deleteUsersRestricted", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="where"),
+        pytest.param("deleteUsersRestricted", "", ["Bob"], id="where-no-filter"),
+        pytest.param("deleteUsersRestricted", "(filter: {})", ["Bob"], id="where-empty-filter"),
+        pytest.param("deleteUsersRestricted", '(filter: { name: { eq: "Alice" } })', [], id="where-disjoint-filter"),
+        pytest.param("deleteUsersRestrictedJoin", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="join"),
+        pytest.param("deleteUsersRestrictedJoin", "", ["Bob"], id="join-no-filter"),
+        pytest.param("deleteUsersRestrictedJoin", '(filter: { name: { eq: "Alice" } })', [], id="join-disjoint-filter"),
+        pytest.param("deleteUsersRestrictedLimit", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="limit"),
+        pytest.param("deleteUsersRestrictedLimit", "", ["Bob"], id="limit-no-filter"),
+        pytest.param("deleteUsersRestrictedSubquery", '(filter: { name: { neq: "zzz" } })', ["Bob"], id="subquery"),
+        pytest.param("deleteUsersRestrictedSubquery", "(filter: {})", ["Bob"], id="subquery-empty-filter"),
+        pytest.param("deleteUsersRestrictedWithoutFilter", "", ["Bob"], id="no-filter-input"),
+    ],
+)
+async def test_delete_restricted_by_repository_statement(
+    field: str, arguments: str, deleted_names: list[str], any_query: AnyQueryExecutor
+) -> None:
+    """A delete whose repository statement keeps only Bob deletes at most Bob, whatever the statement and filter."""
+    result = await maybe_async(any_query(f"mutation {{ {field}{arguments} {{ name }} }}"))
     assert not result.errors
     assert result.data
-    assert result.data["deleteUsersRestricted"] == [{"name": "Bob"}]
+    assert [user["name"] for user in result.data[field]] == deleted_names
 
-    result = await maybe_async(any_async_query("{ users { name } }"))
+    result = await maybe_async(any_query("{ users { name } }"))
     assert not result.errors
     assert result.data
-    assert sorted(user["name"] for user in result.data["users"]) == ["Alice", "Charlie", "Tango"]
+    assert sorted(user["name"] for user in result.data["users"]) == sorted(
+        user["name"] for user in _USERS if user["name"] not in deleted_names
+    )
+
+
+async def test_delete_restricted_by_repository_statement_on_composite_primary_key(
+    any_query: AnyQueryExecutor,
+) -> None:
+    """A delete whose limited repository statement keeps one composite-key row deletes that row alone."""
+    result = await maybe_async(any_query("mutation { deleteUserDepartmentsRestrictedLimit { userId departmentId } }"))
+    assert not result.errors
+    assert result.data
+    assert result.data["deleteUserDepartmentsRestrictedLimit"] == [{"userId": 1, "departmentId": 1}]
+
+    result = await maybe_async(any_query("{ userDepartments { userId departmentId } }"))
+    assert not result.errors
+    assert result.data
+    assert sorted((row["userId"], row["departmentId"]) for row in result.data["userDepartments"]) == sorted(
+        (row["user_id"], row["department_id"]) for row in _USER_DEPARTMENTS[1:]
+    )
 
 
 @pytest.mark.snapshot
