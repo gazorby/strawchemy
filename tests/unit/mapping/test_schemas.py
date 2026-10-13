@@ -1801,6 +1801,16 @@ def test_second_schema_scoped_declaration_error(decorator: str) -> None:
         getattr(strawchemy, decorator)(Fruit, include=["id"], scope="schema")(type("FruitOther", (), {}))
 
 
+def test_schema_scoped_update_inputs_of_each_mode() -> None:
+    """Test that a model takes a schema-scoped declaration for each update input mode without conflict."""
+    strawchemy = Strawchemy("postgresql")
+    by_pk = strawchemy.pk_update_input(Fruit, include=["name"], scope="schema")(type("FruitByPk", (), {}))
+    by_filter = strawchemy.filter_update_input(Fruit, include=["name"], scope="schema")(type("FruitByFilter", (), {}))
+
+    assert get_object_definition(by_pk, strict=True).name == "FruitByPk"
+    assert get_object_definition(by_filter, strict=True).name == "FruitByFilter"
+
+
 @pytest.mark.parametrize("decorator", ["type", "aggregate"])
 def test_override_keyword_rejected(strawchemy: Strawchemy, decorator: str) -> None:
     """Test that passing override to a declaration decorator raises like any unexpected keyword."""
